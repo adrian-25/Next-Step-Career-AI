@@ -9,6 +9,10 @@ import { Dashboard } from "@/pages/Dashboard";
 import { ResumeAnalyzer } from "@/pages/ResumeAnalyzer";
 import { CareerRoadmap } from "@/pages/CareerRoadmap";
 import { AIMentor } from "@/pages/AIMentor";
+import { JobRecommendations } from "@/pages/JobRecommendations";
+import { PortfolioSuggestions } from "@/pages/PortfolioSuggestions";
+import { NetworkingAssistant } from "@/pages/NetworkingAssistant";
+import { Analytics } from "@/pages/Analytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +30,10 @@ const App = () => (
               <Route path="resume" element={<ResumeAnalyzer />} />
               <Route path="roadmap" element={<CareerRoadmap />} />
               <Route path="mentor" element={<AIMentor />} />
+              <Route path="jobs" element={<JobRecommendations />} />
+              <Route path="portfolio" element={<PortfolioSuggestions />} />
+              <Route path="networking" element={<NetworkingAssistant />} />
+              <Route path="analytics" element={<Analytics />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

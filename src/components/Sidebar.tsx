@@ -9,7 +9,11 @@ import {
   Moon, 
   Sun, 
   Bot,
-  Sparkles
+  Sparkles,
+  Target,
+  Code,
+  Users,
+  TrendingUp
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useTheme } from "@/components/ThemeProvider"
@@ -20,6 +24,10 @@ const navigation = [
   { name: "Resume Analyzer", href: "/resume", icon: FileText },
   { name: "Career Roadmap", href: "/roadmap", icon: Route },
   { name: "AI Mentor", href: "/mentor", icon: MessageSquare },
+  { name: "Job Recommendations", href: "/jobs", icon: Target },
+  { name: "Portfolio Ideas", href: "/portfolio", icon: Code },
+  { name: "Networking", href: "/networking", icon: Users },
+  { name: "Analytics", href: "/analytics", icon: TrendingUp },
 ]
 
 export function Sidebar() {
