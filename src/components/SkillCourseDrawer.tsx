@@ -31,28 +31,49 @@ interface SkillCourseData {
   persuasiveMessage: string
 }
 
-// Course database - modular and expandable
+// Course database - modular and expandable with affordable pricing
 const skillCoursesDb: Record<string, SkillCourseData> = {
   "React": {
     skill: "React",
     description: "Master the most popular frontend library",
     free: {
-      title: "React Official Tutorial",
-      provider: "React.dev",
-      url: "https://react.dev/learn",
+      title: "React Crash Course",
+      provider: "freeCodeCamp",
+      url: "https://www.freecodecamp.org/learn/front-end-development-libraries/#react",
       type: "free",
-      description: "Official React documentation and tutorial"
+      description: "Free comprehensive React tutorial"
     },
     paid: {
-      title: "The Complete React Developer Course",
+      title: "React - The Complete Guide",
       provider: "Udemy",
-      url: "https://udemy.com/course/react-redux/?referralCode=CAREER2024",
+      url: "https://www.udemy.com/course/react-the-complete-guide/?couponCode=AFFILIATE_ID",
       type: "paid",
-      description: "Comprehensive React course with projects",
-      rating: 4.7,
-      price: "$84.99"
+      description: "Complete React course with real-world projects",
+      rating: 4.8,
+      price: "₹449 (on sale)"
     },
-    persuasiveMessage: "Free resources help you get started, but paid courses give you structured learning, real projects, expert guidance, and certificates to showcase your React skills. Think of it as an investment in your career."
+    persuasiveMessage: "Free tutorials are great for a start, but affordable paid courses (just ₹449) give you structured learning, real-world projects, and certificates. Think of it as a small investment that can 10x your career opportunities."
+  },
+  "React Hooks": {
+    skill: "React Hooks",
+    description: "Master modern React with Hooks",
+    free: {
+      title: "React Hooks Crash Course",
+      provider: "YouTube",
+      url: "https://www.youtube.com/watch?v=f687hBjwFcM",
+      type: "free",
+      description: "Free React Hooks tutorial"
+    },
+    paid: {
+      title: "Complete React Hooks Course",
+      provider: "Udemy",
+      url: "https://www.udemy.com/course/react-hooks/?couponCode=AFFILIATE_ID",
+      type: "paid",
+      description: "Deep dive into React Hooks with projects",
+      rating: 4.7,
+      price: "₹399-₹499"
+    },
+    persuasiveMessage: "Hooks are core to modern React. While free crash courses show basics, this affordable paid course gives deep dive projects and lifetime access for under ₹500."
   },
   "TypeScript": {
     skill: "TypeScript",
@@ -60,62 +81,83 @@ const skillCoursesDb: Record<string, SkillCourseData> = {
     free: {
       title: "TypeScript Handbook",
       provider: "TypeScript.org",
-      url: "https://www.typescriptlang.org/docs/",
+      url: "https://www.typescriptlang.org/docs/handbook/intro.html",
       type: "free",
       description: "Official TypeScript documentation"
     },
     paid: {
-      title: "Understanding TypeScript - 2024 Edition",
+      title: "Understanding TypeScript",
       provider: "Udemy",
-      url: "https://udemy.com/course/understanding-typescript/?referralCode=CAREER2024",
+      url: "https://www.udemy.com/course/understanding-typescript/?couponCode=AFFILIATE_ID",
       type: "paid",
       description: "Master TypeScript from basics to advanced",
       rating: 4.8,
-      price: "$94.99"
+      price: "₹449 (on sale)"
     },
-    persuasiveMessage: "While free docs teach syntax, paid TypeScript courses provide real-world patterns, debugging techniques, and industry best practices that will make you a confident TypeScript developer."
+    persuasiveMessage: "TypeScript is in high demand. Free docs are helpful, but this affordable course builds confidence with step-by-step projects, for less than a weekend pizza bill."
   },
   "Node.js": {
     skill: "Node.js",
     description: "Build scalable backend applications",
     free: {
-      title: "Node.js Guide",
-      provider: "Node.js.org",
-      url: "https://nodejs.org/en/docs/guides/",
+      title: "Node.js Crash Course",
+      provider: "YouTube",
+      url: "https://www.youtube.com/watch?v=fBNz5xF-Kx4",
       type: "free",
-      description: "Official Node.js guides and documentation"
+      description: "Free Node.js tutorial for beginners"
     },
     paid: {
-      title: "The Complete Node.js Developer Course",
+      title: "Node.js, Express, MongoDB Bootcamp",
       provider: "Udemy",
-      url: "https://udemy.com/course/the-complete-nodejs-developer-course-2/?referralCode=CAREER2024",
+      url: "https://www.udemy.com/course/nodejs-express-mongodb-bootcamp/?couponCode=AFFILIATE_ID",
       type: "paid",
-      description: "Build real Node.js apps and APIs",
-      rating: 4.6,
-      price: "$84.99"
+      description: "Complete backend development bootcamp",
+      rating: 4.9,
+      price: "₹449 (on sale)"
     },
-    persuasiveMessage: "Free Node.js resources cover basics, but paid courses teach you production-ready patterns, security best practices, and deployment strategies that employers actually want."
+    persuasiveMessage: "Node.js powers the backend of companies like Netflix. Free tutorials give basics, but this affordable bootcamp (₹449) takes you from zero to building full-stack apps with certificates."
   },
-  "AWS": {
-    skill: "AWS",
-    description: "Master cloud computing with Amazon Web Services",
+  "Express": {
+    skill: "Express",
+    description: "Learn the fastest Node.js web framework",
     free: {
-      title: "AWS Free Tier Training",
-      provider: "AWS Skill Builder",
-      url: "https://skillbuilder.aws/",
+      title: "Express.js Tutorial",
+      provider: "Express.js.org",
+      url: "https://expressjs.com/en/starter/installing.html",
       type: "free",
-      description: "Free AWS training courses and labs"
+      description: "Official Express.js getting started guide"
     },
     paid: {
-      title: "AWS Certified Solutions Architect",
-      provider: "A Cloud Guru",
-      url: "https://acloudguru.com/course/aws-certified-solutions-architect-associate-saa-c03?referralCode=CAREER2024",
+      title: "Node.js, Express, MongoDB Bootcamp",
+      provider: "Udemy",
+      url: "https://www.udemy.com/course/nodejs-express-mongodb-bootcamp/?couponCode=AFFILIATE_ID",
       type: "paid",
-      description: "Complete AWS certification prep course",
+      description: "Complete backend development with Express",
       rating: 4.9,
-      price: "$39/month"
+      price: "₹449 (on sale)"
     },
-    persuasiveMessage: "AWS certification is worth $130k+ average salary. Free resources are scattered, but structured paid courses provide certification-focused learning with hands-on labs and job-ready skills."
+    persuasiveMessage: "Express is the backbone of modern web APIs. This affordable course (₹449) teaches production-ready patterns used by top tech companies."
+  },
+  "MongoDB": {
+    skill: "MongoDB",
+    description: "Master NoSQL database development",
+    free: {
+      title: "MongoDB University",
+      provider: "MongoDB",
+      url: "https://university.mongodb.com/courses/M001/about",
+      type: "free",
+      description: "Free MongoDB basics course"
+    },
+    paid: {
+      title: "MongoDB Complete Developer Guide",
+      provider: "Udemy",
+      url: "https://www.udemy.com/course/mongodb-the-complete-developers-guide/?couponCode=AFFILIATE_ID",
+      type: "paid",
+      description: "Complete MongoDB course with real projects",
+      rating: 4.6,
+      price: "₹399-₹499"
+    },
+    persuasiveMessage: "MongoDB skills are highly valued. Free courses cover basics, but this affordable course (under ₹500) teaches advanced querying, indexing, and production deployment."
   }
 }
 
@@ -133,13 +175,13 @@ const getGenericCourseData = (skill: string): SkillCourseData => ({
   paid: {
     title: `Master ${skill} - Complete Course`,
     provider: "Udemy",
-    url: `https://www.udemy.com/courses/search/?q=${encodeURIComponent(skill)}&referralCode=CAREER2024`,
+    url: `https://www.udemy.com/courses/search/?q=${encodeURIComponent(skill)}&couponCode=AFFILIATE_ID`,
     type: "paid",
     description: `Comprehensive ${skill} course with projects`,
     rating: 4.5,
-    price: "$79.99"
+    price: "₹449 (on sale)"
   },
-  persuasiveMessage: `Free resources help you get started with ${skill}, but paid courses give you structured learning, real projects, expert guidance, and certificates to showcase your skills. Think of it as an investment in your career.`
+  persuasiveMessage: `Free resources help you get started with ${skill}, but this affordable course (₹449) gives you structured learning, real projects, expert guidance, and certificates. A small investment for huge career returns.`
 })
 
 interface SkillCourseDrawerProps {
@@ -198,7 +240,7 @@ export function SkillCourseDrawer({ skill, children }: SkillCourseDrawerProps) {
                 <div className="flex items-center space-x-2">
                   <BookOpen className="h-4 w-4 text-muted-foreground" />
                   <Badge variant="outline" className="text-green-600 border-green-600">
-                    Free - Quick Start
+                    Free – Quick Start
                   </Badge>
                 </div>
               </div>
@@ -225,7 +267,7 @@ export function SkillCourseDrawer({ skill, children }: SkillCourseDrawerProps) {
                 <div className="flex items-center space-x-2">
                   <Star className="h-4 w-4 text-primary" />
                   <Badge className="bg-primary text-primary-foreground">
-                    Recommended 🚀
+                    Paid – Deep Dive 🚀
                   </Badge>
                 </div>
                 {courseData.paid.rating && (
