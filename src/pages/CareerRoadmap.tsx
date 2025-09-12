@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
+import { SkillCourseDrawer } from "@/components/SkillCourseDrawer"
 
 interface RoadmapStep {
   id: string
@@ -330,9 +331,14 @@ export function CareerRoadmap() {
                               <div className="flex items-center justify-between">
                                 <div className="flex flex-wrap gap-1">
                                   {step.skills.map((skill, skillIndex) => (
-                                    <Badge key={skillIndex} variant="secondary" className="text-xs">
-                                      {skill}
-                                    </Badge>
+                                    <SkillCourseDrawer key={skillIndex} skill={skill}>
+                                      <Badge 
+                                        variant="secondary" 
+                                        className="text-xs cursor-pointer hover:bg-primary/20 transition-colors"
+                                      >
+                                        {skill}
+                                      </Badge>
+                                    </SkillCourseDrawer>
                                   ))}
                                 </div>
                                 <div className="flex items-center text-sm text-muted-foreground">
