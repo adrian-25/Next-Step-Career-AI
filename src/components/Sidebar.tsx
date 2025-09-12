@@ -6,18 +6,15 @@ import {
   FileText, 
   Route, 
   MessageSquare, 
-  Moon, 
-  Sun, 
   Bot,
   Sparkles,
   Target,
   Code,
   Users,
-  TrendingUp
+  TrendingUp,
+  Zap
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useTheme } from "@/components/ThemeProvider"
-import { Button } from "@/components/ui/button"
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: Home },
@@ -32,28 +29,29 @@ const navigation = [
 
 export function Sidebar() {
   const location = useLocation()
-  const { theme, setTheme } = useTheme()
 
   return (
     <motion.div 
       initial={{ x: -300 }}
       animate={{ x: 0 }}
-      className="flex h-screen w-64 flex-col bg-sidebar border-r border-sidebar-border"
+      className="flex h-screen w-64 flex-col glass border-r border-border/20 backdrop-blur-xl"
     >
       {/* Logo Section */}
-      <div className="flex h-20 items-center px-6 border-b border-sidebar-border">
+      <div className="flex h-20 items-center px-6 border-b border-border/20">
         <motion.div 
           className="flex items-center space-x-3"
           whileHover={{ scale: 1.05 }}
           transition={{ type: "spring", stiffness: 400, damping: 17 }}
         >
           <div className="relative">
-            <Bot className="h-8 w-8 text-sidebar-primary" />
+            <div className="p-2 rounded-xl neon-glow bg-primary/10">
+              <Zap className="h-6 w-6 text-primary" />
+            </div>
             <Sparkles className="absolute -top-1 -right-1 h-4 w-4 text-accent animate-pulse" />
           </div>
           <div>
             <h1 className="text-xl font-bold gradient-text">Next Step</h1>
-            <p className="text-sm text-sidebar-foreground/70">Career AI</p>
+            <p className="text-sm text-muted-foreground">Career AI</p>
           </div>
         </motion.div>
       </div>
@@ -72,40 +70,37 @@ export function Sidebar() {
               <NavLink
                 to={item.href}
                 className={cn(
-                  "flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200",
+                  "flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 group",
                   isActive
-                    ? "bg-sidebar-accent text-sidebar-primary shadow-glow-sm"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-primary"
+                    ? "bg-primary/20 text-primary border border-primary/30 neon-glow"
+                    : "text-muted-foreground hover:bg-surface-light hover:text-primary border border-transparent"
                 )}
               >
-                <item.icon className="h-5 w-5" />
+                <item.icon className={cn(
+                  "h-5 w-5 transition-all duration-300",
+                  isActive ? "text-primary" : "group-hover:text-primary"
+                )} />
                 <span className="font-medium">{item.name}</span>
+                {isActive && (
+                  <motion.div
+                    layoutId="activeIndicator"
+                    className="ml-auto w-2 h-2 rounded-full bg-primary animate-pulse"
+                  />
+                )}
               </NavLink>
             </motion.div>
           )
         })}
       </nav>
 
-      {/* Theme Toggle */}
-      <div className="p-4 border-t border-sidebar-border">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-          className="w-full justify-start space-x-2"
-        >
-          {theme === "light" ? (
-            <>
-              <Moon className="h-4 w-4" />
-              <span>Dark Mode</span>
-            </>
-          ) : (
-            <>
-              <Sun className="h-4 w-4" />
-              <span>Light Mode</span>
-            </>
-          )}
-        </Button>
+      {/* Footer */}
+      <div className="p-4 border-t border-border/20">
+        <div className="text-center">
+          <p className="text-xs text-muted-foreground">
+            Powered by{" "}
+            <span className="neon-text text-primary font-semibold">Gen-Z AI</span>
+          </p>
+        </div>
       </div>
     </motion.div>
   )
