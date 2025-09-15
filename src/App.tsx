@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Layout } from "@/components/Layout";
+import Index from "@/pages/Index";
+import { TopicsPage } from "@/pages/TopicsPage";
 import { Dashboard } from "@/pages/Dashboard";
 import { ResumeAnalyzer } from "@/pages/ResumeAnalyzer";
 import { CareerRoadmap } from "@/pages/CareerRoadmap";
@@ -25,16 +27,24 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="resume" element={<ResumeAnalyzer />} />
-              <Route path="roadmap" element={<CareerRoadmap />} />
-              <Route path="mentor" element={<AIMentor />} />
-              <Route path="jobs" element={<JobRecommendations />} />
-              <Route path="portfolio" element={<PortfolioSuggestions />} />
-              <Route path="networking" element={<NetworkingAssistant />} />
-              <Route path="analytics" element={<Analytics />} />
+            {/* Landing Page - No Layout */}
+            <Route path="/" element={<Index />} />
+            
+            {/* Topics Page - No Layout */}
+            <Route path="/topics" element={<TopicsPage />} />
+            
+            {/* App Pages - With Layout */}
+            <Route element={<Layout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/resume" element={<ResumeAnalyzer />} />
+              <Route path="/roadmap" element={<CareerRoadmap />} />
+              <Route path="/mentor" element={<AIMentor />} />
+              <Route path="/jobs" element={<JobRecommendations />} />
+              <Route path="/portfolio" element={<PortfolioSuggestions />} />
+              <Route path="/networking" element={<NetworkingAssistant />} />
+              <Route path="/analytics" element={<Analytics />} />
             </Route>
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
