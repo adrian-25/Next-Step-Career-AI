@@ -97,8 +97,7 @@ export function Sidebar() {
       <div className="p-4 border-t border-border/20">
         <div className="text-center">
           <p className="text-xs text-muted-foreground">
-            Powered by{" "}
-            <span className="neon-text text-primary font-semibold">Gen-Z AI</span>
+            Career AI Platform v2.0
           </p>
         </div>
       </div>

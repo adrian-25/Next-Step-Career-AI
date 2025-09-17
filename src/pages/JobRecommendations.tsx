@@ -18,44 +18,61 @@ interface JobMatch {
   type: string
   postedDate: string
   description: string
+  applyUrl: string
 }
 
 const mockJobs: JobMatch[] = [
   {
     id: "1",
     title: "Senior Frontend Developer",
-    company: "TechCorp Inc",
-    location: "San Francisco, CA",
-    salary: "$120k - $160k",
+    company: "Tata Consultancy Services",
+    location: "Bangalore, India",
+    salary: "₹15-25 LPA",
     fitPercentage: 92,
     skills: ["React", "TypeScript", "Next.js", "Tailwind CSS"],
     type: "Full-time",
     postedDate: "2 days ago",
-    description: "We're looking for a senior frontend developer to lead our web application development..."
+    description: "We're looking for a senior frontend developer to lead our web application development team in Bangalore.",
+    applyUrl: "https://www.naukri.com/job-listings"
   },
   {
     id: "2", 
-    title: "Full Stack Engineer",
-    company: "StartupXYZ",
-    location: "New York, NY",
-    salary: "$100k - $140k",
+    title: "Full Stack Developer",
+    company: "Flipkart",
+    location: "Hyderabad, India",
+    salary: "₹12-20 LPA",
     fitPercentage: 87,
-    skills: ["Node.js", "React", "PostgreSQL", "AWS"],
+    skills: ["Node.js", "React", "MongoDB", "AWS"],
     type: "Full-time",
     postedDate: "1 week ago",
-    description: "Join our fast-growing startup as a full stack engineer. You'll work on cutting-edge projects..."
+    description: "Join Flipkart's tech team as a full stack developer. Work on high-scale e-commerce solutions.",
+    applyUrl: "https://www.flipkartcareers.com/"
   },
   {
     id: "3",
     title: "React Developer",
-    company: "Digital Agency Pro",
-    location: "Remote",
-    salary: "$80k - $120k",
+    company: "Zomato",
+    location: "Remote/Gurgaon",
+    salary: "₹8-15 LPA",
     fitPercentage: 79,
     skills: ["React", "JavaScript", "CSS", "Git"],
-    type: "Contract",
+    type: "Full-time",
     postedDate: "3 days ago",
-    description: "Remote React developer position for building modern web applications for various clients..."
+    description: "Remote React developer position for building food-tech applications with millions of users.",
+    applyUrl: "https://www.zomato.com/careers"
+  },
+  {
+    id: "4",
+    title: "Software Engineer",
+    company: "Paytm",
+    location: "Noida, India",
+    salary: "₹10-18 LPA",
+    fitPercentage: 74,
+    skills: ["Java", "React", "Spring Boot", "MySQL"],
+    type: "Full-time", 
+    postedDate: "5 days ago",
+    description: "Develop innovative fintech solutions at Paytm. Work with cutting-edge payment technologies.",
+    applyUrl: "https://jobs.paytm.com/"
   }
 ]
 
@@ -286,7 +303,10 @@ export function JobRecommendations() {
                         </div>
 
                         <div className="flex flex-col gap-2 min-w-[120px]">
-                          <Button className="w-full gradient-bg text-white">
+                          <Button 
+                            className="w-full gradient-bg text-white"
+                            onClick={() => window.open(job.applyUrl, '_blank')}
+                          >
                             <ExternalLink className="mr-2 h-4 w-4" />
                             Apply Now
                           </Button>
