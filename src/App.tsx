@@ -10,11 +10,13 @@ import { TopicsPage } from "@/pages/TopicsPage";
 import { Dashboard } from "@/pages/Dashboard";
 import { ResumeAnalyzer } from "@/pages/ResumeAnalyzer";
 import { CareerRoadmap } from "@/pages/CareerRoadmap";
-import { AIMentor } from "@/pages/AIMentor";
+import { CareerMentorPage } from "@/pages/CareerMentorPage";
+import { CareerChatbotPage } from "@/pages/CareerChatbotPage";
 import { JobRecommendations } from "@/pages/JobRecommendations";
 import { PortfolioSuggestions } from "@/pages/PortfolioSuggestions";
 import { NetworkingAssistant } from "@/pages/NetworkingAssistant";
 import { Analytics } from "@/pages/Analytics";
+import { Courses } from "@/pages/Courses";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,11 +40,13 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/resume" element={<ResumeAnalyzer />} />
               <Route path="/roadmap" element={<CareerRoadmap />} />
-              <Route path="/mentor" element={<AIMentor />} />
+              <Route path="/mentor" element={<CareerMentorPage />} />
+              <Route path="/chatbot" element={<CareerChatbotPage />} />
               <Route path="/jobs" element={<JobRecommendations />} />
               <Route path="/portfolio" element={<PortfolioSuggestions />} />
               <Route path="/networking" element={<NetworkingAssistant />} />
               <Route path="/analytics" element={<Analytics />} />
+              <Route path="/courses" element={<Courses />} />
             </Route>
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

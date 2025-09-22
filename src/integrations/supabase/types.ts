@@ -14,7 +14,122 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          id: string
+          email: string
+          full_name: string | null
+          avatar_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          email: string
+          full_name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          full_name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      user_skills: {
+        Row: {
+          id: string
+          user_id: string
+          skill_name: string
+          confidence: number
+          score: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          skill_name: string
+          confidence: number
+          score?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          skill_name?: string
+          confidence?: number
+          score?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      skill_suggestions: {
+        Row: {
+          id: string
+          user_id: string
+          skill_name: string
+          priority: "high" | "medium" | "low" | null
+          reason: string | null
+          recommended_action: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          skill_name: string
+          priority?: "high" | "medium" | "low" | null
+          reason?: string | null
+          recommended_action?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          skill_name?: string
+          priority?: "high" | "medium" | "low" | null
+          reason?: string | null
+          recommended_action?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      resume_analyses: {
+        Row: {
+          id: string
+          user_id: string
+          resume_text: string
+          target_role: string | null
+          experience_years: number | null
+          analysis_result: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          resume_text: string
+          target_role?: string | null
+          experience_years?: number | null
+          analysis_result: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          resume_text?: string
+          target_role?: string | null
+          experience_years?: number | null
+          analysis_result?: Json
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

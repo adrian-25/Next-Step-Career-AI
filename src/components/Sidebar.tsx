@@ -17,14 +17,14 @@ import {
 import { cn } from "@/lib/utils"
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: Home },
   { name: "Resume Analyzer", href: "/resume", icon: FileText },
   { name: "Career Roadmap", href: "/roadmap", icon: Route },
   { name: "AI Mentor", href: "/mentor", icon: MessageSquare },
   { name: "Job Recommendations", href: "/jobs", icon: Target },
   { name: "Portfolio Ideas", href: "/portfolio", icon: Code },
-  { name: "Networking", href: "/networking", icon: Users },
-  { name: "Analytics", href: "/analytics", icon: TrendingUp },
+  { name: "Networking Hub", href: "/networking", icon: Users },
+  { name: "Career Analytics", href: "/analytics", icon: TrendingUp },
+  { name: "Courses", href: "/courses", icon: Bot },
 ]
 
 export function Sidebar() {
@@ -93,11 +93,13 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Footer */}
+      {/* About Section */}
       <div className="p-4 border-t border-border/20">
-        <div className="text-center">
-          <p className="text-xs text-muted-foreground">
-            Career AI Platform v2.0
+        <div className="text-xs text-muted-foreground space-y-2">
+          <p className="font-semibold text-foreground">About</p>
+          <p>
+            This platform was built by Adrian, focused on empowering professionals with
+            AI-driven career guidance, resume tools, job matching, and analytics.
           </p>
         </div>
       </div>

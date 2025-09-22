@@ -1,12 +1,19 @@
 import React, { useState, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Upload, FileText, CheckCircle, AlertCircle, TrendingUp, Target, Star, DollarSign, BarChart3, ExternalLink, BookOpen } from "lucide-react"
+import { Upload, FileText, CheckCircle, AlertCircle, TrendingUp, Target, Star, DollarSign, BarChart3, ExternalLink, BookOpen, ChevronsUpDown, Check, Calendar, Briefcase, FolderOpen } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { SkillAnalyzerCard, SkillAnalysis } from "@/components/SkillAnalyzerCard"
+import { ResumeAnalysisService } from "@/lib/resumeAnalysisService"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { CareerMentor } from "@/components/CareerMentor"
+import { CareerChatbot } from "@/components/CareerChatbot"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 
 interface SkillSuggestion {
   skill: string
@@ -49,11 +56,21 @@ interface AnalysisResult {
   trendingSkills: string[]
 }
 
+const TOP_CS_ROLES = [
+  "Software Engineer", "Data Scientist", "AI/ML Engineer", "Cloud Engineer", "Cybersecurity Specialist", "Game Developer", "Web Developer", "Mobile App Developer", "Database Administrator", "DevOps Engineer", "UI/UX Designer", "Product Manager", "IT Project Manager", "Systems Architect", "Blockchain Developer", "Research Scientist", "QA Engineer", "Network Engineer", "Business Analyst"
+]
+
 export function EnhancedResumeAnalyzer() {
   const [file, setFile] = useState<File | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null)
+  const [skillAnalysis, setSkillAnalysis] = useState<SkillAnalysis | null>(null)
   const [selectedSkill, setSelectedSkill] = useState<SkillSuggestion | null>(null)
+  const [resumeText, setResumeText] = useState<string>("")
+  const [targetRole, setTargetRole] = useState<string>("")
+  const [userSkills, setUserSkills] = useState<string[]>([])
+  const [roleOpen, setRoleOpen] = useState(false)
+  const [portfolioGoal, setPortfolioGoal] = useState<string>("")
   const { toast } = useToast()
 
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,90 +94,145 @@ export function EnhancedResumeAnalyzer() {
 
     setIsAnalyzing(true)
     
-    // Realistic scoring system
-    setTimeout(() => {
-      const categoryScores = {
-        skills: Math.floor(Math.random() * 40) + 60, // 60-100
-        experience: Math.floor(Math.random() * 30) + 50, // 50-80
-        formatting: Math.floor(Math.random() * 30) + 70, // 70-100
-        grammar: Math.floor(Math.random() * 20) + 80, // 80-100
-        links: Math.floor(Math.random() * 40) + 40, // 40-80
-      }
+    try {
+      const text = await extractTextFromFile(file)
+      setResumeText(text)
       
-      // Calculate weighted total score
-      const totalScore = Math.round(
-        (categoryScores.skills * 0.35) +
-        (categoryScores.experience * 0.25) +
-        (categoryScores.formatting * 0.20) +
-        (categoryScores.grammar * 0.10) +
-        (categoryScores.links * 0.10)
-      )
+      const [legacyAnalysis, skillAnalysisResult] = await Promise.all([
+        runLegacyAnalysis(),
+        ResumeAnalysisService.analyzeResume({
+          resume_text: text,
+          target_role: targetRole || undefined,
+          user_id: "demo-user"
+        })
+      ])
       
-      setAnalysis({
-        score: totalScore,
-        categoryScores,
-        strengths: totalScore > 75 ? [
-          "Strong technical skills alignment",
-          "Good project portfolio documentation",
-          "Clear career progression shown",
-          "Solid educational foundation"
-        ] : [
-          "Has relevant technical experience",
-          "Shows some project involvement",
-          "Educational background present"
-        ],
-        improvements: [
-          { text: "Add more specific metrics and quantifiable achievements", clickable: false },
-          { text: "Include relevant certifications or continuing education", clickable: false },
-          { text: "Learn AWS for cloud expertise", clickable: true, skill: "AWS" },
-          { text: "Master Docker and containerization", clickable: true, skill: "Docker" }
-        ],
-        jobFit: {
-          role: "Senior Frontend Developer",
-          matchPercentage: 92,
-          skills: ["React", "TypeScript", "JavaScript", "CSS", "HTML", "Git"],
-          salaryRange: "$85,000 - $120,000",
-          demandLevel: "High",
-          readinessScore: 88
-        },
-        suggestions: [
-          "Consider adding AWS or cloud platform experience",
-          "Highlight leadership and mentoring experience more prominently",
-          "Include specific examples of problem-solving and impact"
-        ],
-        skillSuggestions: [
-          {
-            skill: "AWS",
-            reason: "Cloud skills are in high demand and can increase salary by 25%",
-            impact: "Opens opportunities at top tech companies",
-            courses: {
-              free: { name: "AWS Free Tier Training", url: "https://aws.amazon.com/training/" },
-              paid: { name: "AWS Solutions Architect Course", url: "https://udemy.com/aws-architect", price: "₹449" }
-            }
-          },
-          {
-            skill: "Docker", 
-            reason: "Containerization is essential for modern development workflows",
-            impact: "Increases job market fit by 40%",
-            courses: {
-              free: { name: "Docker Official Tutorial", url: "https://docs.docker.com/get-started/" },
-              paid: { name: "Complete Docker Mastery", url: "https://udemy.com/docker-mastery", price: "₹399" }
-            }
-          }
-        ],
-        salaryBenchmark: {
-          current: 800000, // ₹8,00,000
-          potential: 1200000, // ₹12,00,000
-          afterImprovement: 1500000 // ₹15,00,000
-        },
-        trendingSkills: ["Next.js", "GraphQL", "Kubernetes", "Terraform", "Microservices"]
-      })
-      setIsAnalyzing(false)
+      setAnalysis(legacyAnalysis)
+      setSkillAnalysis(skillAnalysisResult)
+      
       toast({
         title: "Enhanced analysis complete!",
         description: "Your resume has been analyzed with advanced AI insights.",
       })
-    }, 3000)
+    } catch (error) {
+      console.error('Analysis error:', error)
+      toast({
+        title: "Analysis failed",
+        description: "There was an error analyzing your resume. Please try again.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
+  const extractTextFromFile = async (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const mockText = `
+          John Doe
+          Senior Software Engineer
+          
+          Experience:
+          - 5 years developing web applications with React and Node.js
+          - Led team of 4 developers on e-commerce platform
+          - Improved application performance by 40%
+          - Implemented CI/CD pipelines using Docker and AWS
+          
+          Skills:
+          - JavaScript, TypeScript, React, Node.js
+          - Python, SQL, MongoDB
+          - AWS, Docker, Git
+          - Agile methodologies
+          
+          Education:
+          - BS Computer Science, University of Technology
+        `
+        resolve(mockText)
+      }
+      reader.readAsText(file)
+    })
+  }
+
+  const runLegacyAnalysis = async (): Promise<AnalysisResult> => {
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    const categoryScores = {
+      skills: Math.floor(Math.random() * 40) + 60,
+      experience: Math.floor(Math.random() * 30) + 50,
+      formatting: Math.floor(Math.random() * 30) + 70,
+      grammar: Math.floor(Math.random() * 20) + 80,
+      links: Math.floor(Math.random() * 40) + 40,
+    }
+    
+    const totalScore = Math.round(
+      (categoryScores.skills * 0.35) +
+      (categoryScores.experience * 0.25) +
+      (categoryScores.formatting * 0.20) +
+      (categoryScores.grammar * 0.10) +
+      (categoryScores.links * 0.10)
+    )
+    
+    return {
+      score: totalScore,
+      categoryScores,
+      strengths: totalScore > 75 ? [
+        "Strong technical skills alignment",
+        "Good project portfolio documentation",
+        "Clear career progression shown",
+        "Solid educational foundation"
+      ] : [
+        "Has relevant technical experience",
+        "Shows some project involvement",
+        "Educational background present"
+      ],
+      improvements: [
+        { text: "Add more specific metrics and quantifiable achievements", clickable: false },
+        { text: "Include relevant certifications or continuing education", clickable: false },
+        { text: "Learn AWS for cloud expertise", clickable: true, skill: "AWS" },
+        { text: "Master Docker and containerization", clickable: true, skill: "Docker" }
+      ],
+      jobFit: {
+        role: targetRole || "Senior Frontend Developer",
+        matchPercentage: 92,
+        skills: ["React", "TypeScript", "JavaScript", "CSS", "HTML", "Git"],
+        salaryRange: "$85,000 - $120,000",
+        demandLevel: "High",
+        readinessScore: 88
+      },
+      suggestions: [
+        "Consider adding AWS or cloud platform experience",
+        "Highlight leadership and mentoring experience more prominently",
+        "Include specific examples of problem-solving and impact"
+      ],
+      skillSuggestions: [
+        {
+          skill: "AWS",
+          reason: "Cloud skills are in high demand and can increase salary by 25%",
+          impact: "Opens opportunities at top tech companies",
+          courses: {
+            free: { name: "AWS Free Tier Training", url: "https://aws.amazon.com/training/" },
+            paid: { name: "AWS Solutions Architect Course", url: "https://udemy.com/aws-architect", price: "₹449" }
+          }
+        },
+        {
+          skill: "Docker", 
+          reason: "Containerization is essential for modern development workflows",
+          impact: "Increases job market fit by 40%",
+          courses: {
+            free: { name: "Docker Official Tutorial", url: "https://docs.docker.com/get-started/" },
+            paid: { name: "Complete Docker Mastery", url: "https://udemy.com/docker-mastery", price: "₹399" }
+          }
+        }
+      ],
+      salaryBenchmark: {
+        current: 800000,
+        potential: 1200000,
+        afterImprovement: 1500000
+      },
+      trendingSkills: ["Next.js", "GraphQL", "Kubernetes", "Terraform", "Microservices"]
+    }
   }
 
   const openSkillModal = (skill: SkillSuggestion) => {
@@ -170,6 +242,377 @@ export function EnhancedResumeAnalyzer() {
   const resetAnalysis = () => {
     setFile(null)
     setAnalysis(null)
+    setSkillAnalysis(null)
+    setResumeText("")
+    setTargetRole("")
+    setUserSkills([])
+    setPortfolioGoal("")
+  }
+
+  const handleAddSkill = async (skillName: string) => {
+    try {
+      await ResumeAnalysisService.addUserSkill("demo-user", skillName, 0.5)
+      setUserSkills(prev => [...prev, skillName])
+      toast({
+        title: "Skill added!",
+        description: `${skillName} has been added to your profile.`,
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add skill. Please try again.",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleAddToLearningPlan = (skillName: string) => {
+    toast({
+      title: "Added to learning plan",
+      description: `${skillName} has been added to your learning plan.`,
+    })
+  }
+
+  const roleSpecificRecommendations = (role: string) => {
+    const lower = role.toLowerCase()
+    if (lower.includes("data") || lower.includes("ml")) {
+      return {
+        missingCerts: ["Google Data Analytics", "AWS Machine Learning Specialty"],
+        projectIdeas: ["End-to-end ML pipeline on Kaggle dataset", "Deploy a FastAPI inference service on AWS"],
+        missingCore: ["Pandas", "Scikit-learn", "TensorFlow/PyTorch", "SQL", "Statistics"]
+      }
+    }
+    if (lower.includes("cloud") || lower.includes("devops")) {
+      return {
+        missingCerts: ["AWS Solutions Architect Associate", "CKA (Kubernetes Administrator)"],
+        projectIdeas: ["IaC with Terraform for a 3-tier app", "CI/CD pipeline with GitHub Actions + EKS"],
+        missingCore: ["AWS", "Docker", "Kubernetes", "Terraform", "Linux"]
+      }
+    }
+    if (lower.includes("cyber")) {
+      return {
+        missingCerts: ["CompTIA Security+", "Certified Ethical Hacker (CEH)"],
+        projectIdeas: ["Home lab with SIEM", "Vulnerability assessment on DVWA"],
+        missingCore: ["Networking", "Linux", "OWASP Top 10", "Threat modeling"]
+      }
+    }
+    if (lower.includes("mobile")) {
+      return {
+        missingCerts: ["Google Associate Android Developer"],
+        projectIdeas: ["React Native app with offline sync", "Flutter app consuming GraphQL"],
+        missingCore: ["React Native/Flutter", "State management", "App store deployment"]
+      }
+    }
+    return {
+      missingCerts: ["Scrum Fundamentals", "AWS Cloud Practitioner"],
+      projectIdeas: ["Full-stack app with auth and payments", "Refactor to TypeScript + tests"],
+      missingCore: ["TypeScript", "Testing (Jest)", "System design basics"]
+    }
+  }
+
+  const generateRoadmap = (role: string) => {
+    const lower = (role || "Software Engineer").toLowerCase()
+    const base = {
+      beginner: { months: "3–6", skills: ["Programming fundamentals", "Git", "Data structures"], tags: ["HTML", "CSS", "JS"] },
+      intermediate: { months: "6–12", skills: ["Build 2–3 projects", "APIs & databases", "Testing"], tags: ["TypeScript", "Node.js", "SQL"] },
+      advanced: { months: "12+", skills: ["System design", "Cloud & CI/CD", "Optimization"], tags: ["AWS", "Docker", "Design Patterns"] },
+      certs: ["AWS Cloud Practitioner"],
+      projects: ["End-to-end product with auth, payments, and analytics"]
+    }
+    if (lower.includes("data") || lower.includes("ml")) {
+      return {
+        title: `Career Roadmap for ${role}`,
+        beginner: { months: "3–6", skills: ["Python", "Pandas", "SQL", "Statistics"], tags: ["Python", "Pandas", "SQL"] },
+        intermediate: { months: "6–12", skills: ["Scikit-learn", "EDA", "Feature engineering", "Visualization"], tags: ["scikit-learn", "Matplotlib", "Seaborn"] },
+        advanced: { months: "12+", skills: ["Deep Learning", "MLOps", "Cloud deployment"], tags: ["PyTorch", "TensorFlow", "AWS Sagemaker"] },
+        certs: ["Google Data Analytics", "AWS ML Specialty"],
+        projects: ["Kaggle pipeline", "ML API on cloud", "Dashboard analytics app"]
+      }
+    }
+    if (lower.includes("cloud") || lower.includes("devops")) {
+      return {
+        title: `Career Roadmap for ${role}`,
+        beginner: { months: "3–6", skills: ["Linux", "Networking", "Git", "Scripting"], tags: ["Linux", "Bash", "Git"] },
+        intermediate: { months: "6–12", skills: ["Cloud services", "Containers", "IaC"], tags: ["AWS", "Docker", "Terraform"] },
+        advanced: { months: "12+", skills: ["Kubernetes", "Observability", "Cost optimization"], tags: ["EKS", "Prometheus", "Grafana"] },
+        certs: ["AWS SAA", "CKA"],
+        projects: ["3-tier IaC", "GitOps pipeline", "Autoscaling microservices"]
+      }
+    }
+    return {
+      title: `Career Roadmap for ${role || 'Software Engineer'}`,
+      ...base
+    }
+  }
+
+  const generateJobRecommendations = (role: string) => {
+    const lower = (role || "Software Engineer").toLowerCase()
+    if (lower.includes("data") || lower.includes("ml")) {
+      return [
+        { title: "Data Analyst", level: "Entry", salary: "₹5L–₹10L", skills: ["SQL", "Excel", "Pandas"], resp: ["Build dashboards", "Analyze trends", "Support decisions"] },
+        { title: "Machine Learning Engineer", level: "Mid", salary: "₹12L–₹25L", skills: ["Python", "scikit-learn", "ML pipelines"], resp: ["Train models", "Deploy services", "Monitor drift"] },
+        { title: "Data Scientist", level: "Mid/Senior", salary: "₹15L–₹35L", skills: ["Stats", "ML", "Visualization"], resp: ["Experimentation", "Feature engineering", "Insights"] }
+      ]
+    }
+    if (lower.includes("cloud") || lower.includes("devops")) {
+      return [
+        { title: "Cloud Engineer", level: "Mid", salary: "₹12L–₹28L", skills: ["AWS", "Networking", "IaC"], resp: ["Design cloud infra", "Security baselines", "Cost mgmt"] },
+        { title: "DevOps Engineer", level: "Mid", salary: "₹12L–₹26L", skills: ["CI/CD", "Docker", "Kubernetes"], resp: ["Build pipelines", "Automate deployments", "Observability"] },
+        { title: "SRE", level: "Senior", salary: "₹20L–₹40L", skills: ["Reliability", "Monitoring", "On-call"], resp: ["SLIs/SLOs", "Incident response", "Capacity planning"] }
+      ]
+    }
+    return [
+      { title: "Frontend Engineer", level: "Entry/Mid", salary: "₹6L–₹18L", skills: ["React", "TypeScript", "CSS"], resp: ["Build UI", "Optimize performance", "Collaborate with backend"] },
+      { title: "Backend Engineer", level: "Mid", salary: "₹10L–₹22L", skills: ["Node.js", "SQL/NoSQL", "APIs"], resp: ["Design APIs", "Data modeling", "Scalability"] },
+      { title: "Full Stack Engineer", level: "Mid", salary: "₹12L–₹24L", skills: ["React", "Node.js", "Cloud"], resp: ["End-to-end features", "Testing", "Deployment"] }
+    ]
+  }
+
+  const generatePortfolioSuggestions = (role: string, goal: string) => {
+    const lower = (role || "Software Engineer").toLowerCase()
+    const commonTip = "Add to your portfolio by showing project description, tech stack used, key challenges solved, and outcomes."
+    if (lower.includes("data") || lower.includes("ml")) {
+      return {
+        prompt: "What’s your career goal?",
+        items: [
+          { title: "ML Pipeline on Kaggle", level: "Intermediate", stack: ["Python", "Pandas", "scikit-learn"], features: ["EDA", "Feature engineering", "Model registry"], tip: commonTip },
+          { title: "Realtime Analytics Dashboard", level: "Advanced", stack: ["Python", "FastAPI", "Postgres", "React"], features: ["Ingestion", "Charts", "Auth"], tip: commonTip },
+          { title: "Image Classifier Service", level: "Intermediate", stack: ["PyTorch", "FastAPI", "Docker"], features: ["Training", "REST API", "Dockerfile"], tip: commonTip }
+        ]
+      }
+    }
+    if (lower.includes("cloud") || lower.includes("devops")) {
+      return {
+        prompt: "What’s your career goal?",
+        items: [
+          { title: "3-Tier Web App on AWS", level: "Intermediate", stack: ["AWS", "Terraform", "RDS", "ALB"], features: ["IaC", "Blue/green deploy", "Autoscaling"], tip: commonTip },
+          { title: "GitOps Microservices", level: "Advanced", stack: ["Docker", "Kubernetes", "ArgoCD"], features: ["CI/CD", "Helm", "Observability"], tip: commonTip },
+          { title: "Cost-Optimized Serverless", level: "Intermediate", stack: ["Lambda", "API Gateway", "DynamoDB"], features: ["Event-driven", "Monitoring", "Cost alerts"], tip: commonTip }
+        ]
+      }
+    }
+    return {
+      prompt: "What’s your career goal?",
+      items: [
+        { title: "AI-Powered Task Manager", level: "Intermediate", stack: ["React", "Node.js", "Postgres"], features: ["Auth", "Tasks CRUD", "Analytics"], tip: commonTip },
+        { title: "E-commerce Storefront", level: "Intermediate", stack: ["Next.js", "Stripe", "Prisma"], features: ["Checkout", "Catalog", "Admin"], tip: commonTip },
+        { title: "Social Feed App", level: "Beginner", stack: ["React", "Supabase"], features: ["Feeds", "Likes", "Profiles"], tip: commonTip }
+      ]
+    }
+  }
+
+  const renderRoleFitInsights = () => {
+    if (!analysis && !skillAnalysis) return null
+    const currentSkills = skillAnalysis ? skillAnalysis.user_skills.map(s => s.name) : userSkills
+    const suggestedSkills = skillAnalysis ? skillAnalysis.suggested_skills.map(s => s.name) : (analysis ? analysis.skillSuggestions.map(s => s.skill) : [])
+    const missing = suggestedSkills.filter(s => !currentSkills.includes(s))
+    const roleRecs = roleSpecificRecommendations(targetRole || analysis?.jobFit.role || "")
+
+    return (
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Target className="h-6 w-6 text-primary" />
+            <span>Role-Fit Insights {targetRole ? `for ${targetRole}` : ''}</span>
+          </CardTitle>
+          <CardDescription>
+            Strengths, gaps, and next steps tailored to your target role
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid md:grid-cols-3 gap-6">
+            <div>
+              <h4 className="font-semibold mb-2">Strengths</h4>
+              <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                {(analysis?.strengths || []).slice(0, 4).map((s, i) => (
+                  <li key={i}>{s}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">Skill Gaps</h4>
+              <div className="flex flex-wrap gap-2">
+                {missing.length > 0 ? missing.map((skill) => (
+                  <Badge key={skill} variant="secondary" className="text-xs">{skill}</Badge>
+                )) : <span className="text-sm text-muted-foreground">No major gaps detected</span>}
+              </div>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">Recommended Certifications</h4>
+              <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                {roleRecs.missingCerts.map((c, i) => (<li key={i}>{c}</li>))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="p-4 border rounded-lg">
+              <h4 className="font-semibold mb-2">Project Ideas</h4>
+              <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                {roleRecs.projectIdeas.map((p, i) => (<li key={i}>{p}</li>))}
+              </ul>
+            </div>
+            <div className="p-4 border rounded-lg">
+              <h4 className="font-semibold mb-2">Core Skills to Add</h4>
+              <div className="flex flex-wrap gap-2">
+                {roleRecs.missingCore.map((s) => (
+                  <Badge key={s} variant="outline" className="text-xs">{s}</Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <h4 className="font-semibold text-green-800 mb-2">Next 30–90 Days Roadmap</h4>
+            <ul className="list-disc pl-5 text-sm text-green-900 space-y-1">
+              <li>Pick 2 high-impact skills and follow a weekly plan</li>
+              <li>Build one portfolio project aligned with the role</li>
+              <li>Earn one relevant certification</li>
+              <li>Update resume with quantifiable, role-specific bullets</li>
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const renderCareerRoadmap = () => {
+    const roadmap = generateRoadmap(targetRole || analysis?.jobFit.role || "Software Engineer")
+    return (
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-primary" />
+            {roadmap.title}
+          </CardTitle>
+          <CardDescription>
+            Learning milestones, suggested timeline, certifications, and example projects
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex flex-wrap gap-2">
+            {roadmap.beginner.tags.map((t: string) => (<Badge key={`b-${t}`} variant="secondary" className="text-xs">{t}</Badge>))}
+            {roadmap.intermediate.tags.map((t: string) => (<Badge key={`i-${t}`} variant="secondary" className="text-xs">{t}</Badge>))}
+            {roadmap.advanced.tags.map((t: string) => (<Badge key={`a-${t}`} variant="secondary" className="text-xs">{t}</Badge>))}
+          </div>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="p-4 border rounded">
+              <h4 className="font-semibold mb-1">Beginner • {roadmap.beginner.months} months</h4>
+              <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                {roadmap.beginner.skills.map((s: string) => (<li key={s}>{s}</li>))}
+              </ul>
+            </div>
+            <div className="p-4 border rounded">
+              <h4 className="font-semibold mb-1">Intermediate • {roadmap.intermediate.months} months</h4>
+              <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                {roadmap.intermediate.skills.map((s: string) => (<li key={s}>{s}</li>))}
+              </ul>
+            </div>
+            <div className="p-4 border rounded">
+              <h4 className="font-semibold mb-1">Advanced • {roadmap.advanced.months} months</h4>
+              <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                {roadmap.advanced.skills.map((s: string) => (<li key={s}>{s}</li>))}
+              </ul>
+            </div>
+          </div>
+          <div>
+            <h4 className="font-semibold mb-2">Industry Certifications</h4>
+            <div className="flex flex-wrap gap-2">
+              {roadmap.certs.map((c: string) => (<Badge key={c} variant="outline" className="text-xs">{c}</Badge>))}
+            </div>
+          </div>
+          <div>
+            <h4 className="font-semibold mb-2">Example Projects</h4>
+            <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+              {roadmap.projects.map((p: string) => (<li key={p}>{p}</li>))}
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const renderJobRecommendations = () => {
+    const jobs = generateJobRecommendations(targetRole || analysis?.jobFit.role || "Software Engineer")
+    return (
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Briefcase className="h-5 w-5 text-primary" />
+            Job Recommendations
+          </CardTitle>
+          <CardDescription>
+            Roles aligned with your target, with required skills and typical responsibilities
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-4">
+            {jobs.map(job => (
+              <div key={job.title} className="p-4 border rounded">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-semibold">{job.title}</h4>
+                  <Badge variant="secondary" className="text-xs">Experience Level: {job.level}</Badge>
+                </div>
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {job.skills.map((s: string) => (<Badge key={`${job.title}-${s}`} variant="outline" className="text-xs">{s}</Badge>))}
+                </div>
+                <p className="text-xs text-muted-foreground mb-1">Approx. Salary: {job.salary}</p>
+                <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                  {job.resp.map((r: string, i: number) => (<li key={i}>{r}</li>))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const renderPortfolioSuggestions = () => {
+    const suggestions = generatePortfolioSuggestions(targetRole || analysis?.jobFit.role || "Software Engineer", portfolioGoal)
+    return (
+      <Card className="glass-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FolderOpen className="h-5 w-5 text-primary" />
+            Portfolio Suggestions
+          </CardTitle>
+          <CardDescription>
+            Tell us your goal to tailor portfolio ideas. No code/demo links—focus on what to build.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">What’s your career goal?</label>
+            <input
+              type="text"
+              value={portfolioGoal}
+              onChange={(e) => setPortfolioGoal(e.target.value)}
+              placeholder="e.g., Get a mid-level ${targetRole || 'Software Engineer'} role in 6 months"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            />
+          </div>
+          <div className="grid md:grid-cols-3 gap-4">
+            {suggestions.items.map((item) => (
+              <div key={item.title} className="p-4 border rounded">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-semibold">{item.title}</h4>
+                  <Badge variant="secondary" className="text-xs">Difficulty: {item.level}</Badge>
+                </div>
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {item.stack.map((s: string) => (<Badge key={`${item.title}-${s}`} variant="outline" className="text-xs">{s}</Badge>))}
+                </div>
+                <h5 className="font-medium text-sm mb-1">Features to implement</h5>
+                <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                  {item.features.map((f: string, i: number) => (<li key={i}>{f}</li>))}
+                </ul>
+                <p className="text-xs text-muted-foreground mt-2">{item.tip}</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -220,6 +663,57 @@ export function EnhancedResumeAnalyzer() {
                     </p>
                   </label>
                   
+                  {/* Target Role Input (Combobox) */}
+                  <div className="w-full max-w-md mx-auto mb-6 text-left">
+                    <label htmlFor="target-role" className="block text-sm font-medium mb-2">
+                      Target Role (Optional)
+                    </label>
+                    <Popover open={roleOpen} onOpenChange={setRoleOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          id="target-role"
+                          role="combobox"
+                          variant="outline"
+                          aria-expanded={roleOpen}
+                          className="w-full justify-between"
+                        >
+                          {targetRole ? targetRole : "Select or type a role"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                        <Command>
+                          <CommandInput placeholder="Search roles..." />
+                          <CommandList>
+                            <CommandEmpty>No role found.</CommandEmpty>
+                            <CommandGroup>
+                              {TOP_CS_ROLES.map((role) => (
+                                <CommandItem
+                                  key={role}
+                                  value={role}
+                                  onSelect={() => {
+                                    setTargetRole(role)
+                                    setRoleOpen(false)
+                                  }}
+                                >
+                                  <Check className={`mr-2 h-4 w-4 ${targetRole === role ? 'opacity-100' : 'opacity-0'}`} />
+                                  {role}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <input
+                      type="text"
+                      value={targetRole}
+                      onChange={(e) => setTargetRole(e.target.value)}
+                      placeholder="Or type your target role"
+                      className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    />
+                  </div>
+                  
                   {file && (
                     <div className="flex justify-center space-x-6 mt-8">
                       <Button onClick={analyzeResume} disabled={isAnalyzing} size="lg" className="gradient-bg px-8 py-4">
@@ -263,12 +757,22 @@ export function EnhancedResumeAnalyzer() {
 
           {/* Enhanced Analysis Results */}
           <AnimatePresence>
-            {analysis && (
+            {(analysis || skillAnalysis) && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-8"
               >
+                <Tabs defaultValue="overview" className="w-full">
+                  <TabsList className="grid w-full grid-cols-5">
+                    <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="skills">Skills Analysis</TabsTrigger>
+                    <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
+                    <TabsTrigger value="mentor">Career Mentor</TabsTrigger>
+                    <TabsTrigger value="chatbot">AI Chat</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="overview" className="space-y-8">
                 {/* Score and Salary Overview */}
                 <div className="grid md:grid-cols-2 gap-6">
                   <Card className="glass-card">
@@ -280,42 +784,42 @@ export function EnhancedResumeAnalyzer() {
                     </CardHeader>
                     <CardContent>
                       <div className="text-center mb-6">
-                        <div className="text-4xl font-bold gradient-text mb-2">{analysis.score}/100</div>
-                        <Progress value={analysis.score} className="mb-2" />
+                        <div className="text-4xl font-bold gradient-text mb-2">{analysis!.score}/100</div>
+                        <Progress value={analysis!.score} className="mb-2" />
                         <p className="text-sm text-muted-foreground">
-                          {analysis.score >= 80 ? "Excellent" : analysis.score >= 70 ? "Good" : analysis.score >= 60 ? "Average" : "Needs Improvement"}
+                          {analysis!.score >= 80 ? "Excellent" : analysis!.score >= 70 ? "Good" : analysis!.score >= 60 ? "Average" : "Needs Improvement"}
                         </p>
                       </div>
                       <div className="space-y-3 text-sm">
                         <div className="flex justify-between items-center">
                           <span>Skills Match (35%)</span>
-                          <span className="font-semibold">{analysis.categoryScores.skills}/100</span>
+                          <span className="font-semibold">{analysis!.categoryScores.skills}/100</span>
                         </div>
-                        <Progress value={analysis.categoryScores.skills} className="h-2" />
+                        <Progress value={analysis!.categoryScores.skills} className="h-2" />
                         
                         <div className="flex justify-between items-center">
                           <span>Experience (25%)</span>
-                          <span className="font-semibold">{analysis.categoryScores.experience}/100</span>
+                          <span className="font-semibold">{analysis!.categoryScores.experience}/100</span>
                         </div>
-                        <Progress value={analysis.categoryScores.experience} className="h-2" />
+                        <Progress value={analysis!.categoryScores.experience} className="h-2" />
                         
                         <div className="flex justify-between items-center">
                           <span>ATS Formatting (20%)</span>
-                          <span className="font-semibold">{analysis.categoryScores.formatting}/100</span>
+                          <span className="font-semibold">{analysis!.categoryScores.formatting}/100</span>
                         </div>
-                        <Progress value={analysis.categoryScores.formatting} className="h-2" />
+                        <Progress value={analysis!.categoryScores.formatting} className="h-2" />
                         
                         <div className="flex justify-between items-center">
                           <span>Grammar (10%)</span>
-                          <span className="font-semibold">{analysis.categoryScores.grammar}/100</span>
+                          <span className="font-semibold">{analysis!.categoryScores.grammar}/100</span>
                         </div>
-                        <Progress value={analysis.categoryScores.grammar} className="h-2" />
+                        <Progress value={analysis!.categoryScores.grammar} className="h-2" />
                         
                         <div className="flex justify-between items-center">
                           <span>Links/Portfolio (10%)</span>
-                          <span className="font-semibold">{analysis.categoryScores.links}/100</span>
+                          <span className="font-semibold">{analysis!.categoryScores.links}/100</span>
                         </div>
-                        <Progress value={analysis.categoryScores.links} className="h-2" />
+                        <Progress value={analysis!.categoryScores.links} className="h-2" />
                       </div>
                     </CardContent>
                   </Card>
@@ -332,20 +836,20 @@ export function EnhancedResumeAnalyzer() {
                         <div>
                           <div className="flex justify-between text-sm mb-1">
                             <span>Current Market Value</span>
-                            <span className="font-semibold">₹{(analysis.salaryBenchmark.current / 100000).toFixed(1)}L</span>
+                            <span className="font-semibold">₹{(analysis!.salaryBenchmark.current / 100000).toFixed(1)}L</span>
                           </div>
                           <Progress value={70} className="h-2" />
                         </div>
                         <div>
                           <div className="flex justify-between text-sm mb-1">
                             <span>With Improvements</span>
-                            <span className="font-semibold text-accent">₹{(analysis.salaryBenchmark.afterImprovement / 100000).toFixed(1)}L</span>
+                            <span className="font-semibold text-accent">₹{(analysis!.salaryBenchmark.afterImprovement / 100000).toFixed(1)}L</span>
                           </div>
                           <Progress value={95} className="h-2" />
                         </div>
                         <p className="text-sm text-muted-foreground">
                           Potential increase: <span className="text-accent font-semibold">
-                            ₹{((analysis.salaryBenchmark.afterImprovement - analysis.salaryBenchmark.current) / 100000).toFixed(1)}L
+                            ₹{((analysis!.salaryBenchmark.afterImprovement - analysis!.salaryBenchmark.current) / 100000).toFixed(1)}L
                           </span>
                         </p>
                         <p className="text-xs text-muted-foreground">
@@ -356,7 +860,7 @@ export function EnhancedResumeAnalyzer() {
                   </Card>
                 </div>
 
-                {/* Job Fit Analysis with Charts */}
+                {/* Job Market Analysis */}
                 <Card className="glass-card">
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
@@ -367,24 +871,36 @@ export function EnhancedResumeAnalyzer() {
                   <CardContent>
                     <div className="grid md:grid-cols-3 gap-6">
                       <div className="text-center">
-                        <div className="text-3xl font-bold mb-2">{analysis.jobFit.matchPercentage}%</div>
+                        <div className="text-3xl font-bold mb-2">{analysis!.jobFit.matchPercentage}%</div>
                         <p className="text-sm text-muted-foreground">Job Match</p>
-                        <Progress value={analysis.jobFit.matchPercentage} className="mt-2" />
+                        <Progress value={analysis!.jobFit.matchPercentage} className="mt-2" />
                       </div>
                       <div className="text-center">
-                        <div className="text-3xl font-bold mb-2">{analysis.jobFit.readinessScore}%</div>
+                        <div className="text-3xl font-bold mb-2">{analysis!.jobFit.readinessScore}%</div>
                         <p className="text-sm text-muted-foreground">Market Readiness</p>
-                        <Progress value={analysis.jobFit.readinessScore} className="mt-2" />
+                        <Progress value={analysis!.jobFit.readinessScore} className="mt-2" />
                       </div>
                       <div className="text-center">
-                        <Badge className={`${analysis.jobFit.demandLevel === 'High' ? 'bg-accent' : 'bg-warning'} text-white text-lg px-4 py-2`}>
-                          {analysis.jobFit.demandLevel} Demand
+                        <Badge className={`${analysis!.jobFit.demandLevel === 'High' ? 'bg-accent' : 'bg-warning'} text-white text-lg px-4 py-2`}>
+                          {analysis!.jobFit.demandLevel} Demand
                         </Badge>
-                        <p className="text-sm text-muted-foreground mt-2">{analysis.jobFit.salaryRange}</p>
+                        <p className="text-sm text-muted-foreground mt-2">{analysis!.jobFit.salaryRange}</p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Role-Fit Insights */}
+                {renderRoleFitInsights()}
+
+                {/* New: Career Roadmap */}
+                {renderCareerRoadmap()}
+
+                {/* New: Job Recommendations */}
+                {renderJobRecommendations()}
+
+                {/* New: Portfolio Suggestions */}
+                {renderPortfolioSuggestions()}
 
                 {/* Clickable Improvements */}
                 <Card className="glass-card">
@@ -398,7 +914,7 @@ export function EnhancedResumeAnalyzer() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {analysis.improvements.map((improvement, index) => (
+                    {analysis!.improvements.map((improvement, index) => (
                       <motion.div
                         key={index}
                         initial={{ opacity: 0, x: 20 }}
@@ -411,7 +927,7 @@ export function EnhancedResumeAnalyzer() {
                         }`}
                         onClick={() => {
                           if (improvement.clickable && improvement.skill) {
-                            const skillSuggestion = analysis.skillSuggestions.find(s => s.skill === improvement.skill)
+                            const skillSuggestion = analysis!.skillSuggestions.find(s => s.skill === improvement.skill)
                             if (skillSuggestion) openSkillModal(skillSuggestion)
                           }
                         }}
@@ -443,7 +959,7 @@ export function EnhancedResumeAnalyzer() {
                   </CardHeader>
                    <CardContent>
                      <div className="flex flex-wrap gap-3">
-                       {analysis.trendingSkills.map((skill) => (
+                       {analysis!.trendingSkills.map((skill) => (
                          <Badge 
                            key={skill} 
                            variant="outline" 
@@ -468,6 +984,106 @@ export function EnhancedResumeAnalyzer() {
                      </p>
                    </CardContent>
                 </Card>
+                  </TabsContent>
+                  
+                  <TabsContent value="skills" className="space-y-8">
+                    {skillAnalysis && (
+                      <SkillAnalyzerCard 
+                        analysis={skillAnalysis}
+                        onAddSkill={handleAddSkill}
+                        onAddToLearningPlan={handleAddToLearningPlan}
+                      />
+                    )}
+                  </TabsContent>
+                  
+                  <TabsContent value="recommendations" className="space-y-8">
+                    {skillAnalysis && (
+                      <div className="space-y-6">
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>AI-Powered Recommendations</CardTitle>
+                            <CardDescription>
+                              Personalized suggestions based on your resume analysis
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-4">
+                              {skillAnalysis.top_recommendations.map((rec, i) => (
+                                <div key={i} className="p-4 border rounded-lg">
+                                  <div className="flex items-start justify-between mb-2">
+                                    <h4 className="font-semibold text-sm">{rec.title}</h4>
+                                    <Badge 
+                                      variant="outline" 
+                                      className={`text-xs ${
+                                        rec.impact === 'high' ? 'bg-red-100 text-red-800 border-red-200' :
+                                        rec.impact === 'medium' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                                        'bg-green-100 text-green-800 border-green-200'
+                                      }`}
+                                    >
+                                      {rec.impact} impact
+                                    </Badge>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">{rec.details}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Resume Elevator Pitch</CardTitle>
+                            <CardDescription>
+                              Suggested summary for the top of your resume
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                              <p className="text-sm italic">"{skillAnalysis.resume_elevator_pitch}"</p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        
+                        <Card>
+                          <CardHeader>
+                            <CardTitle>Suggested Keywords</CardTitle>
+                            <CardDescription>
+                              Keywords to include in job applications
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="flex flex-wrap gap-2">
+                              {skillAnalysis.suggested_keywords.map((keyword, i) => (
+                                <Badge key={i} variant="secondary" className="text-xs">
+                                  {keyword}
+                                </Badge>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    )}
+                  </TabsContent>
+                  
+                  <TabsContent value="mentor" className="space-y-8">
+                    {skillAnalysis && (
+                      <CareerMentor 
+                        analysis={skillAnalysis}
+                        userSkills={userSkills}
+                        targetRole={targetRole}
+                        experienceYears={3}
+                      />
+                    )}
+                  </TabsContent>
+                  
+                  <TabsContent value="chatbot" className="space-y-8">
+                    <CareerChatbot 
+                      userSkills={userSkills}
+                      targetRole={targetRole}
+                      experienceYears={3}
+                    />
+                  </TabsContent>
+                </Tabs>
               </motion.div>
             )}
           </AnimatePresence>
