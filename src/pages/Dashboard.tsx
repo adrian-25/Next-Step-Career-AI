@@ -1,18 +1,24 @@
-import React from "react"
-import { motion } from "framer-motion"
-import { useNavigate } from "react-router-dom"
+import React from "react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { 
   FileText, 
   Route, 
   MessageSquare, 
   TrendingUp, 
   Users, 
-  Star,
-  ArrowRight,
-  Sparkles
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+  Star, 
+  ArrowRight, 
+  Sparkles 
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
 
 const features = [
   {
@@ -36,17 +42,17 @@ const features = [
     href: "/mentor",
     gradient: "from-secondary to-accent",
   },
-]
+];
 
 const stats = [
   { label: "Resumes Analyzed", value: "10,000+", icon: FileText },
   { label: "Career Paths", value: "500+", icon: Route },
   { label: "Success Rate", value: "94%", icon: TrendingUp },
   { label: "Happy Users", value: "2,500+", icon: Users },
-]
+];
 
 export function Dashboard() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-gradient-surface">
@@ -58,7 +64,7 @@ export function Dashboard() {
         transition={{ duration: 0.8 }}
       >
         <div className="max-w-4xl mx-auto text-center">
-          <motion.div
+          <motion.div 
             className="mb-6"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -66,10 +72,12 @@ export function Dashboard() {
           >
             <div className="inline-flex items-center space-x-2 bg-gradient-glow px-4 py-2 rounded-full border border-primary/20">
               <Sparkles className="h-4 w-4 text-primary animate-pulse" />
-              <span className="text-sm font-medium text-foreground">Powered by Advanced AI</span>
+              <span className="text-sm font-medium text-foreground">
+                Powered by Advanced AI
+              </span>
             </div>
           </motion.div>
-          
+
           <motion.h1 
             className="text-5xl md:text-6xl font-bold mb-6"
             initial={{ opacity: 0, y: 20 }}
@@ -79,7 +87,7 @@ export function Dashboard() {
             <span className="gradient-text">Next Step</span>{" "}
             <span className="text-foreground">Career AI</span>
           </motion.h1>
-          
+
           <motion.p 
             className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
@@ -89,7 +97,7 @@ export function Dashboard() {
             Accelerate your career growth with AI-powered insights, personalized roadmaps, 
             and expert mentorship. Your future starts here.
           </motion.p>
-          
+
           <motion.div 
             className="flex flex-col sm:flex-row gap-4 justify-center"
             initial={{ opacity: 0, y: 20 }}
@@ -101,7 +109,8 @@ export function Dashboard() {
               className="gradient-bg text-white hover:shadow-glow transition-all duration-300"
               onClick={() => navigate("/resume")}
             >
-              Analyze Resume <ArrowRight className="ml-2 h-4 w-4" />
+              Analyze Resume
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
             <Button 
               size="lg" 
@@ -125,7 +134,7 @@ export function Dashboard() {
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
-              <motion.div
+              <motion.div 
                 key={stat.label}
                 className="text-center"
                 initial={{ opacity: 0, y: 20 }}
@@ -135,8 +144,12 @@ export function Dashboard() {
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 mb-3">
                   <stat.icon className="h-6 w-6 text-primary" />
                 </div>
-                <div className="text-3xl font-bold text-foreground mb-1">{stat.value}</div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
+                <div className="text-3xl font-bold text-foreground mb-1">
+                  {stat.value}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {stat.label}
+                </div>
               </motion.div>
             ))}
           </div>
@@ -159,10 +172,10 @@ export function Dashboard() {
               Comprehensive tools and AI guidance to help you navigate your career journey with confidence.
             </p>
           </motion.div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <motion.div
+              <motion.div 
                 key={feature.title}
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -176,7 +189,9 @@ export function Dashboard() {
                     <div className={`inline-flex w-fit p-3 rounded-xl bg-gradient-to-br ${feature.gradient}`}>
                       <feature.icon className="h-6 w-6 text-white" />
                     </div>
-                    <CardTitle className="text-xl font-bold">{feature.title}</CardTitle>
+                    <CardTitle className="text-xl font-bold">
+                      {feature.title}
+                    </CardTitle>
                     <CardDescription className="text-muted-foreground leading-relaxed">
                       {feature.description}
                     </CardDescription>
@@ -197,5 +212,5 @@ export function Dashboard() {
         </div>
       </div>
     </div>
-  )
+  );
 }
