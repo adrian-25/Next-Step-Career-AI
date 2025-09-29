@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { SkillAnalyzerCard, SkillAnalysis } from "@/components/SkillAnalyzerCard"
 import { ResumeAnalysisService } from "@/lib/resumeAnalysisService"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CareerMentor } from "@/components/CareerMentor"
+// Removed CareerMentor import as the Mentor tab is no longer used
 import { CareerChatbot } from "@/components/CareerChatbot"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
@@ -764,11 +764,9 @@ export function EnhancedResumeAnalyzer() {
                 className="space-y-8"
               >
                 <Tabs defaultValue="overview" className="w-full">
-                  <TabsList className="grid w-full grid-cols-5">
+                  <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="overview">Overview</TabsTrigger>
                     <TabsTrigger value="skills">Skills Analysis</TabsTrigger>
-                    <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
-                    <TabsTrigger value="mentor">Career Mentor</TabsTrigger>
                     <TabsTrigger value="chatbot">AI Chat</TabsTrigger>
                   </TabsList>
                   
@@ -996,85 +994,7 @@ export function EnhancedResumeAnalyzer() {
                     )}
                   </TabsContent>
                   
-                  <TabsContent value="recommendations" className="space-y-8">
-                    {skillAnalysis && (
-                      <div className="space-y-6">
-                        <Card>
-                          <CardHeader>
-                            <CardTitle>AI-Powered Recommendations</CardTitle>
-                            <CardDescription>
-                              Personalized suggestions based on your resume analysis
-                            </CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="space-y-4">
-                              {skillAnalysis.top_recommendations.map((rec, i) => (
-                                <div key={i} className="p-4 border rounded-lg">
-                                  <div className="flex items-start justify-between mb-2">
-                                    <h4 className="font-semibold text-sm">{rec.title}</h4>
-                                    <Badge 
-                                      variant="outline" 
-                                      className={`text-xs ${
-                                        rec.impact === 'high' ? 'bg-red-100 text-red-800 border-red-200' :
-                                        rec.impact === 'medium' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
-                                        'bg-green-100 text-green-800 border-green-200'
-                                      }`}
-                                    >
-                                      {rec.impact} impact
-                                    </Badge>
-                                  </div>
-                                  <p className="text-sm text-muted-foreground">{rec.details}</p>
-                                </div>
-                              ))}
-                            </div>
-                          </CardContent>
-                        </Card>
-                        
-                        <Card>
-                          <CardHeader>
-                            <CardTitle>Resume Elevator Pitch</CardTitle>
-                            <CardDescription>
-                              Suggested summary for the top of your resume
-                            </CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                              <p className="text-sm italic">"{skillAnalysis.resume_elevator_pitch}"</p>
-                            </div>
-                          </CardContent>
-                        </Card>
-                        
-                        <Card>
-                          <CardHeader>
-                            <CardTitle>Suggested Keywords</CardTitle>
-                            <CardDescription>
-                              Keywords to include in job applications
-                            </CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="flex flex-wrap gap-2">
-                              {skillAnalysis.suggested_keywords.map((keyword, i) => (
-                                <Badge key={i} variant="secondary" className="text-xs">
-                                  {keyword}
-                                </Badge>
-                              ))}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    )}
-                  </TabsContent>
                   
-                  <TabsContent value="mentor" className="space-y-8">
-                    {skillAnalysis && (
-                      <CareerMentor 
-                        analysis={skillAnalysis}
-                        userSkills={userSkills}
-                        targetRole={targetRole}
-                        experienceYears={3}
-                      />
-                    )}
-                  </TabsContent>
                   
                   <TabsContent value="chatbot" className="space-y-8">
                     <CareerChatbot 

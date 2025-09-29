@@ -5,11 +5,9 @@ import {
   Home, 
   FileText, 
   Route, 
-  MessageSquare, 
   Bot,
   Sparkles,
   Target,
-  Code,
   Users,
   TrendingUp,
   Zap
@@ -19,9 +17,7 @@ import { cn } from "@/lib/utils"
 const navigation = [
   { name: "Resume Analyzer", href: "/resume", icon: FileText },
   { name: "Career Roadmap", href: "/roadmap", icon: Route },
-  { name: "AI Mentor", href: "/mentor", icon: MessageSquare },
   { name: "Job Recommendations", href: "/jobs", icon: Target },
-  { name: "Portfolio Ideas", href: "/portfolio", icon: Code },
   { name: "Networking Hub", href: "/networking", icon: Users },
   { name: "Career Analytics", href: "/analytics", icon: TrendingUp },
   { name: "Courses", href: "/courses", icon: Bot },
