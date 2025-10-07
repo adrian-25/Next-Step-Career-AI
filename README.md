@@ -1,18 +1,12 @@
-# Welcome to your Lovable project
+# Welcome to the project
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/b6ab9a9b-0aa7-4704-8ba9-a7de6433ac2f
-
+**URL**: ( https://momentum-mind-ai.vercel.app/ )
 ## How can I edit this code?
 
 There are several ways of editing your application.
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/b6ab9a9b-0aa7-4704-8ba9-a7de6433ac2f) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
 
 **Use your preferred IDE**
 
@@ -62,12 +56,10 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/b6ab9a9b-0aa7-4704-8ba9-a7de6433ac2f) and click on Share -> Publish.
+Simply open [vercel](https://momentum-mind-ai.vercel.app/) and click on Share -> Publish.
 
 ## Can I connect a custom domain to my Lovable project?
 
 Yes, you can!
 
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
