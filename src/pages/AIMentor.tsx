@@ -320,9 +320,9 @@ export function AIMentor() {
                         </Avatar>
                         <div className="bg-muted p-4 rounded-2xl">
                           <div className="flex space-x-1">
-                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
-                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
-                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
+                            <div className="w-3 h-3 bg-muted-foreground rounded-full animate-bounce" />
+                            <div className="w-3 h-3 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "0.1s" }} />
+                            <div className="w-3 h-3 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "0.2s" }} />
                           </div>
                         </div>
                       </motion.div>

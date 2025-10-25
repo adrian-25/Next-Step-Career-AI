@@ -9,7 +9,6 @@ import {
   Sparkles,
   Target,
   Users,
-  TrendingUp,
   Zap
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -19,7 +18,6 @@ const navigation = [
   { name: "Career Roadmap", href: "/roadmap", icon: Route },
   { name: "Job Recommendations", href: "/jobs", icon: Target },
   { name: "Networking Hub", href: "/networking", icon: Users },
-  { name: "Career Analytics", href: "/analytics", icon: TrendingUp },
   { name: "Courses", href: "/courses", icon: Bot },
 ]
 
@@ -80,7 +78,7 @@ export function Sidebar() {
                 {isActive && (
                   <motion.div
                     layoutId="activeIndicator"
-                    className="ml-auto w-2 h-2 rounded-full bg-primary animate-pulse"
+                    className="ml-auto w-3 h-3 rounded-full bg-primary animate-pulse"
                   />
                 )}
               </NavLink>
