@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { SkillAnalysis } from '@/components/SkillAnalyzerCard';
+import { MLTrainingService } from './mlTrainingService';
 
 // This would typically be your actual LLM API endpoint
 // For now, we'll use a mock implementation that follows the schema
@@ -295,5 +296,132 @@ export class ResumeAnalysisService {
     }
 
     return data || [];
+  }
+
+  /**
+   * Get ML model prediction for resume analysis
+   */
+  static async getMLPrediction(resumeText: string, targetRole?: string): Promise<number> {
+    try {
+      // Get latest training results to check if model is available
+      const latestResults = await MLTrainingService.getLatestTrainingResults();
+      
+      if (!latestResults) {
+        console.warn('No trained model available, using default confidence');
+        return 0.75; // Default confidence
+      }
+
+      // Extract features from resume text (same as training)
+      const features = this.extractFeaturesFromResume(resumeText, targetRole);
+      
+      // For now, return a mock prediction based on features
+      // In a real implementation, you would load the trained model and make predictions
+      const mockPrediction = this.mockMLPrediction(features);
+      
+      return mockPrediction;
+    } catch (error) {
+      console.error('Error getting ML prediction:', error);
+      return 0.75; // Fallback confidence
+    }
+  }
+
+  /**
+   * Extract features from resume text (same as training preprocessing)
+   */
+  private static extractFeaturesFromResume(resumeText: string, targetRole?: string): number[] {
+    const text = resumeText.toLowerCase();
+    const wordCount = text.split(/\s+/).length;
+    const charCount = text.length;
+    const hasEmail = text.includes('@') ? 1 : 0;
+    const hasPhone = /\d{3}[-.]?\d{3}[-.]?\d{4}/.test(text) ? 1 : 0;
+    const hasLinkedIn = text.includes('linkedin') ? 1 : 0;
+    const hasGithub = text.includes('github') ? 1 : 0;
+    
+    // Technical keywords
+    const techKeywords = [
+      'javascript', 'python', 'java', 'react', 'node', 'sql', 'aws', 'docker',
+      'kubernetes', 'git', 'typescript', 'angular', 'vue', 'mongodb', 'postgresql'
+    ];
+    
+    const techKeywordCount = techKeywords.reduce((count, keyword) => {
+      return count + (text.includes(keyword) ? 1 : 0);
+    }, 0);
+
+    // Estimate experience years from text
+    const experienceYears = this.estimateExperienceYears(text);
+
+    return [
+      wordCount / 1000,
+      charCount / 10000,
+      hasEmail,
+      hasPhone,
+      hasLinkedIn,
+      hasGithub,
+      experienceYears / 10,
+      techKeywordCount / 15
+    ];
+  }
+
+  /**
+   * Estimate experience years from resume text
+   */
+  private static estimateExperienceYears(text: string): number {
+    const yearPattern = /(\d+)\+?\s*years?/gi;
+    const matches = text.match(yearPattern);
+    
+    if (matches) {
+      const years = matches.map(match => {
+        const num = parseInt(match.replace(/\D/g, ''));
+        return isNaN(num) ? 0 : num;
+      });
+      return Math.max(...years);
+    }
+    
+    // Fallback: estimate based on keywords
+    if (text.includes('senior') || text.includes('lead')) return 5;
+    if (text.includes('mid') || text.includes('intermediate')) return 3;
+    if (text.includes('junior') || text.includes('entry')) return 1;
+    
+    return 2; // Default
+  }
+
+  /**
+   * Mock ML prediction based on features
+   */
+  private static mockMLPrediction(features: number[]): number {
+    // Simple weighted sum as mock prediction
+    const weights = [0.1, 0.05, 0.1, 0.05, 0.1, 0.1, 0.2, 0.3];
+    const prediction = features.reduce((sum, feature, index) => {
+      return sum + (feature * (weights[index] || 0));
+    }, 0);
+    
+    // Normalize to 0-1 range
+    return Math.max(0, Math.min(1, prediction));
+  }
+
+  /**
+   * Enhanced analyze resume with ML predictions
+   */
+  static async analyzeResumeWithML(request: ResumeAnalysisRequest): Promise<SkillAnalysis> {
+    // Get base analysis
+    const baseAnalysis = await this.analyzeResume(request);
+    
+    // Get ML prediction for confidence
+    const mlConfidence = await this.getMLPrediction(request.resume_text, request.target_role);
+    
+    // Enhance analysis with ML confidence
+    const enhancedAnalysis: SkillAnalysis = {
+      ...baseAnalysis,
+      metadata: {
+        model_confidence: mlConfidence
+      }
+    };
+    
+    // Save enhanced analysis to database
+    if (request.user_id) {
+      await this.saveAnalysisToDatabase(request.user_id, request, enhancedAnalysis);
+    }
+    
+    return enhancedAnalysis;
   }
 }

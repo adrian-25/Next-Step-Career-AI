@@ -9,7 +9,8 @@ import {
   Sparkles,
   Target,
   Users,
-  Zap
+  Zap,
+  Brain
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -18,6 +19,7 @@ const navigation = [
   { name: "Career Roadmap", href: "/roadmap", icon: Route },
   { name: "Job Recommendations", href: "/jobs", icon: Target },
   { name: "Networking Hub", href: "/networking", icon: Users },
+  { name: "ML Training", href: "/ml-training", icon: Brain },
   { name: "Courses", href: "/courses", icon: Bot },
 ]
 

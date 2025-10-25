@@ -15,6 +15,7 @@ import { CareerChatbotPage } from "@/pages/CareerChatbotPage";
 import { JobRecommendations } from "@/pages/JobRecommendations";
 import { PortfolioSuggestions } from "@/pages/PortfolioSuggestions";
 import { NetworkingAssistant } from "@/pages/NetworkingAssistant";
+import { MLTraining } from "@/pages/MLTraining";
 import { Courses } from "@/pages/Courses";
 import NotFound from "./pages/NotFound";
 
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/jobs" element={<JobRecommendations />} />
               <Route path="/portfolio" element={<PortfolioSuggestions />} />
               <Route path="/networking" element={<NetworkingAssistant />} />
+              <Route path="/ml-training" element={<MLTraining />} />
               <Route path="/courses" element={<Courses />} />
             </Route>
             
