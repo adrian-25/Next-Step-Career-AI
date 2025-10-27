@@ -7,33 +7,7 @@ import { Plus, ExternalLink, CheckCircle, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { SkillsComparisonChart } from "@/components/SkillsComparisonChart";
 
-export interface SkillAnalysis {
-  user_skills: Array<{
-    name: string;
-    confidence: number;
-  }>;
-  suggested_skills: Array<{
-    name: string;
-    priority: "high" | "medium" | "low";
-    reason: string;
-    recommended_action: string;
-  }>;
-  skills_chart: Array<{
-    name: string;
-    score: number;
-  }>;
-  top_recommendations: Array<{
-    title: string;
-    details: string;
-    impact: "low" | "medium" | "high";
-  }>;
-  resume_elevator_pitch: string;
-  suggested_keywords: string[];
-  summary_text: string;
-  metadata: {
-    model_confidence: number;
-  };
-}
+import { EnhancedSkillAnalysis } from "@/lib/enhancedResumeAnalysisService";
 
 interface UserSkill {
   name: string;
@@ -43,7 +17,7 @@ interface UserSkill {
 }
 
 interface SkillAnalyzerCardProps {
-  analysis: SkillAnalysis;
+  analysis: EnhancedSkillAnalysis;
   onAddSkill?: (skill: string) => void;
   onAddToLearningPlan?: (skill: string) => void;
 }

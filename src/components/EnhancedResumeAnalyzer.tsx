@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Upload, FileText, CheckCircle, AlertCircle, TrendingUp, Target, Star, DollarSign, BarChart3, ExternalLink, BookOpen, ChevronsUpDown, Check, Calendar, Briefcase, FolderOpen } from "lucide-react"
+import { Upload, FileText, CheckCircle, AlertCircle, TrendingUp, Target, Star, DollarSign, BarChart3, ExternalLink, BookOpen, ChevronsUpDown, Check, Calendar, Briefcase, FolderOpen, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { SkillAnalyzerCard, SkillAnalysis } from "@/components/SkillAnalyzerCard"
 import { ResumeAnalysisService } from "@/lib/resumeAnalysisService"
+import { EnhancedResumeAnalysisService, EnhancedSkillAnalysis } from "@/lib/enhancedResumeAnalysisService"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 // Removed CareerMentor import as the Mentor tab is no longer used
 import { CareerChatbot } from "@/components/CareerChatbot"
@@ -64,7 +65,7 @@ export function EnhancedResumeAnalyzer() {
   const [file, setFile] = useState<File | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null)
-  const [skillAnalysis, setSkillAnalysis] = useState<SkillAnalysis | null>(null)
+  const [skillAnalysis, setSkillAnalysis] = useState<EnhancedSkillAnalysis | null>(null)
   const [selectedSkill, setSelectedSkill] = useState<SkillSuggestion | null>(null)
   const [resumeText, setResumeText] = useState<string>("")
   const [targetRole, setTargetRole] = useState<string>("")
@@ -90,17 +91,17 @@ export function EnhancedResumeAnalyzer() {
   }, [toast])
 
   const analyzeResume = async () => {
-    if (!file) return
+    if (!file && !resumeText.trim()) return
 
     setIsAnalyzing(true)
     
     try {
-      const text = await extractTextFromFile(file)
+      const text = file ? await extractTextFromFile(file) : resumeText
       setResumeText(text)
       
       const [legacyAnalysis, skillAnalysisResult] = await Promise.all([
         runLegacyAnalysis(),
-        ResumeAnalysisService.analyzeResume({
+        EnhancedResumeAnalysisService.analyzeResume({
           resume_text: text,
           target_role: targetRole || undefined,
           user_id: "demo-user"
@@ -643,7 +644,7 @@ export function EnhancedResumeAnalyzer() {
                 <div className="text-center">
                   <input
                     type="file"
-                    accept=".pdf,.doc,.docx"
+                    accept=".pdf,.doc,.docx,.txt"
                     onChange={handleFileUpload}
                     className="hidden"
                     id="resume-upload"
@@ -714,7 +715,21 @@ export function EnhancedResumeAnalyzer() {
                     />
                   </div>
                   
-                  {file && (
+                  {/* Manual Resume Input */}
+                  <div className="w-full max-w-2xl mx-auto mb-6 text-left">
+                    <label htmlFor="resume-text" className="block text-sm font-medium mb-2">
+                      Or paste your resume content here:
+                    </label>
+                    <textarea
+                      id="resume-text"
+                      value={resumeText}
+                      onChange={(e) => setResumeText(e.target.value)}
+                      placeholder="Paste your resume content here for analysis..."
+                      className="w-full h-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-vertical"
+                    />
+                  </div>
+                  
+                  {(file || resumeText.trim()) && (
                     <div className="flex justify-center space-x-6 mt-8">
                       <Button onClick={analyzeResume} disabled={isAnalyzing} size="lg" className="gradient-bg px-8 py-4">
                         {isAnalyzing ? "Analyzing..." : "Analyze Resume"}
@@ -986,11 +1001,237 @@ export function EnhancedResumeAnalyzer() {
                   
                   <TabsContent value="skills" className="space-y-8">
                     {skillAnalysis && (
-                      <SkillAnalyzerCard 
-                        analysis={skillAnalysis}
-                        onAddSkill={handleAddSkill}
-                        onAddToLearningPlan={handleAddToLearningPlan}
-                      />
+                      <>
+                        {/* Enhanced Skill Analysis Overview */}
+                        <div className="grid md:grid-cols-3 gap-6">
+                          <Card className="glass-card">
+                            <CardHeader>
+                              <CardTitle className="flex items-center space-x-2">
+                                <Target className="h-6 w-6 text-primary" />
+                                <span>Skill Match Score</span>
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="text-center">
+                                <div className="text-4xl font-bold gradient-text mb-2">
+                                  {skillAnalysis.matchScore}%
+                                </div>
+                                <Progress value={skillAnalysis.matchScore} className="mb-2" />
+                                <p className="text-sm text-muted-foreground">
+                                  Match with {targetRole || 'target role'}
+                                </p>
+                              </div>
+                            </CardContent>
+                          </Card>
+
+                          <Card className="glass-card">
+                            <CardHeader>
+                              <CardTitle className="flex items-center space-x-2">
+                                <CheckCircle className="h-6 w-6 text-green-500" />
+                                <span>Matched Skills</span>
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="text-center">
+                                <div className="text-3xl font-bold text-green-600 mb-2">
+                                  {skillAnalysis.matchedSkills.length}
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  Skills found in resume
+                                </p>
+                                <div className="flex flex-wrap gap-1 mt-3 justify-center">
+                                  {skillAnalysis.matchedSkills.slice(0, 5).map((skill) => (
+                                    <Badge key={skill} variant="secondary" className="text-xs">
+                                      {skill}
+                                    </Badge>
+                                  ))}
+                                  {skillAnalysis.matchedSkills.length > 5 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      +{skillAnalysis.matchedSkills.length - 5} more
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+
+                          <Card className="glass-card">
+                            <CardHeader>
+                              <CardTitle className="flex items-center space-x-2">
+                                <AlertCircle className="h-6 w-6 text-warning" />
+                                <span>Missing Skills</span>
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="text-center">
+                                <div className="text-3xl font-bold text-warning mb-2">
+                                  {skillAnalysis.missingSkills.length}
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  Skills to learn
+                                </p>
+                                <div className="flex flex-wrap gap-1 mt-3 justify-center">
+                                  {skillAnalysis.missingSkills.slice(0, 5).map((skill) => (
+                                    <Badge key={skill} variant="destructive" className="text-xs">
+                                      {skill}
+                                    </Badge>
+                                  ))}
+                                  {skillAnalysis.missingSkills.length > 5 && (
+                                    <Badge variant="outline" className="text-xs">
+                                      +{skillAnalysis.missingSkills.length - 5} more
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
+
+                        {/* Critical Missing Skills */}
+                        {skillAnalysis.criticalMissingSkills.length > 0 && (
+                          <Card className="glass-card border-red-200 bg-red-50">
+                            <CardHeader>
+                              <CardTitle className="flex items-center space-x-2 text-red-800">
+                                <AlertCircle className="h-6 w-6 text-red-600" />
+                                <span>Critical Missing Skills</span>
+                              </CardTitle>
+                              <CardDescription className="text-red-700">
+                                These skills are essential for {targetRole || 'your target role'} and should be prioritized
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="grid md:grid-cols-2 gap-4">
+                                {skillAnalysis.criticalMissingSkills.map((skill) => {
+                                  const suggestion = skillAnalysis.suggested_skills.find(s => s.name === skill);
+                                  return (
+                                    <div key={skill} className="p-4 border border-red-200 rounded-lg bg-white">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <h4 className="font-semibold text-red-800">{skill}</h4>
+                                        <Badge className="bg-red-600 text-white">CRITICAL</Badge>
+                                      </div>
+                                      {suggestion && (
+                                        <>
+                                          <p className="text-sm text-red-700 mb-2">{suggestion.reason}</p>
+                                          <div className="flex gap-2">
+                                            <Button 
+                                              size="sm" 
+                                              variant="outline"
+                                              className="border-red-300 text-red-700 hover:bg-red-100"
+                                              onClick={() => handleAddSkill(skill)}
+                                            >
+                                              <Plus className="h-3 w-3 mr-1" />
+                                              Add to Profile
+                                            </Button>
+                                            <Button 
+                                              size="sm" 
+                                              variant="outline"
+                                              className="border-red-300 text-red-700 hover:bg-red-100"
+                                              onClick={() => {
+                                                const skillSuggestion = skillAnalysis.suggested_skills.find(s => s.name === skill);
+                                                if (skillSuggestion) {
+                                                  const skillSuggestionObj = {
+                                                    skill: skill,
+                                                    reason: skillSuggestion.reason,
+                                                    impact: "High impact on job prospects",
+                                                    courses: {
+                                                      free: { name: `${skill} Tutorial`, url: `https://www.udemy.com/courses/search/?q=${encodeURIComponent(skill)}` },
+                                                      paid: { name: `Complete ${skill} Course`, url: `https://www.udemy.com/courses/search/?q=${encodeURIComponent(skill)}`, price: '₹399' }
+                                                    }
+                                                  };
+                                                  setSelectedSkill(skillSuggestionObj);
+                                                }
+                                              }}
+                                            >
+                                              <ExternalLink className="h-3 w-3 mr-1" />
+                                              Learn More
+                                            </Button>
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {/* Important Missing Skills */}
+                        {skillAnalysis.importantMissingSkills.length > 0 && (
+                          <Card className="glass-card border-yellow-200 bg-yellow-50">
+                            <CardHeader>
+                              <CardTitle className="flex items-center space-x-2 text-yellow-800">
+                                <Star className="h-6 w-6 text-yellow-600" />
+                                <span>Important Missing Skills</span>
+                              </CardTitle>
+                              <CardDescription className="text-yellow-700">
+                                These skills will significantly improve your job prospects
+                              </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="grid md:grid-cols-3 gap-4">
+                                {skillAnalysis.importantMissingSkills.map((skill) => {
+                                  const suggestion = skillAnalysis.suggested_skills.find(s => s.name === skill);
+                                  return (
+                                    <div key={skill} className="p-4 border border-yellow-200 rounded-lg bg-white">
+                                      <div className="flex items-center justify-between mb-2">
+                                        <h4 className="font-semibold text-yellow-800">{skill}</h4>
+                                        <Badge className="bg-yellow-600 text-white">IMPORTANT</Badge>
+                                      </div>
+                                      {suggestion && (
+                                        <>
+                                          <p className="text-sm text-yellow-700 mb-2">{suggestion.reason}</p>
+                                          <div className="flex gap-2">
+                                            <Button 
+                                              size="sm" 
+                                              variant="outline"
+                                              className="border-yellow-300 text-yellow-700 hover:bg-yellow-100"
+                                              onClick={() => handleAddSkill(skill)}
+                                            >
+                                              <Plus className="h-3 w-3 mr-1" />
+                                              Add to Profile
+                                            </Button>
+                                            <Button 
+                                              size="sm" 
+                                              variant="outline"
+                                              className="border-yellow-300 text-yellow-700 hover:bg-yellow-100"
+                                              onClick={() => {
+                                                const skillSuggestion = skillAnalysis.suggested_skills.find(s => s.name === skill);
+                                                if (skillSuggestion) {
+                                                  const skillSuggestionObj = {
+                                                    skill: skill,
+                                                    reason: skillSuggestion.reason,
+                                                    impact: "Medium impact on job prospects",
+                                                    courses: {
+                                                      free: { name: `${skill} Tutorial`, url: `https://www.udemy.com/courses/search/?q=${encodeURIComponent(skill)}` },
+                                                      paid: { name: `Complete ${skill} Course`, url: `https://www.udemy.com/courses/search/?q=${encodeURIComponent(skill)}`, price: '₹399' }
+                                                    }
+                                                  };
+                                                  setSelectedSkill(skillSuggestionObj);
+                                                }
+                                              }}
+                                            >
+                                              <ExternalLink className="h-3 w-3 mr-1" />
+                                              Learn More
+                                            </Button>
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {/* All Skills Analysis */}
+                        <SkillAnalyzerCard 
+                          analysis={skillAnalysis}
+                          onAddSkill={handleAddSkill}
+                          onAddToLearningPlan={handleAddToLearningPlan}
+                        />
+                      </>
                     )}
                   </TabsContent>
                   

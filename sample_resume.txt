@@ -1,0 +1,30 @@
+John Smith
+Data Analyst
+john.smith@email.com | (555) 123-4567
+
+PROFESSIONAL SUMMARY
+Experienced data analyst with 3+ years of experience in Python, SQL, and data visualization. Proficient in pandas, numpy, and matplotlib for data analysis and reporting.
+
+TECHNICAL SKILLS
+- Python (pandas, numpy, matplotlib, seaborn)
+- SQL (MySQL, PostgreSQL)
+- Data Analysis and Statistics
+- Excel and Google Sheets
+- Git and GitHub
+- Jupyter Notebooks
+
+EXPERIENCE
+Data Analyst | Tech Company | 2021-2024
+- Analyzed large datasets using Python and SQL
+- Created data visualizations with matplotlib and seaborn
+- Collaborated with cross-functional teams
+- Used Git for version control
+
+EDUCATION
+Bachelor of Science in Computer Science
+University of Technology | 2020
+
+PROJECTS
+- Built a data analysis dashboard using Python and pandas
+- Created automated reports using SQL queries
+- Developed data visualization tools with matplotlib
