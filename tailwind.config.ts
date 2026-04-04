@@ -72,6 +72,11 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Premium AI SaaS Theme Colors
+        'dark-bg': '#0B0F1A',
+        'neon-green': '#B6FF00',
+        'card-bg': 'rgba(26, 31, 46, 0.6)',
+        'glass-border': 'rgba(182, 255, 0, 0.2)',
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -80,11 +85,17 @@ export default {
         xl: "var(--radius-lg)",
         "2xl": "var(--radius-xl)",
       },
+      backdropBlur: {
+        'glass': '12px',
+      },
       boxShadow: {
         'glow-sm': 'var(--shadow-sm)',
         'glow-md': 'var(--shadow-md)',
         'glow-lg': 'var(--shadow-lg)',
         'glow': 'var(--shadow-glow)',
+        // Premium AI SaaS Glow Effects
+        'neon-glow': '0 0 20px rgba(182, 255, 0, 0.3)',
+        'neon-glow-lg': '0 0 30px rgba(182, 255, 0, 0.5)',
       },
       backgroundImage: {
         'gradient-primary': 'var(--gradient-primary)',
@@ -113,10 +124,32 @@ export default {
             height: "0",
           },
         },
+        // Premium AI SaaS Animations
+        'float': {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-20px)' },
+        },
+        'orbit-glow': {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg)' },
+        },
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'slide-up': {
+          '0%': { opacity: '0', transform: 'translateY(30px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        // Premium AI SaaS Animations
+        'float': 'float 6s ease-in-out infinite',
+        'orbit-glow': 'orbit-glow 8s linear infinite',
+        'fade-in': 'fade-in 0.6s ease-out',
+        'slide-up': 'slide-up 0.6s ease-out',
       },
     },
   },

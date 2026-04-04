@@ -119,9 +119,14 @@ export class ResumeAnalysisService {
     // Add some randomization to make it feel more realistic
     const randomizedAnalysis = this.randomizeAnalysis(MOCK_ANALYSIS);
     
-    // Save analysis to database if user_id is provided
+    // Save analysis to database only if user_id is provided (optional in demo mode)
     if (request.user_id) {
-      await this.saveAnalysisToDatabase(request.user_id, request, randomizedAnalysis);
+      try {
+        await this.saveAnalysisToDatabase(request.user_id, request, randomizedAnalysis);
+      } catch (error) {
+        console.warn('Failed to save analysis to database (demo mode continues):', error);
+        // Continue without database storage in demo mode
+      }
     }
     
     return randomizedAnalysis;
@@ -417,9 +422,14 @@ export class ResumeAnalysisService {
       }
     };
     
-    // Save enhanced analysis to database
+    // Save enhanced analysis to database only if user_id is provided (optional in demo mode)
     if (request.user_id) {
-      await this.saveAnalysisToDatabase(request.user_id, request, enhancedAnalysis);
+      try {
+        await this.saveAnalysisToDatabase(request.user_id, request, enhancedAnalysis);
+      } catch (error) {
+        console.warn('Failed to save enhanced analysis to database (demo mode continues):', error);
+        // Continue without database storage in demo mode
+      }
     }
     
     return enhancedAnalysis;

@@ -379,6 +379,109 @@ export class AnalyticsService {
   }
 
   /**
+   * Get user-specific dashboard summary statistics
+   */
+  static async getUserDashboardStats(userId: string): Promise<{
+    totalPredictions: number;
+    averageSuccessRate: number;
+    topPerformingRoles: string[];
+    trendingSkills: string[];
+    recentActivity: number;
+  }> {
+    try {
+      // Get total predictions for user
+      const { count: totalPredictions, error: countError } = await supabase
+        .from('placement_predictions')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId);
+
+      if (countError) {
+        console.error('Error getting user prediction count:', countError);
+        throw new Error(`Failed to get user prediction count: ${countError.message}`);
+      }
+
+      // Get average success rate for user
+      const { data: predictionData, error: predictionError } = await supabase
+        .from('placement_predictions')
+        .select('predicted_probability')
+        .eq('user_id', userId);
+
+      if (predictionError) {
+        console.error('Error fetching user predictions for stats:', predictionError);
+        throw new Error(`Failed to fetch user predictions: ${predictionError.message}`);
+      }
+
+      const averageSuccessRate = predictionData && predictionData.length > 0
+        ? predictionData.reduce((sum, p) => sum + p.predicted_probability, 0) / predictionData.length
+        : 0;
+
+      // Get user's top roles (from their predictions)
+      const { data: roleData, error: roleError } = await supabase
+        .from('placement_predictions')
+        .select('target_role, predicted_probability')
+        .eq('user_id', userId);
+
+      if (roleError) {
+        console.error('Error fetching user roles:', roleError);
+        throw new Error(`Failed to fetch user roles: ${roleError.message}`);
+      }
+
+      // Calculate average probability per role for this user
+      const roleStats = roleData?.reduce((acc: any, pred) => {
+        if (!acc[pred.target_role]) {
+          acc[pred.target_role] = { total: 0, count: 0 };
+        }
+        acc[pred.target_role].total += pred.predicted_probability;
+        acc[pred.target_role].count += 1;
+        return acc;
+      }, {}) || {};
+
+      const topPerformingRoles = Object.entries(roleStats)
+        .map(([role, stats]: [string, any]) => ({
+          role,
+          avgProbability: stats.total / stats.count
+        }))
+        .sort((a, b) => b.avgProbability - a.avgProbability)
+        .slice(0, 5)
+        .map(r => r.role);
+
+      // Get trending skills (global data since user-specific trending is complex)
+      const skillAnalytics = await this.getSkillAnalytics();
+      const trendingSkills = skillAnalytics
+        .filter(s => s.market_trend === 'rising')
+        .sort((a, b) => b.demand_score - a.demand_score)
+        .slice(0, 5)
+        .map(s => s.skill_name);
+
+      // Get recent activity for user (predictions in last 7 days)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const { count: recentActivity, error: recentError } = await supabase
+        .from('placement_predictions')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .gte('created_at', sevenDaysAgo.toISOString());
+
+      if (recentError) {
+        console.error('Error getting user recent activity:', recentError);
+        throw new Error(`Failed to get user recent activity: ${recentError.message}`);
+      }
+
+      return {
+        totalPredictions: totalPredictions || 0,
+        averageSuccessRate,
+        topPerformingRoles,
+        trendingSkills,
+        recentActivity: recentActivity || 0
+      };
+    } catch (error) {
+      console.error('Error in getUserDashboardStats:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get skill gap analysis for a specific role
    */
   static async getSkillGapAnalysis(role: string): Promise<{
@@ -499,6 +602,245 @@ export class AnalyticsService {
       return comparativeData;
     } catch (error) {
       console.error('Error in getComparativeRoleAnalytics:', error);
+      throw error;
+    }
+  }
+}
+
+
+  /**
+   * Get resume score data for user
+   */
+  static async getResumeScoreData(userId: string): Promise<{
+    latestScore: number;
+    componentScores: { skills: number; projects: number; experience: number; education: number };
+    qualityFlag: string;
+    recommendations: string[];
+    scoreHistory: Array<{ date: string; score: number }>;
+  } | null> {
+    try {
+      // Get latest resume score
+      const { data: latestScoreData, error: scoreError } = await supabase
+        .from('resume_scores')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (scoreError && scoreError.code !== 'PGRST116') {
+        console.error('Error fetching resume score:', scoreError);
+        throw new Error(`Failed to fetch resume score: ${scoreError.message}`);
+      }
+
+      if (!latestScoreData) {
+        return null;
+      }
+
+      // Get score history (last 10 scores)
+      const { data: historyData, error: historyError } = await supabase
+        .from('resume_scores')
+        .select('total_score, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: true })
+        .limit(10);
+
+      if (historyError) {
+        console.error('Error fetching score history:', historyError);
+      }
+
+      const scoreHistory = (historyData || []).map(item => ({
+        date: new Date(item.created_at).toLocaleDateString(),
+        score: item.total_score
+      }));
+
+      return {
+        latestScore: latestScoreData.total_score,
+        componentScores: {
+          skills: latestScoreData.skills_score,
+          projects: latestScoreData.projects_score,
+          experience: latestScoreData.experience_score,
+          education: latestScoreData.education_score
+        },
+        qualityFlag: latestScoreData.quality_flag,
+        recommendations: latestScoreData.recommendations || [],
+        scoreHistory
+      };
+    } catch (error) {
+      console.error('Error in getResumeScoreData:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get skill match data for user
+   */
+  static async getSkillMatchData(userId: string): Promise<{
+    matchScore: number;
+    weightedMatchScore: number;
+    matchQuality: string;
+    matchedSkills: string[];
+    missingSkills: string[];
+    targetRole: string;
+  } | null> {
+    try {
+      const { data, error } = await supabase
+        .from('skill_matches')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching skill match:', error);
+        throw new Error(`Failed to fetch skill match: ${error.message}`);
+      }
+
+      if (!data) {
+        return null;
+      }
+
+      return {
+        matchScore: data.match_score,
+        weightedMatchScore: data.weighted_match_score,
+        matchQuality: data.match_quality,
+        matchedSkills: data.matched_skills || [],
+        missingSkills: data.missing_skills || [],
+        targetRole: data.target_role
+      };
+    } catch (error) {
+      console.error('Error in getSkillMatchData:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get component scores data for visualization
+   */
+  static async getComponentScoresData(userId: string): Promise<Array<{
+    component: string;
+    score: number;
+    weight: number;
+  }>> {
+    try {
+      const { data, error } = await supabase
+        .from('resume_scores')
+        .select('skills_score, projects_score, experience_score, education_score')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching component scores:', error);
+        throw new Error(`Failed to fetch component scores: ${error.message}`);
+      }
+
+      if (!data) {
+        return [];
+      }
+
+      return [
+        { component: 'Skills', score: data.skills_score, weight: 40 },
+        { component: 'Projects', score: data.projects_score, weight: 25 },
+        { component: 'Experience', score: data.experience_score, weight: 20 },
+        { component: 'Education', score: data.education_score, weight: 15 }
+      ];
+    } catch (error) {
+      console.error('Error in getComponentScoresData:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get trending skills by role from database
+   */
+  static async getTrendingSkillsByRole(role?: string): Promise<Array<{
+    skillName: string;
+    demandScore: number;
+    trendDirection: string;
+    growthRate: number;
+  }>> {
+    try {
+      let query = supabase
+        .from('trending_skills')
+        .select('skill_name, demand_score, trend_direction, growth_rate')
+        .order('demand_score', { ascending: false })
+        .limit(20);
+
+      if (role) {
+        query = query.eq('target_role', role);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching trending skills:', error);
+        throw new Error(`Failed to fetch trending skills: ${error.message}`);
+      }
+
+      return (data || []).map(item => ({
+        skillName: item.skill_name,
+        demandScore: item.demand_score,
+        trendDirection: item.trend_direction,
+        growthRate: item.growth_rate
+      }));
+    } catch (error) {
+      console.error('Error in getTrendingSkillsByRole:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get skill distribution by category for user
+   */
+  static async getSkillDistribution(userId: string): Promise<Array<{
+    category: string;
+    count: number;
+  }>> {
+    try {
+      // Get user's matched skills
+      const { data: matchData, error: matchError } = await supabase
+        .from('skill_matches')
+        .select('matched_skills')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (matchError && matchError.code !== 'PGRST116') {
+        console.error('Error fetching skill match for distribution:', matchError);
+        throw new Error(`Failed to fetch skill match: ${matchError.message}`);
+      }
+
+      if (!matchData || !matchData.matched_skills) {
+        return [];
+      }
+
+      // Get skill categories from skill_database
+      const { data: skillData, error: skillError } = await supabase
+        .from('skill_database')
+        .select('skill_name, category')
+        .in('skill_name', matchData.matched_skills);
+
+      if (skillError) {
+        console.error('Error fetching skill categories:', skillError);
+        throw new Error(`Failed to fetch skill categories: ${skillError.message}`);
+      }
+
+      // Count skills by category
+      const categoryCount = (skillData || []).reduce((acc, skill) => {
+        acc[skill.category] = (acc[skill.category] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      return Object.entries(categoryCount).map(([category, count]) => ({
+        category,
+        count
+      }));
+    } catch (error) {
+      console.error('Error in getSkillDistribution:', error);
       throw error;
     }
   }

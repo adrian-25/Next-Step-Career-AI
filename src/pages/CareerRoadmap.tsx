@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   Target, 
@@ -181,56 +181,102 @@ const CATEGORY_TO_ROLES: Record<string, string[]> = CAREER_ROADMAPS.reduce((acc,
   return acc
 }, {} as Record<string, string[]>)
 
+function transformToRoadmap(raw: RawRoadmap): Roadmap {
+  const steps: RoadmapStep[] = raw.steps.map((s, idx) => ({
+    id: `${raw.role}-${idx + 1}`,
+    title: s.title,
+    description: s.description,
+    type: idx === 1 ? "course" : idx === raw.steps.length - 1 ? "experience" : "skill",
+    duration: idx === 0 ? "3-4 weeks" : idx === 1 ? "4-6 weeks" : "3-6 weeks",
+    priority: idx < 2 ? "high" : idx === 2 ? "medium" : "low",
+    completed: false,
+    skills: s.tags,
+  }))
+  return {
+    title: raw.role,
+    description: raw.description,
+    timeline: raw.duration,
+    completionRate: 0,
+    steps,
+  }
+}
+
 export function CareerRoadmap() {
   const [targetRole, setTargetRole] = useState<string>("")
   const [roleOpen, setRoleOpen] = useState(false)
   const [roadmap, setRoadmap] = useState<Roadmap | null>(null)
 
-  const transformToRoadmap = (raw: RawRoadmap): Roadmap => {
-    const steps: RoadmapStep[] = raw.steps.map((s, idx) => ({
-      id: `${raw.role}-${idx + 1}`,
-      title: s.title,
-      description: s.description,
-      type: idx === 1 ? "course" : idx === raw.steps.length - 1 ? "experience" : "skill",
-      duration: idx === 0 ? "3-4 weeks" : idx === 1 ? "4-6 weeks" : "3-6 weeks",
-      priority: idx < 2 ? "high" : idx === 2 ? "medium" : "low",
-      completed: false,
-      skills: s.tags,
-    }))
+  // Suggest role from last resume analysis
+  const suggestedRole = useMemo(() => {
+    try {
+      const r = localStorage.getItem('lastDetectedRole') ?? ''
+      if (!r) return null
+      // Map skill-db key to roadmap role name
+      const map: Record<string, string> = {
+        software_developer: 'Full-Stack Developer',
+        aiml_engineer:      'Machine Learning Engineer',
+        data_scientist:     'Data Scientist',
+        devops_engineer:    'DevOps Engineer',
+        product_manager:    null as unknown as string,
+      }
+      return map[r] ?? null
+    } catch { return null }
+  }, [])
 
-    return {
-      title: raw.role,
-      description: raw.description,
-      timeline: raw.duration,
-      completionRate: 0,
-      steps,
-    }
+  // Restore saved progress from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('roadmapProgress')
+      if (saved) {
+        const { role: savedRole, steps: savedSteps } = JSON.parse(saved)
+        const raw = CAREER_ROADMAPS.find(r => r.role === savedRole)
+        if (raw) {
+          const base = transformToRoadmap(raw)
+          const merged = {
+            ...base,
+            steps: base.steps.map(s => ({
+              ...s,
+              completed: savedSteps[s.id] ?? false,
+            })),
+          }
+          const done = merged.steps.filter(s => s.completed).length
+          merged.completionRate = Math.round((done / merged.steps.length) * 100)
+          setTargetRole(savedRole)
+          setRoadmap(merged)
+        }
+      }
+    } catch { /* ignore */ }
+  }, [])
+
+  const saveProgress = (role: string, steps: RoadmapStep[]) => {
+    try {
+      const stepMap = Object.fromEntries(steps.map(s => [s.id, s.completed]))
+      localStorage.setItem('roadmapProgress', JSON.stringify({ role, steps: stepMap }))
+    } catch { /* ignore */ }
   }
+
 
   const handleSelectRole = (role: string) => {
     setTargetRole(role)
     const raw = CAREER_ROADMAPS.find(r => r.role === role)
     if (raw) {
-      setRoadmap(transformToRoadmap(raw))
+      const newRoadmap = transformToRoadmap(raw)
+      setRoadmap(newRoadmap)
+      saveProgress(role, newRoadmap.steps)
     }
     setRoleOpen(false)
   }
 
   const toggleStepCompletion = (stepId: string) => {
     if (!roadmap) return
-    
-    const updatedSteps = roadmap.steps.map(step => 
+    const updatedSteps = roadmap.steps.map(step =>
       step.id === stepId ? { ...step, completed: !step.completed } : step
     )
-    
     const completedSteps = updatedSteps.filter(step => step.completed).length
     const completionRate = Math.round((completedSteps / updatedSteps.length) * 100)
-    
-    setRoadmap({
-      ...roadmap,
-      steps: updatedSteps,
-      completionRate
-    })
+    const updated = { ...roadmap, steps: updatedSteps, completionRate }
+    setRoadmap(updated)
+    saveProgress(targetRole, updatedSteps)
   }
 
   const getStepIcon = (type: string) => {
@@ -336,6 +382,26 @@ export function CareerRoadmap() {
                   </p>
                 </CardContent>
               </Card>
+
+              {/* Suggested role from resume analysis */}
+              {suggestedRole && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="mt-4 p-4 bg-primary/5 border border-primary/20 rounded-xl flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <span className="text-sm">
+                      Based on your resume, we suggest: <strong>{suggestedRole}</strong>
+                    </span>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => handleSelectRole(suggestedRole)}>
+                    Use This
+                  </Button>
+                </motion.div>
+              )}
             </motion.div>
           )}
 
@@ -350,26 +416,54 @@ export function CareerRoadmap() {
                 {/* Roadmap Header */}
                 <Card className="glass-card neon-glow">
                   <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between flex-wrap gap-3">
                       <div>
                         <CardTitle className="text-2xl gradient-text font-bold">{roadmap.title}</CardTitle>
                         <CardDescription className="mt-2 text-base text-muted-foreground">
                           {roadmap.description}
                         </CardDescription>
                       </div>
-                      <Badge className="tag-train">
-                        <Clock className="w-3 h-3 mr-1" />
-                        {roadmap.timeline}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge className="tag-train">
+                          <Clock className="w-3 h-3 mr-1" />
+                          {roadmap.timeline}
+                        </Badge>
+                        <Button size="sm" variant="outline" onClick={() => { setRoadmap(null); setTargetRole('') }}>
+                          Change Role
+                        </Button>
+                      </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="font-medium">Progress</span>
                         <span className="neon-text">{roadmap.completionRate}% complete</span>
                       </div>
                       <Progress value={roadmap.completionRate} className="h-3" />
+                    </div>
+                    {/* Milestone badges */}
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {roadmap.completionRate >= 25 && (
+                        <Badge className="bg-amber-100 text-amber-700 border-amber-200 gap-1">
+                          <Award className="h-3 w-3" /> Getting Started
+                        </Badge>
+                      )}
+                      {roadmap.completionRate >= 50 && (
+                        <Badge className="bg-blue-100 text-blue-700 border-blue-200 gap-1">
+                          <TrendingUp className="h-3 w-3" /> Halfway There
+                        </Badge>
+                      )}
+                      {roadmap.completionRate >= 75 && (
+                        <Badge className="bg-purple-100 text-purple-700 border-purple-200 gap-1">
+                          <Sparkles className="h-3 w-3" /> Almost Done
+                        </Badge>
+                      )}
+                      {roadmap.completionRate === 100 && (
+                        <Badge className="bg-green-100 text-green-700 border-green-200 gap-1">
+                          <CheckCircle className="h-3 w-3" /> Roadmap Complete!
+                        </Badge>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

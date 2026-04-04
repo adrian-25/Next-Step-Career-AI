@@ -1,30 +1,22 @@
-John Smith
-Data Analyst
-john.smith@email.com | (555) 123-4567
+John Doe
+Software Engineer
 
-PROFESSIONAL SUMMARY
-Experienced data analyst with 3+ years of experience in Python, SQL, and data visualization. Proficient in pandas, numpy, and matplotlib for data analysis and reporting.
+Experience:
+- 3 years developing web applications with React and Node.js
+- Led team of 4 developers on e-commerce platform
+- Improved application performance by 40%
+- Implemented CI/CD pipelines using Docker and AWS
 
-TECHNICAL SKILLS
-- Python (pandas, numpy, matplotlib, seaborn)
-- SQL (MySQL, PostgreSQL)
-- Data Analysis and Statistics
-- Excel and Google Sheets
-- Git and GitHub
-- Jupyter Notebooks
+Skills:
+- JavaScript, TypeScript, React, Node.js
+- Python, SQL, MongoDB
+- AWS, Docker, Git
+- Agile methodologies
 
-EXPERIENCE
-Data Analyst | Tech Company | 2021-2024
-- Analyzed large datasets using Python and SQL
-- Created data visualizations with matplotlib and seaborn
-- Collaborated with cross-functional teams
-- Used Git for version control
+Education:
+- BS Computer Science, University of Technology
 
-EDUCATION
-Bachelor of Science in Computer Science
-University of Technology | 2020
-
-PROJECTS
-- Built a data analysis dashboard using Python and pandas
-- Created automated reports using SQL queries
-- Developed data visualization tools with matplotlib
+Projects:
+- E-commerce Platform: Built scalable web application using React, Node.js, and MongoDB
+- Task Management System: Developed full-stack application with real-time updates
+- API Gateway: Designed microservices architecture with Docker containers
