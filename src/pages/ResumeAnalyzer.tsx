@@ -295,7 +295,10 @@ function UploadWidget({ targetRole, onComplete }: {
 
       if (!fileResult.success) throw new Error(fileResult.error ?? 'Parsing failed');
 
-      const resumeText = fileResult.extractedText ?? '';
+      // Use full resume text — NOT the 500-char preview
+      const resumeText = fileResult.comprehensiveAnalysis?.parsedResume?.text
+        ?? fileResult.extractedText?.replace(/\.\.\.$/, '') // strip preview ellipsis
+        ?? '';
 
       // Run ML pipeline
       setStage('predicting'); setProgress(75);

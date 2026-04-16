@@ -8,7 +8,7 @@ import { TFIDFVectorizer } from './tfidf';
 import { NaiveBayesClassifier } from './naiveBayes';
 import dataset from '../../data/job_roles_dataset.json';
 
-const MODEL_CACHE_KEY = 'ml_role_predictor_v3';
+const MODEL_CACHE_KEY = 'ml_role_predictor_v4';
 
 export interface RolePrediction {
   predictedRole: string;
