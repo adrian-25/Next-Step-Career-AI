@@ -47,6 +47,15 @@ export interface TopJobMatch {
   created_at: string;
 }
 
+export interface ResumeSearchEntry {
+  id: string;
+  user_id: string;
+  file_name: string;
+  target_role: string;
+  uploaded_at: string;
+  raw_text?: string;
+}
+
 // ── Demo seed data ────────────────────────────────────────────────────────────
 
 const DEMO_SEED: Array<{
@@ -319,5 +328,49 @@ export class AdvancedAnalyticsService {
         .slice(0, limit)
         .map(([skill, count]) => ({ skill, count }));
     } catch { return []; }
+  }
+
+  // ── Task 2: Full-Text Search ────────────────────────────────────────────────
+  
+  static async searchResumes(query: string, userId?: string, targetRole?: string): Promise<ResumeSearchEntry[]> {
+    try {
+      if (!query || query.trim() === '') return [];
+      
+      const args: any = { search_query: query };
+      if (userId && userId !== 'demo-user') args.user_uuid = userId;
+
+      const { data, error } = await supabase.rpc('search_resumes', args);
+      if (error || !data) {
+        console.warn('[AdvancedAnalytics] searchResumes rpc error:', error?.message);
+        
+        // Fallback demo functionality for UI if DB function is not deployed
+        return [];
+      }
+      
+      let filtered = data;
+      if (targetRole && targetRole !== '') {
+        filtered = filtered.filter((r: any) => r.target_role === targetRole);
+      }
+      return filtered as ResumeSearchEntry[];
+    } catch { return []; }
+  }
+
+  // ── Task 4: Backup Export ───────────────────────────────────────────────────
+
+  static async exportUserData(userId?: string): Promise<any> {
+    try {
+      // By default use a demo user UUID if it's the demo-user
+      const id = userId && userId !== 'demo-user' ? userId : '00000000-0000-0000-0000-000000000001';
+      const { data, error } = await supabase.rpc('export_user_data_json', { p_user_id: id });
+      
+      if (error) {
+        console.warn('[AdvancedAnalytics] exportUserData error:', error.message);
+        return null;
+      }
+      return data;
+    } catch (err) { 
+      console.warn('[AdvancedAnalytics] exportUserData exception:', err);
+      return null; 
+    }
   }
 }

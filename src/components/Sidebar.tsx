@@ -34,8 +34,7 @@ const navigation = [
   { name: "Resume Insights",   href: "/analytics",        icon: BarChart3 },
   { name: "DBMS Analytics",    href: "/dbms-analytics",   icon: Database  },
   { name: "Career Roadmap",    href: "/roadmap",          icon: Route     },
-  { name: "Job Matches",       href: "/job-recommendations", icon: Briefcase },
-  { name: "Job Recommendations", href: "/jobs",           icon: Target    },
+  { name: "Job Matches",       href: "/job-matches",      icon: Briefcase },
   { name: "Networking Hub",    href: "/networking",       icon: Users     },
   { name: "Courses",           href: "/courses",          icon: Bot       },
 ]

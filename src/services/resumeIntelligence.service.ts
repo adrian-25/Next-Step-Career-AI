@@ -29,7 +29,6 @@ import { ResumeAnalysisService } from './resumeAnalysis.service';
 import { skillMatchService } from './skillMatch.service';
 import { resumeScoreService } from './resumeScore.service';
 import { sectionAnalysisService } from './sectionAnalysis.service';
-import { jobRecommendationsService } from './jobRecommendations.service';
 import { AuditLogService } from './auditLog.service';
 
 import type { ComprehensiveAnalysis } from '@/ai/types';
@@ -272,9 +271,6 @@ export class ResumeIntelligenceService {
         skillMatchService.saveSkillMatch(userId, analysisId, analysis.skillMatch),
         resumeScoreService.saveResumeScore(userId, analysisId, analysis.resumeScore),
         sectionAnalysisService.saveSectionAnalysis(userId, analysisId, analysis.sectionAnalysis),
-        analysis.jobRecommendations.length > 0
-          ? jobRecommendationsService.saveJobRecommendations(userId, analysis.jobRecommendations)
-          : Promise.resolve(),
       ]);
 
       console.log('[ResumeIntelligence] All results stored successfully');

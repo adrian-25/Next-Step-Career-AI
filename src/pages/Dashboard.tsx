@@ -59,7 +59,7 @@ const QUICK_ACTIONS = [
   { title: 'Resume Analyzer',   desc: 'Upload & analyze your resume',         icon: FileText,   href: '/resume',            gradient: 'from-indigo-500 to-purple-600' },
   { title: 'Resume Insights',   desc: 'View charts & skill breakdown',         icon: BarChart3,  href: '/analytics',         gradient: 'from-blue-500 to-cyan-500' },
   { title: 'DBMS Analytics',    desc: 'Stored procedures & live DB views',     icon: Database,   href: '/dbms-analytics',    gradient: 'from-violet-500 to-pink-500' },
-  { title: 'Job Matches',       desc: 'Find roles that fit your skills',       icon: Briefcase,  href: '/job-recommendations', gradient: 'from-emerald-500 to-teal-500' },
+  { title: 'Job Matches',       desc: 'Find roles that fit your skills',       icon: Briefcase,  href: '/job-matches', gradient: 'from-emerald-500 to-teal-500' },
   { title: 'Career Roadmap',    desc: 'Step-by-step growth plan',              icon: Route,      href: '/roadmap',           gradient: 'from-orange-500 to-amber-500' },
   { title: 'AI Career Mentor',  desc: 'Chat with your AI mentor',              icon: MessageSquare, href: '/mentor',         gradient: 'from-rose-500 to-pink-500' },
 ];

@@ -16,7 +16,6 @@ import { DBMSAnalyticsPage } from "@/pages/DBMSAnalyticsPage";
 import { CareerRoadmap } from "@/pages/CareerRoadmap";
 import { CareerMentorPage } from "@/pages/CareerMentorPage";
 import { CareerChatbotPage } from "@/pages/CareerChatbotPage";
-import { JobRecommendations } from "@/pages/JobRecommendations";
 import { JobRecommendationsPage } from "@/pages/JobRecommendationsPage";
 import { PortfolioSuggestions } from "@/pages/PortfolioSuggestions";
 import { NetworkingAssistant } from "@/pages/NetworkingAssistant";
@@ -54,8 +53,7 @@ const App = () => (
                   <Route path="/roadmap" element={<CareerRoadmap />} />
                   <Route path="/mentor" element={<CareerMentorPage />} />
                   <Route path="/chatbot" element={<CareerChatbotPage />} />
-                  <Route path="/jobs" element={<JobRecommendations />} />
-                  <Route path="/job-recommendations" element={<JobRecommendationsPage />} />
+                  <Route path="/job-matches" element={<JobRecommendationsPage />} />
                   <Route path="/portfolio" element={<PortfolioSuggestions />} />
                   <Route path="/networking" element={<NetworkingAssistant />} />
                   <Route path="/courses" element={<Courses />} />

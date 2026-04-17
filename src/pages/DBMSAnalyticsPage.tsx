@@ -12,6 +12,7 @@ import {
   Database, RefreshCw, AlertCircle, CheckCircle2, TrendingUp,
   FileText, Target, Activity, Layers, ShieldCheck, BarChart2,
   Sparkles, Clock, ChevronDown, ChevronUp, Award,
+  Download, Search, Filter, FileJson
 } from 'lucide-react';
 import {
   AdvancedAnalyticsService,
@@ -20,6 +21,7 @@ import {
   type RoleMatchAnalytics,
   type AuditLogEntry,
   type TopJobMatch,
+  type ResumeSearchEntry,
 } from '@/services/advancedAnalytics.service';
 
 const COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#f97316', '#14b8a6', '#a855f7'];
@@ -178,6 +180,13 @@ export function DBMSAnalyticsPage() {
     indexes: true, trigger: false, analytics: false,
   });
 
+  // Search & Download States
+  const [searchQuery, setSearchQuery]           = useState('');
+  const [searchRoleFilter, setSearchRoleFilter] = useState('');
+  const [searchResults, setSearchResults]       = useState<ResumeSearchEntry[]>([]);
+  const [isSearching, setIsSearching]           = useState(false);
+  const [isDownloading, setIsDownloading]       = useState(false);
+
   const loadAuditLogs = useCallback(async () => {
     setAuditLoading(true);
     const logs = await AdvancedAnalyticsService.getAuditLogs(25);
@@ -243,6 +252,40 @@ export function DBMSAnalyticsPage() {
     await loadAuditLogs();
   };
 
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    setIsSearching(true);
+    const res = await AdvancedAnalyticsService.searchResumes(searchQuery, 'demo-user', searchRoleFilter);
+    setSearchResults(res);
+    setIsSearching(false);
+  };
+
+  const handleDownloadBackup = async () => {
+    setIsDownloading(true);
+    const data = await AdvancedAnalyticsService.exportUserData('demo-user');
+    setIsDownloading(false);
+    
+    if (!data) {
+      setSeedMsg('Export failed. Check database connection and functions.');
+      return;
+    }
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `resume-analyzer-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setSeedMsg('✓ Database export downloaded successfully.');
+  };
+
   // Chart data
   const roleChartData = roleAnalytics.map(r => ({
     role: fmtRole(r.target_role).split(' ').slice(0, 2).join(' '),
@@ -287,6 +330,15 @@ export function DBMSAnalyticsPage() {
           )}
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button 
+            variant="outline" size="sm" 
+            onClick={handleDownloadBackup} 
+            disabled={isDownloading} 
+            className="border-indigo-300 text-indigo-700 hover:bg-indigo-50"
+          >
+            <Download className={`h-4 w-4 mr-1 ${isDownloading ? 'animate-bounce' : ''}`} />
+            {isDownloading ? 'Exporting...' : 'Download Data'}
+          </Button>
           <Button
             variant="outline" size="sm"
             onClick={handleSeedDemoData}
@@ -351,8 +403,85 @@ export function DBMSAnalyticsPage() {
             <DBMSBadge label="Analytics Query"   active={dbmsStatus.analytics} />
           </div>
           <p className="text-xs text-muted-foreground mt-3">
-            Run migrations 012, 013, 014 in Supabase SQL editor, then seed data to activate all features.
+            Run migrations 012, 013, 014, 016 in Supabase SQL editor, then seed data to activate all features.
           </p>
+        </CardContent>
+      </Card>
+
+      {/* Full-Text Search Block */}
+      <Card className="border-primary/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-primary" />
+              Full-Text Resume Search (tsvector + GIN Index)
+            </div>
+            <Badge variant="secondary" className="text-xs bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">
+              PostgreSQL <code className="ml-1 px-1 bg-white/50 rounded">@@ plainto_tsquery()</code>
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSearch} className="flex flex-wrap gap-3 items-end">
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Keywords</label>
+              <input 
+                type="text" 
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="e.g. 'react developer' or 'aws docker'" 
+                className="w-full text-sm border rounded-md px-3 py-2 bg-background focus:ring-1 focus:ring-primary outline-none"
+              />
+            </div>
+            <div className="w-[180px]">
+              <label className="text-xs font-medium text-muted-foreground mb-1 block flex items-center justify-between">
+                <span>Filter by Role</span>
+                <Filter className="h-3 w-3" />
+              </label>
+              <select 
+                value={searchRoleFilter} 
+                onChange={e => setSearchRoleFilter(e.target.value)}
+                className="w-full text-sm border rounded-md px-3 py-2 bg-background outline-none focus:ring-1 focus:ring-primary"
+              >
+                <option value="">All Roles</option>
+                {uniqueRoles.map(r => <option key={r} value={r}>{fmtRole(r)}</option>)}
+              </select>
+            </div>
+            <Button type="submit" disabled={isSearching} className="gap-2">
+              {isSearching ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+              {isSearching ? 'Searching...' : 'Search'}
+            </Button>
+          </form>
+
+          {/* Search Results */}
+          <AnimatePresence>
+            {searchResults.length > 0 && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-4 pt-4 border-t">
+                <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-2">
+                  <CheckCircle2 className="h-3 w-3 text-green-500" />
+                  Found {searchResults.length} {searchResults.length === 1 ? 'resume' : 'resumes'}
+                </p>
+                <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                  {searchResults.map((res: ResumeSearchEntry) => (
+                    <div key={res.id} className="flex flex-col sm:flex-row sm:items-center justify-between bg-muted/40 p-3 rounded-lg text-sm border border-border/50 gap-2">
+                      <div>
+                        <p className="font-medium flex items-center gap-1.5"><FileText className="h-4 w-4 text-primary" /> {res.file_name || 'Resume Document'}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Target Role: <span className="font-medium">{fmtRole(res.target_role)}</span></p>
+                      </div>
+                      <Badge variant="outline" className="w-fit text-[10px] bg-background">
+                        {new Date(res.uploaded_at).toLocaleDateString()}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+            {searchQuery && !isSearching && searchResults.length === 0 && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-4 pt-4 border-t text-sm text-muted-foreground text-center">
+                No matching resumes found by full-text search.
+              </motion.div>
+            )}
+          </AnimatePresence>
         </CardContent>
       </Card>
 
