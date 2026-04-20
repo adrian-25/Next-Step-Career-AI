@@ -5,6 +5,7 @@ import {
   FileText, Route, MessageSquare, TrendingUp, Users, ArrowRight,
   Sparkles, Target, Database, Briefcase, BarChart3, Bot,
   CheckCircle2, Clock, Zap, Award, Star, Search, Download,
+  Trophy, GitBranch,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -57,12 +58,18 @@ function timeAgo(iso: string) {
 // ── Quick actions ─────────────────────────────────────────────────────────────
 
 const QUICK_ACTIONS = [
-  { title: 'Resume Analyzer',   desc: 'Upload & analyze your resume',         icon: FileText,   href: '/resume',            gradient: 'from-indigo-500 to-purple-600' },
-  { title: 'Resume Insights',   desc: 'View charts & skill breakdown',         icon: BarChart3,  href: '/analytics',         gradient: 'from-blue-500 to-cyan-500' },
-  { title: 'DBMS Analytics',    desc: 'Stored procedures & live DB views',     icon: Database,   href: '/dbms-analytics',    gradient: 'from-violet-500 to-pink-500' },
-  { title: 'Job Matches',       desc: 'Find roles that fit your skills',       icon: Briefcase,  href: '/job-matches', gradient: 'from-emerald-500 to-teal-500' },
-  { title: 'Career Roadmap',    desc: 'Step-by-step growth plan',              icon: Route,      href: '/roadmap',           gradient: 'from-orange-500 to-amber-500' },
-  { title: 'AI Career Mentor',  desc: 'Chat with your AI mentor',              icon: MessageSquare, href: '/mentor',         gradient: 'from-rose-500 to-pink-500' },
+  { title: 'Resume Analyzer',   desc: 'Upload & analyze your resume',         icon: FileText,      href: '/resume',                gradient: 'from-indigo-500 to-purple-600' },
+  { title: 'Resume Insights',   desc: 'View charts & skill breakdown',         icon: BarChart3,     href: '/analytics',             gradient: 'from-blue-500 to-cyan-500' },
+  { title: 'Job Matching',      desc: 'Compare resume vs job description',     icon: Briefcase,     href: '/job-matching',          gradient: 'from-emerald-500 to-teal-500' },
+  { title: 'Resume Ranking',    desc: 'Rank multiple resumes for a role',      icon: Trophy,        href: '/ranking',               gradient: 'from-yellow-500 to-orange-500' },
+  { title: 'Search Resumes',    desc: 'Full-text search with PostgreSQL FTS',  icon: Search,        href: '/search',                gradient: 'from-sky-500 to-blue-600' },
+  { title: 'DBMS Analytics',    desc: 'Stored procedures & live DB views',     icon: Database,      href: '/dbms-analytics',        gradient: 'from-violet-500 to-pink-500' },
+  { title: 'Prod Analytics',    desc: 'Live charts from FastAPI backend',      icon: TrendingUp,    href: '/production-analytics',  gradient: 'from-rose-500 to-pink-600' },
+  { title: 'Career Roadmap',    desc: 'Step-by-step growth plan',              icon: Route,         href: '/roadmap',               gradient: 'from-orange-500 to-amber-500' },
+  { title: 'AI Career Mentor',  desc: 'Chat with your AI mentor',              icon: MessageSquare, href: '/mentor',                gradient: 'from-fuchsia-500 to-purple-600' },
+  { title: 'Architecture',      desc: 'System diagram & ADBMS features',      icon: GitBranch,     href: '/architecture',          gradient: 'from-slate-500 to-gray-600' },
+  { title: 'Job Matches',       desc: 'Find roles that fit your skills',       icon: Target,        href: '/job-matches',           gradient: 'from-green-500 to-emerald-600' },
+  { title: 'Courses',           desc: 'Curated learning resources',            icon: Bot,           href: '/courses',               gradient: 'from-cyan-500 to-teal-600' },
 ];
 
 // ── Platform stats (static) ───────────────────────────────────────────────────

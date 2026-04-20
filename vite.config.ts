@@ -24,5 +24,33 @@ export default defineConfig(({ mode }) => ({
         global: 'globalThis'
       }
     }
-  }
+  },
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Core React runtime
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          // UI primitives
+          'vendor-ui': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-tooltip',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-select',
+            '@radix-ui/react-progress',
+          ],
+          // Charts
+          'vendor-charts': ['recharts'],
+          // Animation
+          'vendor-motion': ['framer-motion'],
+          // Supabase
+          'vendor-supabase': ['@supabase/supabase-js'],
+          // PDF parsing (largest chunk)
+          'vendor-pdf': ['pdfjs-dist'],
+        },
+      },
+    },
+  },
 }));
