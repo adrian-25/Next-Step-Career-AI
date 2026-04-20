@@ -12,8 +12,9 @@ import { Progress } from '@/components/ui/progress';
 import {
   Award, CheckCircle2, XCircle, AlertCircle, ArrowRight,
   FileText, Briefcase, GraduationCap, Code2, Lightbulb,
-  TrendingUp, Star, Zap, RotateCcw,
+  TrendingUp, Star, Zap, RotateCcw, Download,
 } from 'lucide-react';
+import { downloadLastAnalysisReport } from '@/services/resumeExport.service';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -233,9 +234,21 @@ export function ResumeScorePage() {
             Detailed analysis for <span className="font-medium text-foreground">{roleLabel}</span>
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => navigate('/resume')} className="gap-1">
-          <RotateCcw className="h-3.5 w-3.5" /> Re-analyze
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline" size="sm"
+            onClick={() => {
+              const ok = downloadLastAnalysisReport();
+              if (!ok) navigate('/resume');
+            }}
+            className="gap-1 border-blue-300 text-blue-700 hover:bg-blue-50"
+          >
+            <Download className="h-3.5 w-3.5" /> Export Report
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => navigate('/resume')} className="gap-1">
+            <RotateCcw className="h-3.5 w-3.5" /> Re-analyze
+          </Button>
+        </div>
       </motion.div>
 
       {/* Hero score + quality flag */}

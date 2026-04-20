@@ -7,11 +7,12 @@ import { Progress } from '@/components/ui/progress';
 import {
   CheckCircle, AlertCircle, ExternalLink, BookOpen, Target,
   ChevronRight, RotateCcw, Briefcase, Brain, Upload,
-  FileText, Cpu, ScanText, Search, UploadCloud, CheckCircle2, Award,
+  FileText, Cpu, ScanText, Search, UploadCloud, CheckCircle2, Award, Download,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { MLAnalysisService, MLAnalysisResult } from '@/services/mlAnalysis.service';
+import { downloadAnalysisReport } from '@/services/resumeExport.service';
 import { getDataset, JobRoleEntry } from '@/ai/ml/rolePredictor';
 import { FileProcessingService } from '@/lib/fileProcessingService';
 
@@ -86,6 +87,18 @@ function MLResultsView({ result, selectedRole, onReset }: {
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => navigate('/score')}>
             <Award className="h-4 w-4 mr-1" /> View Score
+          </Button>
+          <Button
+            variant="outline" size="sm"
+            onClick={() => {
+              try {
+                const raw = localStorage.getItem('lastAnalysisResult');
+                const analysis = raw ? JSON.parse(raw) : null;
+                downloadAnalysisReport(result, analysis, selectedRole);
+              } catch { /* ignore */ }
+            }}
+          >
+            <Download className="h-4 w-4 mr-1" /> Export Report
           </Button>
           <Button variant="outline" size="sm" onClick={onReset}>
             <RotateCcw className="h-4 w-4 mr-1" /> Start Over

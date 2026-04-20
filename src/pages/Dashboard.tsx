@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { getAnalyticsOverview, checkBackendHealth, downloadUserBackup } from '@/services/backendApi.service';
+import { downloadLastAnalysisReport } from '@/services/resumeExport.service';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -365,16 +366,26 @@ export function Dashboard() {
             <CardContent className="py-5 flex items-center justify-between flex-wrap gap-3">
               <div>
                 <p className="font-semibold text-sm">Export Your Data</p>
-                <p className="text-xs text-muted-foreground">Download all your resume analyses as JSON backup</p>
+                <p className="text-xs text-muted-foreground">Download your resume analysis as HTML report or full JSON backup</p>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-blue-300 text-blue-700 hover:bg-blue-100"
-                onClick={() => downloadUserBackup('00000000-0000-0000-0000-000000000001')}
-              >
-                <Download className="h-4 w-4 mr-1" /> Download Backup
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                  onClick={() => downloadLastAnalysisReport()}
+                >
+                  <Download className="h-4 w-4 mr-1" /> Analysis Report
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                  onClick={() => downloadUserBackup('00000000-0000-0000-0000-000000000001')}
+                >
+                  <Download className="h-4 w-4 mr-1" /> JSON Backup
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
