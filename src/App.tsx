@@ -21,6 +21,11 @@ import { PortfolioSuggestions } from "@/pages/PortfolioSuggestions";
 import { NetworkingAssistant } from "@/pages/NetworkingAssistant";
 import { Courses } from "@/pages/Courses";
 import { AuthPage } from "@/pages/AuthPage";
+import { JobMatchingPage } from "@/pages/JobMatchingPage";
+import { MultiResumeRankingPage } from "@/pages/MultiResumeRankingPage";
+import { ResumeSearchPage } from "@/pages/ResumeSearchPage";
+import { ArchitecturePage } from "@/pages/ArchitecturePage";
+import { ProductionAnalyticsPage } from "@/pages/ProductionAnalyticsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +62,11 @@ const App = () => (
                   <Route path="/portfolio" element={<PortfolioSuggestions />} />
                   <Route path="/networking" element={<NetworkingAssistant />} />
                   <Route path="/courses" element={<Courses />} />
+                  <Route path="/job-matching" element={<JobMatchingPage />} />
+                  <Route path="/ranking" element={<MultiResumeRankingPage />} />
+                  <Route path="/search" element={<ResumeSearchPage />} />
+                  <Route path="/architecture" element={<ArchitecturePage />} />
+                  <Route path="/production-analytics" element={<ProductionAnalyticsPage />} />
                 </Route>
                 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

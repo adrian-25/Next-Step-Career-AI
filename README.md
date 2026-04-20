@@ -1,130 +1,207 @@
-# Momentum Mind AI
+# Next Step Career AI — Resume Intelligence Platform
 
-## 🚀 Next-Step Career AI Platform
+A production-grade AI-powered resume analysis and career guidance platform built with React, FastAPI, PostgreSQL, and scikit-learn.
 
-An intelligent career guidance platform that empowers professionals with AI-driven resume analysis, job matching, career roadmaps, and networking assistance.
+## 🚀 Live Demo
 
-**Live URL**: [https://momentum-mind-ai.vercel.app/](https://momentum-mind-ai.vercel.app/)
+- **Frontend:** https://next-step-career-ai.vercel.app
+- **Backend API:** https://next-step-career-ai.railway.app
+- **API Docs:** https://next-step-career-ai.railway.app/docs
+
+---
+
+## 🏗️ Architecture
+
+```
+Frontend (React + Vite + Tailwind)
+    ↓ HTTP/REST
+Backend (FastAPI Python)
+    ↓ ML Pipeline
+ML Layer (scikit-learn TF-IDF + Naive Bayes + Fuzzy Logic)
+    ↓ SQL + JSONB
+Database (PostgreSQL / Supabase)
+```
+
+---
 
 ## ✨ Features
 
-### 🎯 Enhanced Resume Analyzer
-- **Dynamic Role Support**: Works with 17+ career roles including Software Engineer, Data Scientist, AI/ML Engineer, Cloud Engineer, Game Developer, Web Developer, Mobile App Developer, Database Administrator, DevOps Engineer, UI/UX Designer, Product Manager, IT Project Manager, Systems Architect, Blockchain Developer, Research Scientist, QA Engineer, Network Engineer, Business Analyst
-- **Comprehensive Skill Analysis**: 
-  - ✅ **Matched Skills**: Identifies skills already present in your resume
-  - ❌ **Missing Skills**: Highlights skills needed for your target role
-  - 📊 **Match Score**: Calculates percentage match with target role requirements
-  - 🔴 **Critical Missing Skills**: Essential skills marked as high priority
-  - 🟡 **Important Missing Skills**: Valuable skills for career advancement
-- **Intelligent Skill Matching**: Uses fuzzy matching and related skills for accurate detection
-- **Role-Specific Recommendations**: Tailored suggestions based on your selected career path
-- **Real-time Analysis**: Instant feedback with detailed skill gap analysis
+### ML & AI
+- **TF-IDF + Naive Bayes** role prediction (browser-based, no server needed)
+- **Fuzzy Logic** skill matching (Levenshtein + Jaccard similarity)
+- **Weighted scoring**: `final_score = 0.7 × ML + 0.3 × Fuzzy`
+- **200+ skill aliases** (React.js → react, sklearn → scikit-learn, etc.)
+- **10 job roles** with weighted skill datasets
 
-### 🛣️ Additional Features
-- **Career Roadmap**: Personalized career progression pathways
-- **Job Recommendations**: Intelligent job matching based on skills and experience
-- **Networking Hub**: Professional networking assistance and connections
-- **Career Mentorship**: AI-powered career guidance and advice
-- **Courses**: Personalized learning recommendations
+### ADBMS Features
+- **Table Partitioning** — `job_matches` partitioned by month (RANGE)
+- **Full-Text Search** — PostgreSQL `tsvector` + GIN index + `search_resumes()` function
+- **Stored Procedures** — `calculate_match()`, `get_skill_gap()`, `export_user_data()`
+- **Materialized Views** — `top_job_matches_view`, `skill_demand_analysis`
+- **Audit Triggers** — auto-log all inserts to `audit_logs`
+- **Row Level Security** — users see only their own data
+- **Resume Versioning** — auto-version on update
+- **Query Optimization** — 15+ composite indexes on JSONB + timestamp columns
+
+### Pages
+| Page | Route | Description |
+|------|-------|-------------|
+| Dashboard | `/dashboard` | Live metrics + recent activity |
+| Resume Analyzer | `/resume` | Upload + ML analysis |
+| Job Matching | `/job-matching` | Resume vs JD comparison |
+| Resume Ranking | `/ranking` | Multi-resume ranking table |
+| Search | `/search` | Full-text PostgreSQL search |
+| Resume Insights | `/analytics` | Radar chart + timeline |
+| DBMS Analytics | `/dbms-analytics` | Live DB stored proc data |
+| Career Roadmap | `/roadmap` | Role-based learning path |
+| Architecture | `/architecture` | System diagram + ADBMS checklist |
+
+---
 
 ## 🛠️ Tech Stack
 
-This project is built with:
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18, Vite, TypeScript, Tailwind CSS, Framer Motion |
+| Charts | Recharts |
+| Backend | FastAPI (Python 3.11) |
+| ML | scikit-learn, TF-IDF, Naive Bayes |
+| Database | PostgreSQL 15 (Supabase) |
+| Auth | Supabase Auth + JWT |
+| Deploy | Vercel (frontend) + Railway (backend) |
+| CI/CD | GitHub Actions |
 
-- **Vite** - Next-generation frontend tooling
-- **TypeScript** - Type-safe JavaScript
-- **React** - UI library
-- **shadcn-ui** - Modern UI components
-- **Tailwind CSS** - Utility-first CSS framework
-- **Supabase** - Backend and database
-- **Framer Motion** - Smooth animations
-- **React Router** - Client-side routing
-- **TensorFlow.js** - Machine learning capabilities
+---
 
-## 📦 Installation
+## 🚀 Quick Start
 
-Follow these steps to get started:
-
-```sh
-# Step 1: Clone the repository
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory
-cd momentum-mind-ai
-
-# Step 3: Install dependencies
+### Frontend
+```bash
 npm install
-
-# Step 4: Start the development server
 npm run dev
+# Opens at http://localhost:8080
 ```
 
-## 🚀 Development
-
-```sh
-# Run development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
+### Backend
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
+# API at http://localhost:8000
+# Docs at http://localhost:8000/docs
 ```
 
-## 🆕 Recent Updates
+### Environment Variables
 
-### Enhanced Resume Analyzer (Latest Release)
-The Resume Analyzer has been completely upgraded with dynamic role support and comprehensive skill analysis:
-
-1. **Select Your Target Role**: Choose from 17+ career roles in the dropdown
-2. **Upload Your Resume**: Paste your resume content or upload a file
-3. **Get Instant Analysis**: Receive detailed skill matching and gap analysis
-4. **View Results**: See matched skills, missing skills, and match percentage
-5. **Take Action**: Get specific recommendations for skill development
-
-### Example Results:
-- **Web Developer**: 106% match with HTML, CSS, JavaScript skills
-- **AI/ML Engineer**: 48% match with Python, TensorFlow, PyTorch skills  
-- **Data Scientist**: 17% match with limited relevant skills
-
-The system automatically adapts to any selected role and provides role-specific insights and recommendations.
-
-## 📝 Project Structure
-
-```
-src/
-├── components/        # Reusable UI components
-│   ├── EnhancedResumeAnalyzer.tsx  # Main resume analysis component
-│   ├── SkillAnalyzerCard.tsx       # Skill analysis display
-│   └── SkillsComparisonChart.tsx   # Skills visualization
-├── pages/            # Route pages
-├── lib/              # Utility functions and services
-│   ├── enhancedResumeAnalysisService.ts  # Enhanced analysis logic
-│   ├── roleDataService.ts               # Role definitions and skill matching
-│   └── resumeAnalysisService.ts         # Original analysis service
-├── hooks/            # Custom React hooks
-├── integrations/     # External service integrations
-└── main.tsx          # Application entry point
+Create `.env` in root:
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_anon_key
+VITE_API_URL=http://localhost:8000/api
 ```
 
-## 🔧 Technical Implementation
+Create `backend/.env`:
+```env
+DATABASE_URL=postgresql://postgres:password@localhost:5432/resume_intelligence
+JWT_SECRET=your-secret-key
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_KEY=your_service_key
+```
 
-### Enhanced Resume Analyzer Architecture
-- **Role Data Service**: Comprehensive skill definitions for 17+ career roles
-- **Skill Matching Engine**: Fuzzy matching with related skills for accurate detection
-- **Analysis Pipeline**: Extract → Match → Categorize → Recommend
-- **Dynamic UI**: Real-time updates based on selected role
-- **Priority System**: Critical vs Important vs Nice-to-have skill categorization
+---
 
-## 🌐 Deployment
+## 🗄️ Database Setup
 
-The project is deployed on **Vercel** for automatic deployments from GitHub.
+Run migrations in order in Supabase SQL Editor:
 
-## 👤 Built By
+```
+001_create_skills_tables.sql
+002_create_training_logs_table.sql
+003_create_user_profiles_table.sql
+...
+013_ml_adbms_upgrade.sql
+014_demo_data_policy.sql
+015_soft_computing_scores.sql
+016_production_adbms.sql
+```
 
-Developed by **Adrian** - Focused on empowering professionals with AI-driven career guidance, resume tools, job matching, and analytics.
+Then disable RLS for demo mode:
+```sql
+ALTER TABLE job_matches DISABLE ROW LEVEL SECURITY;
+ALTER TABLE audit_logs DISABLE ROW LEVEL SECURITY;
+```
 
-## 📄 License
+---
 
-All rights reserved.
+## 🐳 Docker
+
+```bash
+# Backend only
+cd backend
+docker build -t resume-api .
+docker run -p 8000:8000 --env-file .env resume-api
+```
+
+---
+
+## 📊 ADBMS Concepts (Viva Ready)
+
+| Concept | Implementation |
+|---------|---------------|
+| Table Partitioning | `job_matches_partitioned` RANGE by `created_at` monthly |
+| Full-Text Search | `tsvector` column + GIN index + `plainto_tsquery()` |
+| Stored Procedures | `calculate_match()`, `get_skill_gap()`, `export_user_data()` |
+| Materialized Views | `top_job_matches_view`, `skill_demand_analysis` |
+| Triggers | `trg_resume_insert_audit`, `trg_job_match_insert_audit`, `trg_resume_versioning` |
+| JSONB + GIN | `matched_skills`, `missing_skills` stored as JSONB with GIN indexes |
+| RLS | Per-user data isolation on all tables |
+| Query Optimization | 15+ indexes, EXPLAIN ANALYZE documented |
+| Backup | `export_user_data(user_id)` returns full JSONB dump |
+
+---
+
+## 🤖 ML Pipeline
+
+```
+Resume Text (PDF/DOCX/TXT)
+    ↓ pdfjs-dist / mammoth
+Extracted Text
+    ↓ Alias Map (200+ mappings)
+Extracted Skills []
+    ↓ TF-IDF Vectorizer
+Feature Vector
+    ↓ Multinomial Naive Bayes
+Predicted Role + Confidence
+    ↓ Fuzzy Matcher (Levenshtein + Jaccard)
+Matched / Partial / Missing Skills
+    ↓ Weighted Scoring
+final_score = 0.7 × ML_score + 0.3 × Fuzzy_score
+```
+
+---
+
+## 📁 Project Structure
+
+```
+├── src/
+│   ├── ai/ml/          # TF-IDF, Naive Bayes, Fuzzy Matcher, Skill Analyzer
+│   ├── data/           # job_roles_dataset.json, learningResources.ts
+│   ├── pages/          # All page components
+│   ├── services/       # API services (Supabase + FastAPI backend)
+│   └── components/     # Reusable UI components
+├── backend/
+│   ├── main.py         # FastAPI app
+│   ├── ml/             # Python ML analyzer + parsers
+│   ├── routers/        # API route handlers
+│   └── Dockerfile
+├── supabase/
+│   └── migrations/     # 016 SQL migration files
+└── .github/
+    └── workflows/      # CI/CD deploy pipeline
+```
+
+---
+
+## 👨‍💻 Author
+
+Built by Adrian — Next Step Career AI

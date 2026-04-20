@@ -14,7 +14,11 @@ import {
   Database,
   LogOut,
   User,
-  Briefcase
+  Briefcase,
+  Search,
+  Trophy,
+  GitBranch,
+  TrendingUp,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
@@ -30,13 +34,17 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 const navigation = [
-  { name: "Resume Analyzer",   href: "/resume",           icon: FileText  },
-  { name: "Resume Insights",   href: "/analytics",        icon: BarChart3 },
-  { name: "DBMS Analytics",    href: "/dbms-analytics",   icon: Database  },
-  { name: "Career Roadmap",    href: "/roadmap",          icon: Route     },
-  { name: "Job Matches",       href: "/job-matches",      icon: Briefcase },
-  { name: "Networking Hub",    href: "/networking",       icon: Users     },
-  { name: "Courses",           href: "/courses",          icon: Bot       },
+  { name: "Resume Analyzer",   href: "/resume",                icon: FileText  },
+  { name: "Resume Insights",   href: "/analytics",             icon: BarChart3 },
+  { name: "Job Matching",      href: "/job-matching",          icon: Briefcase },
+  { name: "Resume Ranking",    href: "/ranking",               icon: Trophy    },
+  { name: "Search Resumes",    href: "/search",                icon: Search    },
+  { name: "DBMS Analytics",    href: "/dbms-analytics",        icon: Database  },
+  { name: "Prod Analytics",    href: "/production-analytics",  icon: TrendingUp },
+  { name: "Career Roadmap",    href: "/roadmap",               icon: Route     },
+  { name: "Networking Hub",    href: "/networking",            icon: Users     },
+  { name: "Courses",           href: "/courses",               icon: Bot       },
+  { name: "Architecture",      href: "/architecture",          icon: GitBranch },
 ]
 
 export function Sidebar() {

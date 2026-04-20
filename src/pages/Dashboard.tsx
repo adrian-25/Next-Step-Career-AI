@@ -1,15 +1,16 @@
-import { useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
   FileText, Route, MessageSquare, TrendingUp, Users, ArrowRight,
   Sparkles, Target, Database, Briefcase, BarChart3, Bot,
-  CheckCircle2, Clock, Zap, Award, Star,
+  CheckCircle2, Clock, Zap, Award, Star, Search, Download,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { getAnalyticsOverview, checkBackendHealth, downloadUserBackup } from '@/services/backendApi.service';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -80,6 +81,19 @@ export function Dashboard() {
   const analysis  = useMemo(getLastAnalysis, []);
   const history   = useMemo(getHistory, []);
   const role      = useMemo(getRole, []);
+
+  // Live backend metrics
+  const [liveMetrics, setLiveMetrics] = useState<{
+    total_resumes: number; avg_match_score: number; total_skills: number; total_analyses: number;
+  } | null>(null);
+  const [backendOnline, setBackendOnline] = useState(false);
+
+  useEffect(() => {
+    checkBackendHealth().then(online => {
+      setBackendOnline(online);
+      if (online) getAnalyticsOverview().then(setLiveMetrics).catch(() => {});
+    });
+  }, []);
 
   const hasAnalysis   = analysis !== null;
   const matchScore    = analysis?.skillMatch?.matchScore ?? 0;
@@ -307,9 +321,18 @@ export function Dashboard() {
         <motion.div {...fadeUp(0.35)}>
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
             <Bot className="h-4 w-4" /> Platform Stats
+            {backendOnline
+              ? <Badge className="text-xs bg-green-100 text-green-700 ml-1">Backend Online</Badge>
+              : <Badge className="text-xs bg-gray-100 text-gray-500 ml-1">Browser Mode</Badge>
+            }
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {PLATFORM_STATS.map(({ label, value, icon: Icon }, i) => (
+            {(liveMetrics ? [
+              { label: 'Total Resumes',    value: liveMetrics.total_resumes,   icon: FileText },
+              { label: 'Avg Match Score',  value: `${liveMetrics.avg_match_score}%`, icon: Target },
+              { label: 'Skills Tracked',   value: liveMetrics.total_skills,    icon: TrendingUp },
+              { label: 'Analyses Run',     value: liveMetrics.total_analyses,  icon: Users },
+            ] : PLATFORM_STATS).map(({ label, value, icon: Icon }, i) => (
               <motion.div
                 key={label}
                 initial={{ opacity: 0, y: 16 }}
@@ -330,7 +353,28 @@ export function Dashboard() {
           </div>
         </motion.div>
 
+        {/* ── Backup / Export ── */}
+        <motion.div {...fadeUp(0.4)}>
+          <Card className="border-dashed border-2 border-blue-200 bg-blue-50/30">
+            <CardContent className="py-5 flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <p className="font-semibold text-sm">Export Your Data</p>
+                <p className="text-xs text-muted-foreground">Download all your resume analyses as JSON backup</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                onClick={() => downloadUserBackup('00000000-0000-0000-0000-000000000001')}
+              >
+                <Download className="h-4 w-4 mr-1" /> Download Backup
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+
       </div>
     </div>
   );
 }
+
