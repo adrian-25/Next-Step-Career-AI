@@ -20,6 +20,7 @@ import {
   GitBranch,
   TrendingUp,
   Layers,
+  Award,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
@@ -36,6 +37,7 @@ import {
 
 const navigation = [
   { name: "Resume Analyzer",   href: "/resume",                icon: FileText  },
+  { name: "Resume Score",      href: "/score",                 icon: Award     },
   { name: "Resume Insights",   href: "/analytics",             icon: BarChart3 },
   { name: "Job Matching",      href: "/job-matching",          icon: Briefcase },
   { name: "Resume Ranking",    href: "/ranking",               icon: Trophy    },

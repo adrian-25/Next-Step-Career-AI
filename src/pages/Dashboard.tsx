@@ -6,8 +6,7 @@ import {
   Sparkles, Target, Database, Briefcase, BarChart3, Bot,
   CheckCircle2, Clock, Zap, Award, Star, Search, Download,
   Trophy, GitBranch, Layers,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
+} from 'lucide-react';import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -59,6 +58,7 @@ function timeAgo(iso: string) {
 
 const QUICK_ACTIONS = [
   { title: 'Resume Analyzer',   desc: 'Upload & analyze your resume',         icon: FileText,      href: '/resume',                gradient: 'from-indigo-500 to-purple-600' },
+  { title: 'Resume Score',      desc: 'Detailed score breakdown & tips',       icon: Award,         href: '/score',                 gradient: 'from-amber-500 to-orange-500' },
   { title: 'Resume Insights',   desc: 'View charts & skill breakdown',         icon: BarChart3,     href: '/analytics',             gradient: 'from-blue-500 to-cyan-500' },
   { title: 'Job Matching',      desc: 'Compare resume vs job description',     icon: Briefcase,     href: '/job-matching',          gradient: 'from-emerald-500 to-teal-500' },
   { title: 'Skill Gap',         desc: 'Current → target role learning plan',   icon: Layers,        href: '/skill-gap',             gradient: 'from-violet-500 to-purple-600' },
@@ -69,7 +69,6 @@ const QUICK_ACTIONS = [
   { title: 'Career Roadmap',    desc: 'Step-by-step growth plan',              icon: Route,         href: '/roadmap',               gradient: 'from-orange-500 to-amber-500' },
   { title: 'AI Career Mentor',  desc: 'Chat with your AI mentor',              icon: MessageSquare, href: '/mentor',                gradient: 'from-fuchsia-500 to-purple-600' },
   { title: 'Architecture',      desc: 'System diagram & ADBMS features',      icon: GitBranch,     href: '/architecture',          gradient: 'from-slate-500 to-gray-600' },
-  { title: 'Courses',           desc: 'Curated learning resources',            icon: Bot,           href: '/courses',               gradient: 'from-cyan-500 to-teal-600' },
 ];
 
 // ── Platform stats (static) ───────────────────────────────────────────────────

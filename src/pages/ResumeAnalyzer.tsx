@@ -7,9 +7,10 @@ import { Progress } from '@/components/ui/progress';
 import {
   CheckCircle, AlertCircle, ExternalLink, BookOpen, Target,
   ChevronRight, RotateCcw, Briefcase, Brain, Upload,
-  FileText, Cpu, ScanText, Search, UploadCloud, CheckCircle2,
+  FileText, Cpu, ScanText, Search, UploadCloud, CheckCircle2, Award,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 import { MLAnalysisService, MLAnalysisResult } from '@/services/mlAnalysis.service';
 import { getDataset, JobRoleEntry } from '@/ai/ml/rolePredictor';
 import { FileProcessingService } from '@/lib/fileProcessingService';
@@ -69,6 +70,7 @@ function MLResultsView({ result, selectedRole, onReset }: {
   selectedRole: string;
   onReset: () => void;
 }) {
+  const navigate = useNavigate();
   const roleLabel = ROLES.find(r => r.key === selectedRole)?.label ?? selectedRole;
   const recMap = new Map(result.recommendations.map(r => [r.skill.toLowerCase(), r.resources]));
 
@@ -81,9 +83,14 @@ function MLResultsView({ result, selectedRole, onReset }: {
           <h2 className="text-xl font-semibold">ML Analysis Complete</h2>
           <Badge variant="secondary">{roleLabel}</Badge>
         </div>
-        <Button variant="outline" size="sm" onClick={onReset}>
-          <RotateCcw className="h-4 w-4 mr-1" /> Start Over
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => navigate('/score')}>
+            <Award className="h-4 w-4 mr-1" /> View Score
+          </Button>
+          <Button variant="outline" size="sm" onClick={onReset}>
+            <RotateCcw className="h-4 w-4 mr-1" /> Start Over
+          </Button>
+        </div>
       </div>
 
       {/* ML Prediction card */}
