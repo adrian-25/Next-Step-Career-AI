@@ -1,6 +1,6 @@
 # Next Step Career AI — Resume Intelligence Platform
 
-A production-grade AI-powered resume analysis and career guidance platform built with React, FastAPI, PostgreSQL, and scikit-learn.
+A production-grade AI-powered resume analysis and career guidance platform built with React 18, FastAPI, PostgreSQL (Supabase), and scikit-learn.
 
 ## 🚀 Live Demo
 
@@ -13,13 +13,13 @@ A production-grade AI-powered resume analysis and career guidance platform built
 ## 🏗️ Architecture
 
 ```
-Frontend (React + Vite + Tailwind)
+Frontend (React 18 + Vite + TypeScript + Tailwind CSS)
     ↓ HTTP/REST
-Backend (FastAPI Python)
+Backend (FastAPI Python 3.11)
     ↓ ML Pipeline
-ML Layer (scikit-learn TF-IDF + Naive Bayes + Fuzzy Logic)
+ML Layer (TF-IDF + Naive Bayes + Fuzzy Logic — runs in browser too)
     ↓ SQL + JSONB
-Database (PostgreSQL / Supabase)
+Database (PostgreSQL 15 / Supabase)
 ```
 
 ---
@@ -32,29 +32,42 @@ Database (PostgreSQL / Supabase)
 - **Weighted scoring**: `final_score = 0.7 × ML + 0.3 × Fuzzy`
 - **200+ skill aliases** (React.js → react, sklearn → scikit-learn, etc.)
 - **10 job roles** with weighted skill datasets
+- **Job compatibility** — scores resume against all 10 roles simultaneously
 
-### ADBMS Features
-- **Table Partitioning** — `job_matches` partitioned by month (RANGE)
+### ADBMS Features (Migrations 001–017)
+- **Table Partitioning** — `job_matches_partitioned` RANGE by month
 - **Full-Text Search** — PostgreSQL `tsvector` + GIN index + `search_resumes()` function
 - **Stored Procedures** — `calculate_match()`, `get_skill_gap()`, `export_user_data()`
 - **Materialized Views** — `top_job_matches_view`, `skill_demand_analysis`
 - **Audit Triggers** — auto-log all inserts to `audit_logs`
 - **Row Level Security** — users see only their own data
-- **Resume Versioning** — auto-version on update
+- **Resume Versioning** — auto-version on update via trigger
 - **Query Optimization** — 15+ composite indexes on JSONB + timestamp columns
+- **Analytics Views** — `daily_upload_stats`, `role_distribution`, `top_skills_view`
+- **Skill Gap Sessions** — `skill_gap_sessions` table + `top_skill_gaps` view
 
 ### Pages
+
 | Page | Route | Description |
 |------|-------|-------------|
-| Dashboard | `/dashboard` | Live metrics + recent activity |
-| Resume Analyzer | `/resume` | Upload + ML analysis |
-| Job Matching | `/job-matching` | Resume vs JD comparison |
-| Resume Ranking | `/ranking` | Multi-resume ranking table |
-| Search | `/search` | Full-text PostgreSQL search |
-| Resume Insights | `/analytics` | Radar chart + timeline |
-| DBMS Analytics | `/dbms-analytics` | Live DB stored proc data |
-| Career Roadmap | `/roadmap` | Role-based learning path |
-| Architecture | `/architecture` | System diagram + ADBMS checklist |
+| Landing | `/` | Premium dark landing page with feature cards |
+| Dashboard | `/dashboard` | Live metrics, recent activity, quick actions |
+| Resume Analyzer | `/resume` | Upload PDF/DOCX/TXT + ML analysis |
+| Resume Score | `/score` | Detailed score breakdown (Skills/Projects/Experience/Education) |
+| Resume Insights | `/analytics` | Radar chart, timeline, job compatibility |
+| Job Matching | `/job-matching` | Resume vs job description comparison |
+| Resume Ranking | `/ranking` | Multi-resume ranking table with medals |
+| Skill Gap | `/skill-gap` | Current → target role gap analysis + learning timeline |
+| Search | `/search` | Full-text PostgreSQL search across resumes |
+| DBMS Analytics | `/dbms-analytics` | Live stored proc data, audit logs, JSONB queries |
+| Prod Analytics | `/production-analytics` | FastAPI backend charts (upload trend, role dist, top skills) |
+| Career Roadmap | `/roadmap` | Role-based step-by-step learning path |
+| Courses | `/courses` | Personalized course recommender (gap-aware) |
+| AI Career Mentor | `/mentor` | Skill analysis + recommendations |
+| Career Chatbot | `/chatbot` | AI career Q&A |
+| Networking Hub | `/networking` | LinkedIn bio + connection message generator |
+| Portfolio | `/portfolio` | Project idea generator |
+| Architecture | `/architecture` | SVG system diagram + ADBMS checklist |
 
 ---
 
@@ -62,10 +75,14 @@ Database (PostgreSQL / Supabase)
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React 18, Vite, TypeScript, Tailwind CSS, Framer Motion |
-| Charts | Recharts |
+| Frontend | React 18, Vite 7, TypeScript, Tailwind CSS, Framer Motion |
+| UI Components | shadcn/ui (Radix UI primitives) |
+| Charts | Recharts 2 |
 | Backend | FastAPI (Python 3.11) |
-| ML | scikit-learn, TF-IDF, Naive Bayes |
+| ML (Python) | scikit-learn, TF-IDF, Naive Bayes |
+| ML (Browser) | Custom TF-IDF + Naive Bayes in TypeScript |
+| PDF Parsing | pdfjs-dist (browser), pdfminer (backend) |
+| DOCX Parsing | mammoth (browser), python-docx (backend) |
 | Database | PostgreSQL 15 (Supabase) |
 | Auth | Supabase Auth + JWT |
 | Deploy | Vercel (frontend) + Railway (backend) |
@@ -118,11 +135,20 @@ Run migrations in order in Supabase SQL Editor:
 001_create_skills_tables.sql
 002_create_training_logs_table.sql
 003_create_user_profiles_table.sql
-...
+004_create_skill_database_table.sql
+005_create_resume_scores_table.sql
+006_create_section_analyses_table.sql
+007_create_trending_skills_table.sql
+008_create_job_recommendations_table.sql
+009_create_skill_matches_table.sql
+010_seed_skill_database.sql
+011_add_neuro_fuzzy_columns.sql
+012_advanced_dbms_features.sql
 013_ml_adbms_upgrade.sql
 014_demo_data_policy.sql
 015_soft_computing_scores.sql
 016_production_adbms.sql
+017_skill_gap_sessions.sql
 ```
 
 Then disable RLS for demo mode:
@@ -136,7 +162,6 @@ ALTER TABLE audit_logs DISABLE ROW LEVEL SECURITY;
 ## 🐳 Docker
 
 ```bash
-# Backend only
 cd backend
 docker build -t resume-api .
 docker run -p 8000:8000 --env-file .env resume-api
@@ -157,6 +182,8 @@ docker run -p 8000:8000 --env-file .env resume-api
 | RLS | Per-user data isolation on all tables |
 | Query Optimization | 15+ indexes, EXPLAIN ANALYZE documented |
 | Backup | `export_user_data(user_id)` returns full JSONB dump |
+| Analytics Views | `daily_upload_stats`, `role_distribution`, `top_skills_view` |
+| Skill Gap Sessions | `skill_gap_sessions` table + `top_skill_gaps` + `role_transitions` views |
 
 ---
 
@@ -164,18 +191,20 @@ docker run -p 8000:8000 --env-file .env resume-api
 
 ```
 Resume Text (PDF/DOCX/TXT)
-    ↓ pdfjs-dist / mammoth
+    ↓ pdfjs-dist / mammoth (browser) or pdfminer / python-docx (backend)
 Extracted Text
-    ↓ Alias Map (200+ mappings)
+    ↓ Alias Map (200+ mappings: React.js→react, sklearn→scikit-learn, etc.)
 Extracted Skills []
-    ↓ TF-IDF Vectorizer
+    ↓ TF-IDF Vectorizer (unigram + bigram, max 5000 features)
 Feature Vector
-    ↓ Multinomial Naive Bayes
-Predicted Role + Confidence
-    ↓ Fuzzy Matcher (Levenshtein + Jaccard)
+    ↓ Multinomial Naive Bayes (alpha=0.1)
+Predicted Role + Confidence + Probabilities
+    ↓ Fuzzy Matcher (Levenshtein + Jaccard, threshold 0.85/0.50)
 Matched / Partial / Missing Skills
     ↓ Weighted Scoring
 final_score = 0.7 × ML_score + 0.3 × Fuzzy_score
+    ↓ Job Compatibility (all 10 roles scored simultaneously)
+Ranked Role List
 ```
 
 ---
@@ -184,20 +213,32 @@ final_score = 0.7 × ML_score + 0.3 × Fuzzy_score
 
 ```
 ├── src/
-│   ├── ai/ml/          # TF-IDF, Naive Bayes, Fuzzy Matcher, Skill Analyzer
-│   ├── data/           # job_roles_dataset.json, learningResources.ts
-│   ├── pages/          # All page components
-│   ├── services/       # API services (Supabase + FastAPI backend)
-│   └── components/     # Reusable UI components
+│   ├── ai/
+│   │   ├── ml/         # TF-IDF, Naive Bayes, Fuzzy Matcher, Skill Analyzer, Role Predictor
+│   │   ├── fuzzy/      # Fuzzy decision engine
+│   │   ├── neuro/      # Neural resume evaluator
+│   │   ├── ranking/    # Resume ranking engine
+│   │   ├── scorer/     # Resume scorer (Skills/Projects/Experience/Education)
+│   │   ├── parser/     # Resume parser, skill extractor, role detector
+│   │   └── matcher/    # Skill matcher, job recommender
+│   ├── data/
+│   │   ├── job_roles_dataset.json   # 10 roles with weighted skills
+│   │   ├── learningResources.ts     # 40+ skills with free + paid courses
+│   │   └── skills/                  # Per-role skill definitions
+│   ├── pages/          # 17 page components
+│   ├── services/       # Supabase + FastAPI API services
+│   ├── components/     # Reusable UI components
+│   └── hooks/          # Custom React hooks
 ├── backend/
-│   ├── main.py         # FastAPI app
+│   ├── main.py         # FastAPI app (CORS, GZip, lifespan)
 │   ├── ml/             # Python ML analyzer + parsers
-│   ├── routers/        # API route handlers
+│   ├── routers/        # resume, match, search, analytics, backup, auth
+│   ├── core/           # config, database
 │   └── Dockerfile
 ├── supabase/
-│   └── migrations/     # 016 SQL migration files
+│   └── migrations/     # 17 SQL migration files (001–017)
 └── .github/
-    └── workflows/      # CI/CD deploy pipeline
+    └── workflows/      # CI/CD: Vercel (frontend) + Railway (backend)
 ```
 
 ---

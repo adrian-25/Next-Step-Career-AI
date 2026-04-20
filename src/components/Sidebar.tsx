@@ -21,6 +21,7 @@ import {
   TrendingUp,
   Layers,
   Award,
+  BookMarked,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
@@ -49,6 +50,7 @@ const navigation = [
   { name: "Networking Hub",    href: "/networking",            icon: Users     },
   { name: "Courses",           href: "/courses",               icon: Bot       },
   { name: "Architecture",      href: "/architecture",          icon: GitBranch },
+  { name: "Project Summary",   href: "/summary",               icon: BookMarked },
 ]
 
 export function Sidebar() {
