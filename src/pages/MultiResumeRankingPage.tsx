@@ -90,147 +90,163 @@ export function MultiResumeRankingPage() {
       </div>
 
       {/* Config */}
-      <Card>
-        <CardContent className="pt-5 space-y-4">
-          <div>
-            <label className="text-sm font-medium mb-2 block">Target Role</label>
-            <select
-              value={targetRole}
-              onChange={e => setTargetRole(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
-            >
-              {ROLES.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
-            </select>
-          </div>
-
-          {/* Drop zone */}
-          <div
-            className="border-2 border-dashed border-emerald-300 rounded-xl p-8 text-center cursor-pointer hover:bg-emerald-50 transition-colors"
-            onDragOver={e => e.preventDefault()}
-            onDrop={handleDrop}
-            onClick={() => document.getElementById('multi-upload')?.click()}
+      <div className="ent-card p-5 space-y-4">
+        <div>
+          <label className="section-label mb-2 block">Target Role</label>
+          <select
+            value={targetRole}
+            onChange={e => setTargetRole(e.target.value)}
+            className="w-full border rounded-lg px-3 py-2 text-sm"
+            style={{ background: 'hsl(var(--card))', borderColor: 'hsl(var(--border))' }}
+            aria-label="Select target role"
           >
-            <input id="multi-upload" type="file" multiple accept=".txt,.pdf" className="hidden" onChange={handleFileInput} />
-            <Upload className="h-8 w-8 mx-auto mb-2 text-emerald-500" />
-            <p className="text-sm font-medium">Drop resumes here or click to browse</p>
-            <p className="text-xs text-muted-foreground mt-1">TXT or PDF — multiple files supported</p>
+            {ROLES.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
+          </select>
+        </div>
+
+        {/* Drop zone */}
+        <div
+          className="upload-zone p-8 text-center"
+          onDragOver={e => e.preventDefault()}
+          onDrop={handleDrop}
+          onClick={() => document.getElementById('multi-upload')?.click()}
+          role="button"
+          aria-label="Upload resume files"
+          tabIndex={0}
+          onKeyDown={e => e.key === 'Enter' && document.getElementById('multi-upload')?.click()}
+        >
+          <input id="multi-upload" type="file" multiple accept=".txt,.pdf" className="hidden" onChange={handleFileInput} />
+          <div className="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center"
+            style={{ background: 'hsl(var(--primary) / 0.08)' }}>
+            <Upload className="h-6 w-6" style={{ color: 'hsl(var(--primary))' }} aria-hidden="true" />
           </div>
+          <p className="text-sm font-semibold">Drop resumes here or click to browse</p>
+          <p className="text-xs mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>TXT or PDF — multiple files supported</p>
+        </div>
 
-          {/* File list */}
-          {files.length > 0 && (
-            <div className="space-y-1.5">
-              {files.map((f, i) => (
-                <div key={i} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg text-sm">
-                  <span className="truncate">{f.name}</span>
-                  <button onClick={() => setFiles(prev => prev.filter((_, j) => j !== i))}>
-                    <X className="h-4 w-4 text-muted-foreground hover:text-red-500" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+        {/* File list */}
+        {files.length > 0 && (
+          <div className="space-y-1.5">
+            {files.map((f, i) => (
+              <div key={i} className="flex items-center justify-between p-2.5 rounded-lg text-sm"
+                style={{ background: 'hsl(var(--muted) / 0.4)', border: '1px solid hsl(var(--border))' }}>
+                <span className="truncate text-sm font-medium">{f.name}</span>
+                <button
+                  onClick={() => setFiles(prev => prev.filter((_, j) => j !== i))}
+                  aria-label={`Remove ${f.name}`}
+                  className="ml-2 p-0.5 rounded transition-colors hover:text-red-500"
+                  style={{ color: 'hsl(var(--muted-foreground))' }}
+                >
+                  <X className="h-4 w-4" aria-hidden="true" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
-          <Button
-            className="w-full bg-[#1e40af] hover:bg-[#1e3a8a] text-white"
-            onClick={handleRank}
-            disabled={loading || files.length === 0}
-          >
-            {loading ? 'Ranking...' : `Rank ${files.length} Resume${files.length !== 1 ? 's' : ''}`}
-          </Button>
-        </CardContent>
-      </Card>
+        <Button
+          className="w-full gradient-bg text-white font-semibold"
+          onClick={handleRank}
+          disabled={loading || files.length === 0}
+        >
+          {loading ? 'Ranking...' : `Rank ${files.length} Resume${files.length !== 1 ? 's' : ''}`}
+        </Button>
+      </div>
 
       {/* Rankings table */}
       {rankings.length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Rankings — {ROLES.find(r => r.key === targetRole)?.label}</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-muted/30 text-xs uppercase text-muted-foreground">
-                    <th className="text-left py-3 px-4">Rank</th>
-                    <th className="text-left py-3 px-4">Resume</th>
-                    <th className="text-left py-3 px-4">Predicted Role</th>
-                    <th className="text-right py-3 px-4">Match %</th>
-                    <th className="text-left py-3 px-4">Top Skills</th>
-                    <th className="text-right py-3 px-4">Details</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rankings.map((r, i) => (
-                    <>
-                      <motion.tr
-                        key={r.name}
-                        initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                        className={`border-b hover:bg-blue-50/30 cursor-pointer ${i % 2 === 0 ? '' : 'bg-slate-50/50'}`}
-                        onClick={() => setExpanded(expanded === r.name ? null : r.name)}
-                      >
-                        <td className="py-3 px-4">
-                          <span className={`font-bold text-lg ${medalColor(r.rank)}`}>#{r.rank}</span>
-                        </td>
-                        <td className="py-3 px-4 font-medium truncate max-w-[160px]">{r.name}</td>
-                        <td className="py-3 px-4">
-                          <Badge variant="secondary" className="text-xs capitalize">
-                            {r.predictedRole.replace(/_/g, ' ')}
-                          </Badge>
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Progress value={r.matchScore} className="w-16 h-1.5" />
-                            <span className={`font-bold text-sm border rounded px-1.5 py-0.5 ${scoreColor(r.matchScore)}`}>
-                              {r.matchScore}%
-                            </span>
+        <div className="ent-card overflow-hidden">
+          <div className="px-5 py-4 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
+            <p className="font-display font-semibold text-sm">
+              Rankings — {ROLES.find(r => r.key === targetRole)?.label}
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="ent-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Resume</th>
+                  <th>Predicted Role</th>
+                  <th className="text-right">Match %</th>
+                  <th>Top Skills</th>
+                  <th className="text-right">Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rankings.map((r, i) => (
+                  <>
+                    <motion.tr
+                      key={r.name}
+                      initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="cursor-pointer"
+                      onClick={() => setExpanded(expanded === r.name ? null : r.name)}
+                    >
+                      <td>
+                        <span className={`font-bold text-base ${medalColor(r.rank)}`}>#{r.rank}</span>
+                      </td>
+                      <td className="font-medium truncate max-w-[160px]">{r.name}</td>
+                      <td>
+                        <span className="text-xs px-2 py-0.5 rounded-full font-medium capitalize"
+                          style={{ background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}>
+                          {r.predictedRole.replace(/_/g, ' ')}
+                        </span>
+                      </td>
+                      <td className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <div className="progress-enterprise w-16">
+                            <div className="progress-enterprise-fill" style={{ width: `${r.matchScore}%` }} />
                           </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex flex-wrap gap-1">
-                            {r.matchedSkills.map((s: string) => (
-                              <Badge key={s} className="text-xs bg-emerald-100 text-emerald-700 capitalize">{s}</Badge>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          {expanded === r.name
-                            ? <ChevronUp className="h-4 w-4 ml-auto text-muted-foreground" />
-                            : <ChevronDown className="h-4 w-4 ml-auto text-muted-foreground" />
-                          }
-                        </td>
-                      </motion.tr>
-                      {expanded === r.name && (
-                        <tr key={`${r.name}-detail`} className="bg-blue-50/20">
-                          <td colSpan={6} className="px-4 py-3">
-                            <div className="grid grid-cols-3 gap-4 text-xs">
-                              <div>
-                                <p className="font-semibold text-blue-700 mb-1">ML Score</p>
-                                <p className="text-2xl font-bold">{r.mlScore}%</p>
-                              </div>
-                              <div>
-                                <p className="font-semibold text-amber-700 mb-1">Fuzzy Score</p>
-                                <p className="text-2xl font-bold">{r.fuzzyScore}%</p>
-                              </div>
-                              <div>
-                                <p className="font-semibold text-rose-700 mb-1">Missing Skills</p>
-                                <div className="flex flex-wrap gap-1 mt-1">
-                                  {r.missingSkills.slice(0, 6).map((s: string) => (
-                                    <Badge key={s} className="text-xs bg-rose-100 text-rose-700 capitalize">{s}</Badge>
-                                  ))}
-                                </div>
+                          <span className={`font-bold text-sm border rounded px-1.5 py-0.5 ${scoreColor(r.matchScore)}`}>
+                            {r.matchScore}%
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="flex flex-wrap gap-1">
+                          {r.matchedSkills.map((s: string) => (
+                            <span key={s} className="badge-success text-xs px-1.5 py-0.5 rounded-full capitalize font-medium">{s}</span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="text-right">
+                        {expanded === r.name
+                          ? <ChevronUp className="h-4 w-4 ml-auto" style={{ color: 'hsl(var(--muted-foreground))' }} aria-hidden="true" />
+                          : <ChevronDown className="h-4 w-4 ml-auto" style={{ color: 'hsl(var(--muted-foreground))' }} aria-hidden="true" />
+                        }
+                      </td>
+                    </motion.tr>
+                    {expanded === r.name && (
+                      <tr key={`${r.name}-detail`} style={{ background: 'hsl(var(--primary) / 0.03)' }}>
+                        <td colSpan={6} className="px-4 py-3">
+                          <div className="grid grid-cols-3 gap-4 text-xs">
+                            <div>
+                              <p className="section-label mb-1">ML Score</p>
+                              <p className="font-display text-xl font-bold" style={{ color: '#2563EB' }}>{r.mlScore}%</p>
+                            </div>
+                            <div>
+                              <p className="section-label mb-1">Fuzzy Score</p>
+                              <p className="font-display text-xl font-bold" style={{ color: '#F59E0B' }}>{r.fuzzyScore}%</p>
+                            </div>
+                            <div>
+                              <p className="section-label mb-1">Missing Skills</p>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {r.missingSkills.slice(0, 6).map((s: string) => (
+                                  <span key={s} className="badge-error text-xs px-1.5 py-0.5 rounded-full capitalize font-medium">{s}</span>
+                                ))}
                               </div>
                             </div>
-                          </td>
-                        </tr>
-                      )}
-                    </>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </div>
   );

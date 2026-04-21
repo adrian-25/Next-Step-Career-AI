@@ -90,40 +90,34 @@ export function JobMatchingPage() {
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Left: inputs */}
         <div className="space-y-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Upload className="h-4 w-4 text-primary" /> Your Resume
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="Paste your resume text here..."
-                className="min-h-[200px] font-mono text-xs resize-none"
-                value={resumeText}
-                onChange={e => setResumeText(e.target.value)}
-              />
-            </CardContent>
-          </Card>
+          <div className="ent-card p-4">
+            <p className="section-label mb-3 flex items-center gap-2">
+              <Upload className="h-3.5 w-3.5" aria-hidden="true" /> Your Resume
+            </p>
+            <Textarea
+              placeholder="Paste your resume text here..."
+              className="min-h-[200px] font-code text-xs resize-none"
+              value={resumeText}
+              onChange={e => setResumeText(e.target.value)}
+              aria-label="Resume text"
+            />
+          </div>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Briefcase className="h-4 w-4 text-blue-600" /> Job Description
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                placeholder="Paste the job description here..."
-                className="min-h-[200px] font-mono text-xs resize-none"
-                value={jdText}
-                onChange={e => setJdText(e.target.value)}
-              />
-            </CardContent>
-          </Card>
+          <div className="ent-card p-4">
+            <p className="section-label mb-3 flex items-center gap-2">
+              <Briefcase className="h-3.5 w-3.5" aria-hidden="true" /> Job Description
+            </p>
+            <Textarea
+              placeholder="Paste the job description here..."
+              className="min-h-[200px] font-code text-xs resize-none"
+              value={jdText}
+              onChange={e => setJdText(e.target.value)}
+              aria-label="Job description text"
+            />
+          </div>
 
           <Button
-            className="w-full bg-[#1e40af] hover:bg-[#1e3a8a] text-white"
+            className="w-full gradient-bg text-white font-semibold"
             onClick={handleMatch}
             disabled={loading || !resumeText.trim() || !jdText.trim()}
           >
@@ -139,90 +133,94 @@ export function JobMatchingPage() {
               className="space-y-4"
             >
               {/* Score circle */}
-              <Card>
-                <CardContent className="pt-6 flex flex-col items-center gap-4">
-                  <ScoreCircle score={result.pct} />
-                  <div className="grid grid-cols-3 gap-4 w-full text-center">
-                    <div>
-                      <p className="text-2xl font-bold text-emerald-600">{result.matched.length}</p>
-                      <p className="text-xs text-muted-foreground">Matched</p>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-rose-600">{result.missing.length}</p>
-                      <p className="text-xs text-muted-foreground">Missing</p>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-blue-600">{result.jdSkills.length}</p>
-                      <p className="text-xs text-muted-foreground">JD Skills</p>
-                    </div>
+              <div className="ent-card p-6 flex flex-col items-center gap-4">
+                <ScoreCircle score={result.pct} />
+                <div className="grid grid-cols-3 gap-4 w-full text-center">
+                  <div>
+                    <p className="stat-number" style={{ color: '#10B981', fontSize: '1.75rem' }}>{result.matched.length}</p>
+                    <p className="text-xs text-muted-foreground">Matched</p>
                   </div>
-                </CardContent>
-              </Card>
+                  <div>
+                    <p className="stat-number" style={{ color: '#EF4444', fontSize: '1.75rem' }}>{result.missing.length}</p>
+                    <p className="text-xs text-muted-foreground">Missing</p>
+                  </div>
+                  <div>
+                    <p className="stat-number" style={{ color: '#2563EB', fontSize: '1.75rem' }}>{result.jdSkills.length}</p>
+                    <p className="text-xs text-muted-foreground">JD Skills</p>
+                  </div>
+                </div>
+              </div>
 
               {/* Skill comparison */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm">Skill Comparison</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {/* Matched */}
-                  {result.matched.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold text-emerald-700 mb-1.5 flex items-center gap-1">
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Matched ({result.matched.length})
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {result.matched.map((s: string) => (
-                          <Badge key={s} className="text-xs bg-emerald-100 text-emerald-700 capitalize">{s}</Badge>
-                        ))}
-                      </div>
+              <div className="ent-card p-4 space-y-4">
+                <p className="section-label">Skill Comparison</p>
+                {/* Matched */}
+                {result.matched.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold mb-2 flex items-center gap-1.5"
+                      style={{ color: '#059669' }}>
+                      <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> Matched ({result.matched.length})
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {result.matched.map((s: string) => (
+                        <span key={s} className="badge-success text-xs px-2 py-0.5 rounded-full capitalize font-medium">{s}</span>
+                      ))}
                     </div>
-                  )}
-                  {/* Missing */}
-                  {result.missing.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold text-rose-700 mb-1.5 flex items-center gap-1">
-                        <XCircle className="h-3.5 w-3.5" /> Missing ({result.missing.length})
-                      </p>
-                      <div className="space-y-1.5">
-                        {result.missing.slice(0, 8).map((s: string) => {
-                          const res = getResourcesForSkill(s);
-                          return (
-                            <div key={s} className="flex items-center justify-between p-2 bg-rose-50 rounded-lg border border-rose-100">
-                              <span className="text-xs font-medium capitalize">{s}</span>
-                              <div className="flex gap-1">
-                                {res.free && (
-                                  <a href={res.free.url} target="_blank" rel="noopener noreferrer">
-                                    <Badge className="text-xs bg-blue-100 text-blue-700 gap-1 cursor-pointer">
-                                      <BookOpen className="h-2.5 w-2.5" /> Free
-                                    </Badge>
-                                  </a>
-                                )}
-                                {res.paid && (
-                                  <a href={res.paid.url} target="_blank" rel="noopener noreferrer">
-                                    <Badge className="text-xs bg-purple-100 text-purple-700 gap-1 cursor-pointer">
-                                      <ExternalLink className="h-2.5 w-2.5" /> Course
-                                    </Badge>
-                                  </a>
-                                )}
-                              </div>
+                  </div>
+                )}
+                {/* Missing */}
+                {result.missing.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold mb-2 flex items-center gap-1.5"
+                      style={{ color: '#DC2626' }}>
+                      <XCircle className="h-3.5 w-3.5" aria-hidden="true" /> Missing ({result.missing.length})
+                    </p>
+                    <div className="space-y-1.5">
+                      {result.missing.slice(0, 8).map((s: string) => {
+                        const res = getResourcesForSkill(s);
+                        return (
+                          <div key={s} className="flex items-center justify-between p-2 rounded-lg border text-xs"
+                            style={{ background: '#FEF2F2', borderColor: '#FECACA' }}>
+                            <span className="font-medium capitalize">{s}</span>
+                            <div className="flex gap-1">
+                              {res.free && (
+                                <a href={res.free.url} target="_blank" rel="noopener noreferrer">
+                                  <span className="badge-info text-xs px-2 py-0.5 rounded-full cursor-pointer flex items-center gap-1">
+                                    <BookOpen className="h-2.5 w-2.5" aria-hidden="true" /> Free
+                                  </span>
+                                </a>
+                              )}
+                              {res.paid && (
+                                <a href={res.paid.url} target="_blank" rel="noopener noreferrer">
+                                  <span className="text-xs px-2 py-0.5 rounded-full cursor-pointer flex items-center gap-1"
+                                    style={{ background: '#F3E8FF', color: '#7C3AED' }}>
+                                    <ExternalLink className="h-2.5 w-2.5" aria-hidden="true" /> Course
+                                  </span>
+                                </a>
+                              )}
                             </div>
-                          );
-                        })}
-                      </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </div>
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
 
         {!result && !loading && (
-          <div className="flex items-center justify-center h-full min-h-[300px] text-center text-muted-foreground">
+          <div className="flex items-center justify-center h-full min-h-[300px] text-center">
             <div>
-              <Target className="h-12 w-12 mx-auto mb-3 opacity-20" />
-              <p className="text-sm">Paste your resume and job description, then click Analyze Match</p>
+              <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+                style={{ background: 'hsl(var(--muted))' }}>
+                <Target className="h-8 w-8" style={{ color: 'hsl(var(--muted-foreground))' }} aria-hidden="true" />
+              </div>
+              <p className="text-sm font-medium">Paste your resume and job description</p>
+              <p className="text-xs mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                then click Analyze Match to see your score
+              </p>
             </div>
           </div>
         )}
