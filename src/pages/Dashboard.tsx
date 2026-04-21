@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getAnalyticsOverview, checkBackendHealth, downloadUserBackup } from '@/services/backendApi.service';
 import { downloadLastAnalysisReport } from '@/services/resumeExport.service';
+import { useAuth } from '@/contexts/AuthContext';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -138,7 +139,13 @@ function ActionCard({ action, index }: { action: typeof QUICK_ACTIONS[0]; index:
 
 export function Dashboard() {
   const navigate  = useNavigate();
+  const { isEmployer } = useAuth();
   const analysis  = useMemo(getLastAnalysis, []);
+
+  // Employers should use the Employer Dashboard
+  useEffect(() => {
+    if (isEmployer) navigate('/employer', { replace: true });
+  }, [isEmployer, navigate]);
   const history   = useMemo(getHistory, []);
   const role      = useMemo(getRole, []);
 

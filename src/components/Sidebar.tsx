@@ -68,8 +68,37 @@ const NAV_GROUPS = [
 export function Sidebar() {
   const location = useLocation()
   const navigate  = useNavigate()
-  const { user, profile, signOut } = useAuth()
+  const { user, profile, signOut, userRole, isEmployer } = useAuth()
   const [collapsed, setCollapsed] = useState(false)
+
+  // Employer sees Analytics first, then limited resume tools
+  const EMPLOYER_NAV_GROUPS = [
+    {
+      label: 'Analytics',
+      items: [
+        { name: 'Employer Dashboard', href: '/employer',           icon: Building2,  },
+        { name: 'DBMS Analytics',     href: '/dbms-analytics',     icon: Database,   },
+        { name: 'Prod Analytics',     href: '/production-analytics', icon: TrendingUp, },
+      ],
+    },
+    {
+      label: 'Recruitment',
+      items: [
+        { name: 'Resume Ranking',   href: '/ranking',              icon: Trophy,     },
+        { name: 'Search Resumes',   href: '/search',               icon: Search,     },
+        { name: 'Job Matching',     href: '/job-matching',         icon: Briefcase,  },
+      ],
+    },
+    {
+      label: 'System',
+      items: [
+        { name: 'Architecture',     href: '/architecture',         icon: GitBranch,  },
+        { name: 'Project Summary',  href: '/summary',              icon: BookMarked, },
+      ],
+    },
+  ]
+
+  const activeGroups = isEmployer ? EMPLOYER_NAV_GROUPS : NAV_GROUPS
 
   const handleSignOut = async () => {
     try { await signOut() } catch { /* ignore */ }
@@ -135,7 +164,7 @@ export function Sidebar() {
 
       {/* ── Navigation ── */}
       <nav className="flex-1 overflow-y-auto py-3 scrollbar-thin px-2">
-        {NAV_GROUPS.map((group, gi) => (
+        {activeGroups.map((group, gi) => (
           <div key={group.label} className={gi > 0 ? 'mt-1' : ''}>
             {/* Group label */}
             <AnimatePresence>

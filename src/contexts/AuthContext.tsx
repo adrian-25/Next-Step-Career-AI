@@ -1,15 +1,22 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { AuthService, User, UserProfile } from '@/services/auth.service';
 
+// ── Role types ────────────────────────────────────────────────────────────────
+
+export type UserRole = 'user' | 'employer' | 'guest';
+
 interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
   loading: boolean;
+  userRole: UserRole;
   signUp: (data: any) => Promise<any>;
   signIn: (data: any) => Promise<any>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<UserProfile | null>;
   isAuthenticated: boolean;
+  isEmployer: boolean;
+  isUser: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,6 +29,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // ── Derive role from user metadata or localStorage ────────────────────────
+  const getUserRole = (u: User | null): UserRole => {
+    if (!u) return 'guest';
+    // Check user_metadata.role (set at signup)
+    const metaRole = (u as any)?.user_metadata?.role;
+    if (metaRole === 'employer') return 'employer';
+    if (metaRole === 'user') return 'user';
+    // Fallback: check localStorage (for demo mode)
+    const stored = localStorage.getItem('demo_role');
+    if (stored === 'employer') return 'employer';
+    return 'user';
+  };
+
+  const userRole: UserRole = getUserRole(user);
 
   useEffect(() => {
     // Get initial session
@@ -161,11 +183,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     profile,
     loading,
+    userRole,
     signUp,
     signIn,
     signOut,
     updateProfile,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    isEmployer: userRole === 'employer',
+    isUser: userRole === 'user' || userRole === 'guest',
   };
 
   return (
