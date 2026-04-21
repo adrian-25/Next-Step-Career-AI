@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { MLAnalysisService, MLAnalysisResult } from '@/services/mlAnalysis.service';
 import { downloadAnalysisReport } from '@/services/resumeExport.service';
+import { explainPrediction, ExplainabilityResult } from '@/ai/explainability/explainableAI';
 import { getDataset, JobRoleEntry } from '@/ai/ml/rolePredictor';
 import { FileProcessingService } from '@/lib/fileProcessingService';
 
@@ -72,8 +73,19 @@ function MLResultsView({ result, selectedRole, onReset }: {
   onReset: () => void;
 }) {
   const navigate = useNavigate();
+  const [showExplain, setShowExplain] = useState(false);
   const roleLabel = ROLES.find(r => r.key === selectedRole)?.label ?? selectedRole;
   const recMap = new Map(result.recommendations.map(r => [r.skill.toLowerCase(), r.resources]));
+
+  // Build explainability on demand
+  const explain = showExplain
+    ? explainPrediction(
+        result.extractedSkills.join(' '),
+        result.predictedRole,
+        result.probabilities,
+        result.extractedSkills
+      )
+    : null;
 
   return (
     <div className="space-y-6">
@@ -147,6 +159,120 @@ function MLResultsView({ result, selectedRole, onReset }: {
             <div>Skills Extracted: <span className="font-medium">{result.extractedSkills.length}</span></div>
           </div>
         </CardContent>
+      </Card>
+
+      {/* ── Explainable AI Panel ── */}
+      <Card className="border-indigo-200">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Brain className="h-4 w-4 text-indigo-600" />
+              Explainable AI — Why This Role?
+            </CardTitle>
+            <Button
+              variant="ghost" size="sm"
+              onClick={() => setShowExplain(!showExplain)}
+              className="text-xs text-indigo-600 hover:text-indigo-700"
+            >
+              {showExplain ? 'Hide' : 'Show'} Explanation
+            </Button>
+          </div>
+        </CardHeader>
+        {showExplain && explain && (
+          <CardContent className="space-y-4">
+            {/* Human-readable explanation */}
+            <div className="p-3 rounded-lg text-sm bg-indigo-50 border border-indigo-100 text-indigo-800">
+              {explain.explanation}
+            </div>
+
+            {/* Role signals */}
+            {explain.roleSignals.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Why This Role</p>
+                <div className="space-y-1">
+                  {explain.roleSignals.map((signal, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs">
+                      <span className="text-indigo-500 font-bold shrink-0">→</span>
+                      <span>{signal}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Top contributing keywords */}
+            {explain.topKeywords.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                  Top Contributing Keywords (TF-IDF)
+                </p>
+                <div className="space-y-1.5">
+                  {explain.topKeywords.slice(0, 6).map(kw => (
+                    <div key={kw.keyword} className="flex items-center gap-2">
+                      <span className="text-xs font-medium capitalize w-28 shrink-0">{kw.keyword}</span>
+                      <div className="flex-1 progress-enterprise">
+                        <div className="progress-enterprise-fill" style={{ width: `${kw.contribution}%`, background: '#6366F1' }} />
+                      </div>
+                      <span className="text-xs text-muted-foreground w-10 text-right">{kw.contribution}%</span>
+                      <Badge className="text-xs bg-indigo-100 text-indigo-700 shrink-0">{kw.category}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Skill confidence */}
+            {explain.skillConfidences.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                  Skill Confidence Scores
+                </p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {explain.skillConfidences.slice(0, 8).map(sc => (
+                    <div key={sc.skill} className="flex items-center justify-between p-1.5 rounded text-xs"
+                      style={{
+                        background: sc.context === 'high' ? '#F0FDF4' : sc.context === 'medium' ? '#FFFBEB' : '#FEF2F2',
+                        border: `1px solid ${sc.context === 'high' ? '#BBF7D0' : sc.context === 'medium' ? '#FDE68A' : '#FECACA'}`,
+                      }}>
+                      <span className="font-medium capitalize truncate">{sc.skill}</span>
+                      <span className="font-bold ml-1 shrink-0"
+                        style={{ color: sc.context === 'high' ? '#059669' : sc.context === 'medium' ? '#B45309' : '#DC2626' }}>
+                        {sc.confidence}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Decision path */}
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Decision Path</p>
+              <div className="space-y-1">
+                {explain.decisionPath.map((step, i) => (
+                  <div key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <span className="w-4 h-4 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</span>
+                    {step.replace(/^Step \d+: /, '')}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Alternative roles */}
+            {explain.alternativeRoles.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Alternative Roles</p>
+                <div className="flex flex-wrap gap-2">
+                  {explain.alternativeRoles.map(r => (
+                    <Badge key={r.role} className="text-xs bg-gray-100 text-gray-700">
+                      {r.display} ({r.probability}%)
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        )}
       </Card>
 
       {/* Score cards */}

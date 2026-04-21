@@ -5,7 +5,7 @@ import {
   FileText, BarChart3, Briefcase, Trophy, Layers, Search,
   Database, TrendingUp, Route, Bot, Users, GitBranch,
   Award, BookMarked, ChevronLeft, ChevronRight,
-  Zap, LogOut, User, Settings, GraduationCap,
+  Zap, LogOut, User, Settings, GraduationCap, ShieldCheck,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
@@ -21,9 +21,10 @@ const NAV_GROUPS = [
   {
     label: 'Resume',
     items: [
-      { name: 'Resume Analyzer',  href: '/resume',               icon: FileText,   },
-      { name: 'Resume Score',     href: '/score',                icon: Award,      },
-      { name: 'Resume Insights',  href: '/analytics',            icon: BarChart3,  },
+      { name: 'Resume Analyzer',  href: '/resume',               icon: FileText,    },
+      { name: 'Resume Score',     href: '/score',                icon: Award,       },
+      { name: 'Resume Insights',  href: '/analytics',            icon: BarChart3,   },
+      { name: 'ATS Checker',      href: '/ats',                  icon: ShieldCheck, },
     ],
   },
   {
@@ -43,12 +44,10 @@ const NAV_GROUPS = [
     ],
   },
   {
-    label: 'Career',
+    label: 'Learning',
     items: [
-      { name: 'Career Roadmap',   href: '/roadmap',              icon: Route,      },
       { name: 'Courses',          href: '/courses',              icon: GraduationCap, },
-      { name: 'Networking Hub',   href: '/networking',           icon: Users,      },
-      { name: 'AI Mentor',        href: '/mentor',               icon: Bot,        },
+      { name: 'Career Roadmap',   href: '/roadmap',              icon: Route,      },
     ],
   },
   {
