@@ -311,7 +311,7 @@ export function SkillGapPage() {
   const targetLabel  = ROLES.find(r => r.key === targetRole)?.label ?? targetRole;
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
+    <div className="page-content max-w-5xl space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">

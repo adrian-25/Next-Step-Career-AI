@@ -229,7 +229,7 @@ export function Courses() {
   const hasResume = gapSkills.length > 0;
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
+    <div className="page-content max-w-5xl space-y-6">
 
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-3">

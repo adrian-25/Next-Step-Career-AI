@@ -222,7 +222,7 @@ export function ResumeScorePage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-8">
+    <div className="page-content max-w-5xl space-y-8">
 
       {/* Header */}
       <motion.div {...fadeUp()} className="flex items-start justify-between flex-wrap gap-3">

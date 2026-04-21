@@ -219,7 +219,7 @@ export function ResumeInsightsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
+      <div className="page-content max-w-6xl space-y-10">
 
         {/* Header */}
         <motion.div {...fadeUp()} className="flex items-center gap-3">

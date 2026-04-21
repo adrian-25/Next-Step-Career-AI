@@ -75,7 +75,7 @@ export function ProjectSummaryPage() {
   });
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-10">
+    <div className="page-content max-w-6xl space-y-10">
 
       {/* Header */}
       <motion.div {...fadeUp()} className="text-center space-y-3">

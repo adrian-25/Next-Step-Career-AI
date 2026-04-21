@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 
 export function ArchitecturePage() {
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
+    <div className="page-content max-w-6xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold">System Architecture</h1>
         <p className="text-sm text-muted-foreground mt-1">

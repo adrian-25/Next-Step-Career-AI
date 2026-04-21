@@ -71,7 +71,7 @@ export function JobMatchingPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
+    <div className="page-content max-w-6xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Briefcase className="h-6 w-6 text-primary" /> Job Matching Engine

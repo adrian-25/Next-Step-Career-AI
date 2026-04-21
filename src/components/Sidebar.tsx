@@ -1,241 +1,275 @@
-import React from "react"
-import { NavLink, useLocation } from "react-router-dom"
-import { motion } from "framer-motion"
-import { 
-  Home, 
-  FileText, 
-  Route, 
-  Bot,
-  Sparkles,
-  Target,
-  Users,
-  Zap,
-  BarChart3,
-  Database,
-  LogOut,
-  User,
-  Briefcase,
-  Search,
-  Trophy,
-  GitBranch,
-  TrendingUp,
-  Layers,
-  Award,
-  BookMarked,
+import React, { useState } from "react"
+import { NavLink, useLocation, useNavigate } from "react-router-dom"
+import { motion, AnimatePresence } from "framer-motion"
+import {
+  FileText, BarChart3, Briefcase, Trophy, Layers, Search,
+  Database, TrendingUp, Route, Bot, Users, GitBranch,
+  Award, BookMarked, ChevronLeft, ChevronRight,
+  Zap, LogOut, User, Settings, GraduationCap,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
-import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-const navigation = [
-  { name: "Resume Analyzer",   href: "/resume",                icon: FileText  },
-  { name: "Resume Score",      href: "/score",                 icon: Award     },
-  { name: "Resume Insights",   href: "/analytics",             icon: BarChart3 },
-  { name: "Job Matching",      href: "/job-matching",          icon: Briefcase },
-  { name: "Resume Ranking",    href: "/ranking",               icon: Trophy    },
-  { name: "Skill Gap",         href: "/skill-gap",             icon: Layers    },
-  { name: "Search Resumes",    href: "/search",                icon: Search    },
-  { name: "DBMS Analytics",    href: "/dbms-analytics",        icon: Database  },
-  { name: "Prod Analytics",    href: "/production-analytics",  icon: TrendingUp },
-  { name: "Career Roadmap",    href: "/roadmap",               icon: Route     },
-  { name: "Networking Hub",    href: "/networking",            icon: Users     },
-  { name: "Courses",           href: "/courses",               icon: Bot       },
-  { name: "Architecture",      href: "/architecture",          icon: GitBranch },
-  { name: "Project Summary",   href: "/summary",               icon: BookMarked },
+// ── Navigation groups ─────────────────────────────────────────
+
+const NAV_GROUPS = [
+  {
+    label: 'Resume',
+    items: [
+      { name: 'Resume Analyzer',  href: '/resume',               icon: FileText,   },
+      { name: 'Resume Score',     href: '/score',                icon: Award,      },
+      { name: 'Resume Insights',  href: '/analytics',            icon: BarChart3,  },
+    ],
+  },
+  {
+    label: 'Matching',
+    items: [
+      { name: 'Job Matching',     href: '/job-matching',         icon: Briefcase,  },
+      { name: 'Resume Ranking',   href: '/ranking',              icon: Trophy,     },
+      { name: 'Skill Gap',        href: '/skill-gap',            icon: Layers,     },
+      { name: 'Search Resumes',   href: '/search',               icon: Search,     },
+    ],
+  },
+  {
+    label: 'Analytics',
+    items: [
+      { name: 'DBMS Analytics',   href: '/dbms-analytics',       icon: Database,   },
+      { name: 'Prod Analytics',   href: '/production-analytics', icon: TrendingUp, },
+    ],
+  },
+  {
+    label: 'Career',
+    items: [
+      { name: 'Career Roadmap',   href: '/roadmap',              icon: Route,      },
+      { name: 'Courses',          href: '/courses',              icon: GraduationCap, },
+      { name: 'Networking Hub',   href: '/networking',           icon: Users,      },
+      { name: 'AI Mentor',        href: '/mentor',               icon: Bot,        },
+    ],
+  },
+  {
+    label: 'System',
+    items: [
+      { name: 'Architecture',     href: '/architecture',         icon: GitBranch,  },
+      { name: 'Project Summary',  href: '/summary',              icon: BookMarked, },
+    ],
+  },
 ]
+
+// ── Component ─────────────────────────────────────────────────
 
 export function Sidebar() {
   const location = useLocation()
+  const navigate  = useNavigate()
   const { user, profile, signOut } = useAuth()
+  const [collapsed, setCollapsed] = useState(false)
 
   const handleSignOut = async () => {
-    try {
-      await signOut()
-    } catch (error) {
-      console.error('Sign out error:', error)
-    }
+    try { await signOut() } catch { /* ignore */ }
   }
 
   const getUserInitials = () => {
-    if (profile?.full_name) {
-      return profile.full_name
-        .split(' ')
-        .map(name => name[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2)
-    }
-    if (user?.email) {
-      return user.email[0].toUpperCase()
-    }
-    return 'G' // Guest
+    if (profile?.full_name) return profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+    if (user?.email) return user.email[0].toUpperCase()
+    return 'G'
   }
 
+  const sidebarWidth = collapsed ? 64 : 240
+
   return (
-    <motion.div 
-      initial={{ x: -300 }}
-      animate={{ x: 0 }}
-      className="flex h-screen w-64 flex-col glass border-r border-border/20 backdrop-blur-xl"
+    <motion.aside
+      animate={{ width: sidebarWidth }}
+      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      className="relative flex flex-col h-screen shrink-0 overflow-hidden"
+      style={{
+        background: 'hsl(var(--sidebar-background))',
+        borderRight: '1px solid hsl(var(--sidebar-border))',
+      }}
     >
-      {/* Logo Section */}
-      <div className="flex h-20 items-center px-6 border-b border-border/20">
-        <motion.div 
-          className="flex items-center space-x-3"
-          whileHover={{ scale: 1.05 }}
-          transition={{ type: "spring", stiffness: 400, damping: 17 }}
+      {/* ── Logo ── */}
+      <div className="flex items-center h-14 px-4 shrink-0" style={{ borderBottom: '1px solid hsl(var(--sidebar-border))' }}>
+        <div
+          className="flex items-center gap-2.5 cursor-pointer min-w-0"
+          onClick={() => navigate('/dashboard')}
         >
-          <div className="relative">
-            <div className="p-2 rounded-xl neon-glow bg-primary/10">
-              <Zap className="h-6 w-6 text-primary" />
-            </div>
-            <Sparkles className="absolute -top-1 -right-1 h-4 w-4 text-accent animate-pulse" />
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+            style={{ background: 'var(--gradient-primary)' }}>
+            <Zap className="h-4 w-4 text-white" />
           </div>
-          <div>
-            <h1 className="text-xl font-bold gradient-text">Next Step</h1>
-            <p className="text-sm text-muted-foreground">Career AI</p>
-          </div>
-        </motion.div>
+          <AnimatePresence>
+            {!collapsed && (
+              <motion.div
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: 'auto' }}
+                exit={{ opacity: 0, width: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <p className="font-display font-700 text-sm text-white leading-tight whitespace-nowrap">Next Step</p>
+                <p className="text-xs whitespace-nowrap" style={{ color: 'hsl(var(--sidebar-foreground) / 0.5)' }}>Career AI</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Collapse toggle */}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="ml-auto p-1 rounded-md transition-colors"
+          style={{ color: 'hsl(var(--sidebar-foreground) / 0.4)' }}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          {collapsed
+            ? <ChevronRight className="h-4 w-4" />
+            : <ChevronLeft className="h-4 w-4" />
+          }
+        </button>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-2">
-        {navigation.map((item, index) => {
-          const isActive = location.pathname === item.href
-          return (
-            <motion.div
-              key={item.name}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <NavLink to={item.href}>
-                {({ isActive: linkActive }) => (
-                  <motion.div
-                    className={cn(
-                      "relative flex items-center space-x-3 px-4 py-3 rounded-xl border cursor-pointer overflow-hidden",
-                      linkActive || isActive
-                        ? "bg-primary/20 text-primary border-primary/30 neon-glow"
-                        : "text-muted-foreground border-transparent"
-                    )}
-                    whileHover={{ x: 5, scale: 1.02 }}
-                    transition={{ duration: 0.2, ease: 'easeOut' }}
+      {/* ── Navigation ── */}
+      <nav className="flex-1 overflow-y-auto py-3 scrollbar-thin px-2">
+        {NAV_GROUPS.map((group, gi) => (
+          <div key={group.label} className={gi > 0 ? 'mt-1' : ''}>
+            {/* Group label */}
+            <AnimatePresence>
+              {!collapsed && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="nav-group-label"
+                >
+                  {group.label}
+                </motion.div>
+              )}
+            </AnimatePresence>
+            {collapsed && gi > 0 && <div className="nav-divider mx-1 my-2" />}
+
+            {/* Items */}
+            {group.items.map(item => {
+              const isActive = location.pathname === item.href
+              return (
+                <NavLink key={item.href} to={item.href} aria-label={item.name}>
+                  <div
+                    className={cn('nav-item', isActive && 'active')}
+                    title={collapsed ? item.name : undefined}
                   >
-                    {/* Animated background highlight on hover */}
-                    <motion.div
-                      className="absolute inset-0 rounded-xl bg-primary/10"
-                      initial={{ opacity: 0 }}
-                      whileHover={{ opacity: linkActive || isActive ? 0 : 1 }}
-                      transition={{ duration: 0.2 }}
-                      style={{ position: 'absolute', pointerEvents: 'none' }}
+                    <item.icon
+                      className="h-4 w-4 shrink-0"
+                      aria-hidden="true"
+                      style={{ color: isActive ? 'hsl(var(--sidebar-primary))' : 'hsl(var(--sidebar-foreground) / 0.65)' }}
                     />
-
-                    {/* Icon — scales up on hover */}
-                    <motion.div
-                      whileHover={{ scale: 1.2 }}
-                      transition={{ duration: 0.2, ease: 'easeOut' }}
-                      className="relative z-10 shrink-0"
-                    >
-                      <item.icon className={cn(
-                        "h-5 w-5",
-                        linkActive || isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary"
-                      )} />
-                    </motion.div>
-
-                    {/* Text — slides right on hover */}
-                    <motion.span
-                      className="font-medium relative z-10"
-                      whileHover={{ x: 3 }}
-                      transition={{ duration: 0.2, ease: 'easeOut' }}
-                    >
-                      {item.name}
-                    </motion.span>
-
-                    {(linkActive || isActive) && (
+                    <AnimatePresence>
+                      {!collapsed && (
+                        <motion.span
+                          initial={{ opacity: 0, width: 0 }}
+                          animate={{ opacity: 1, width: 'auto' }}
+                          exit={{ opacity: 0, width: 0 }}
+                          transition={{ duration: 0.18 }}
+                          className="overflow-hidden whitespace-nowrap text-sm"
+                        >
+                          {item.name}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                    {isActive && !collapsed && (
                       <motion.div
                         layoutId="activeIndicator"
-                        className="ml-auto w-3 h-3 rounded-full bg-primary animate-pulse relative z-10"
+                        className="ml-auto w-1.5 h-1.5 rounded-full shrink-0"
+                        style={{ background: 'hsl(var(--sidebar-primary))' }}
                       />
                     )}
-                  </motion.div>
-                )}
-              </NavLink>
-            </motion.div>
-          )
-        })}
+                  </div>
+                </NavLink>
+              )
+            })}
+          </div>
+        ))}
       </nav>
 
-      {/* About Section */}
-      <div className="p-4 border-t border-border/20">
-        {/* User Profile Section */}
+      {/* ── User Profile ── */}
+      <div className="shrink-0 p-2" style={{ borderTop: '1px solid hsl(var(--sidebar-border))' }}>
         {user ? (
-          <div className="mb-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="w-full justify-start p-2 h-auto">
-                  <div className="flex items-center space-x-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={profile?.avatar_url} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                        {getUserInitials()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 text-left">
-                      <p className="text-sm font-medium truncate">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="w-full flex items-center gap-2.5 p-2 rounded-lg transition-colors"
+                style={{ color: 'hsl(var(--sidebar-foreground))' }}
+                aria-label="User menu"
+              >
+                <Avatar className="h-7 w-7 shrink-0">
+                  <AvatarImage src={profile?.avatar_url} />
+                  <AvatarFallback className="text-xs font-semibold"
+                    style={{ background: 'hsl(var(--primary) / 0.2)', color: 'hsl(var(--sidebar-primary))' }}>
+                    {getUserInitials()}
+                  </AvatarFallback>
+                </Avatar>
+                <AnimatePresence>
+                  {!collapsed && (
+                    <motion.div
+                      initial={{ opacity: 0, width: 0 }}
+                      animate={{ opacity: 1, width: 'auto' }}
+                      exit={{ opacity: 0, width: 0 }}
+                      className="flex-1 text-left overflow-hidden"
+                    >
+                      <p className="text-xs font-semibold truncate text-white">
                         {profile?.full_name || user?.email?.split('@')[0] || 'User'}
                       </p>
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className="text-xs truncate" style={{ color: 'hsl(var(--sidebar-foreground) / 0.5)' }}>
                         {profile?.job_title || 'Professional'}
                       </p>
-                    </div>
-                  </div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Sign Out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <User className="mr-2 h-4 w-4" /> Profile Settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
+                <LogOut className="mr-2 h-4 w-4" /> Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         ) : (
-          <div className="mb-4">
-            <NavLink to="/auth">
-              <Button variant="outline" className="w-full">
-                <User className="mr-2 h-4 w-4" />
-                Login (Optional)
-              </Button>
-            </NavLink>
-            <p className="text-xs text-muted-foreground text-center mt-2">
-              Demo Mode Active
-            </p>
-          </div>
+          <button
+            onClick={() => navigate('/auth')}
+            className="w-full flex items-center gap-2.5 p-2 rounded-lg transition-colors"
+            style={{ color: 'hsl(var(--sidebar-foreground) / 0.6)' }}
+            aria-label="Login"
+          >
+            <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+              style={{ background: 'hsl(var(--sidebar-accent))' }}>
+              <User className="h-3.5 w-3.5" style={{ color: 'hsl(var(--sidebar-foreground) / 0.6)' }} />
+            </div>
+            <AnimatePresence>
+              {!collapsed && (
+                <motion.div
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 'auto' }}
+                  exit={{ opacity: 0, width: 0 }}
+                  className="overflow-hidden"
+                >
+                  <p className="text-xs font-medium whitespace-nowrap" style={{ color: 'hsl(var(--sidebar-foreground) / 0.6)' }}>
+                    Login (Optional)
+                  </p>
+                  <p className="text-xs whitespace-nowrap" style={{ color: 'hsl(var(--sidebar-foreground) / 0.35)' }}>
+                    Demo Mode Active
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </button>
         )}
-
-        <div className="text-xs text-muted-foreground space-y-2">
-          <p className="font-semibold text-foreground">About</p>
-          <p>
-            This platform was built by Adrian, focused on empowering professionals with
-            AI-driven career guidance, resume tools, job matching, and analytics.
-          </p>
-        </div>
       </div>
-    </motion.div>
+    </motion.aside>
   )
 }

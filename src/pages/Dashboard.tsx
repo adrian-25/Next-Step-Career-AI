@@ -132,7 +132,7 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-surface">
-      <div className="max-w-6xl mx-auto px-6 py-10 space-y-10">
+      <div className="page-content max-w-6xl space-y-10">
 
         {/* ── Hero ── */}
         <motion.div {...fadeUp()} className="text-center space-y-4">

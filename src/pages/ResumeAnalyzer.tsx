@@ -456,42 +456,60 @@ export function ResumeAnalyzer() {
 
   if (result && selectedRole) {
     return (
-      <div className="max-w-3xl mx-auto p-6">
+      <div className="page-content max-w-3xl">
         <MLResultsView result={result} selectedRole={selectedRole} onReset={handleReset} />
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6 space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold mb-1 flex items-center gap-2">
-          <Brain className="h-6 w-6 text-primary" /> ML Resume Analyzer
-        </h1>
-        <p className="text-muted-foreground text-sm mb-1">
-          Powered by TF-IDF vectorization + Naive Bayes classification.
-        </p>
-        <p className="text-xs text-muted-foreground mb-6">
+    <div className="page-content max-w-2xl">
+      {/* Page header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ background: 'var(--gradient-primary)' }}>
+            <Brain className="h-5 w-5 text-white" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="font-display text-2xl font-bold">ML Resume Analyzer</h1>
+            <p className="text-sm text-muted-foreground">
+              Powered by TF-IDF vectorization + Naive Bayes classification.
+            </p>
+          </div>
+        </div>
+        <p className="text-sm text-muted-foreground mt-3 p-3 rounded-lg border bg-muted/30">
           Select your target role, upload your resume — the ML model extracts skills, predicts your role, and calculates match %.
         </p>
+      </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {ROLES.map(role => (
+      {/* Role selection */}
+      <div className="mb-6">
+        <p className="section-label mb-3">Select Target Role</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {ROLES.map((role, i) => (
             <motion.button
               key={role.key}
-              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.04 }}
               onClick={() => setSelectedRole(role.key)}
-              className={`flex items-center justify-between p-3.5 rounded-xl border-2 text-left transition-colors ${
-                selectedRole === role.key
-                  ? 'border-primary bg-primary/5 text-primary'
-                  : 'border-border hover:border-primary/40'
-              }`}
+              className={`role-card text-left ${selectedRole === role.key ? 'selected' : ''}`}
+              aria-pressed={selectedRole === role.key}
             >
-              <div className="flex items-center gap-2.5">
-                <Briefcase className={`h-4 w-4 ${selectedRole === role.key ? 'text-primary' : 'text-muted-foreground'}`} />
-                <span className="font-medium text-sm">{role.label}</span>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                style={{
+                  background: selectedRole === role.key ? 'var(--gradient-primary)' : 'hsl(var(--muted))',
+                }}>
+                <Briefcase className="h-4 w-4"
+                  style={{ color: selectedRole === role.key ? 'white' : 'hsl(var(--muted-foreground))' }}
+                  aria-hidden="true"
+                />
               </div>
-              {selectedRole === role.key && <ChevronRight className="h-4 w-4 text-primary" />}
+              <span className="font-medium text-sm flex-1">{role.label}</span>
+              {selectedRole === role.key && (
+                <ChevronRight className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
+              )}
             </motion.button>
           ))}
         </div>
@@ -504,9 +522,9 @@ export function ResumeAnalyzer() {
             exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}
           >
             <div className="flex items-center gap-2 mb-3">
-              <Target className="h-4 w-4 text-primary" />
+              <Target className="h-4 w-4 text-primary" aria-hidden="true" />
               <span className="text-sm font-medium">
-                Analyzing for: <span className="text-primary">{ROLES.find(r => r.key === selectedRole)?.label}</span>
+                Analyzing for: <span className="text-primary font-semibold">{ROLES.find(r => r.key === selectedRole)?.label}</span>
               </span>
             </div>
             <UploadWidget targetRole={selectedRole} onComplete={setResult} />
