@@ -135,12 +135,18 @@ export function ProductionAnalyticsPage() {
     <div className="page-content max-w-6xl space-y-8">
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">Analytics Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {backendOnline ? 'Live data from FastAPI backend' : 'Supabase direct queries (backend offline)'}
-          </p>
-          {lastUpdated && <p className="text-xs text-muted-foreground mt-0.5">Updated: {lastUpdated.toLocaleTimeString()}</p>}
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #EC4899, #F97316)' }}>
+            <TrendingUp className="h-4.5 w-4.5 text-white" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="font-display text-xl font-bold">Analytics Dashboard</h1>
+            <p className="text-sm text-muted-foreground">
+              {backendOnline ? 'Live data from FastAPI backend' : 'Supabase direct queries (backend offline)'}
+            </p>
+            {lastUpdated && <p className="text-xs text-muted-foreground mt-0.5">Updated: {lastUpdated.toLocaleTimeString()}</p>}
+          </div>
         </div>
         <div className="flex gap-2">
           <Badge className={backendOnline ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}>

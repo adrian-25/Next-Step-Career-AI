@@ -72,13 +72,19 @@ export function JobMatchingPage() {
 
   return (
     <div className="page-content max-w-6xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Briefcase className="h-6 w-6 text-primary" /> Job Matching Engine
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Paste your resume and a job description to see how well you match.
-        </p>
+      <div className="mb-6">
+        <div className="flex items-center gap-3 mb-1">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center"
+            style={{ background: 'var(--gradient-primary)' }}>
+            <Briefcase className="h-4.5 w-4.5 text-white" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="font-display text-xl font-bold">Job Matching Engine</h1>
+            <p className="text-sm text-muted-foreground">
+              Paste your resume and a job description to see how well you match.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">

@@ -313,13 +313,17 @@ export function SkillGapPage() {
   return (
     <div className="page-content max-w-5xl space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Zap className="h-6 w-6 text-primary" /> Skill Gap Analyzer
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Compare your current skills against a target role and get a personalised learning plan.
-        </p>
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-9 h-9 rounded-lg flex items-center justify-center"
+          style={{ background: 'linear-gradient(135deg, #8B5CF6, #6366F1)' }}>
+          <Zap className="h-4.5 w-4.5 text-white" aria-hidden="true" />
+        </div>
+        <div>
+          <h1 className="font-display text-xl font-bold">Skill Gap Analyzer</h1>
+          <p className="text-sm text-muted-foreground">
+            Compare your current skills against a target role and get a personalised learning plan.
+          </p>
+        </div>
       </div>
 
       {/* Role selectors */}

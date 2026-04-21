@@ -3,48 +3,44 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
   FileText, Route, MessageSquare, TrendingUp, Users, ArrowRight,
-  Sparkles, Target, Database, Briefcase, BarChart3, Bot,
+  Target, Database, Briefcase, BarChart3, Bot,
   CheckCircle2, Clock, Zap, Award, Star, Search, Download,
-  Trophy, GitBranch, Layers,
-} from 'lucide-react';import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+  Trophy, GitBranch, Layers, ChevronRight, Activity,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { getAnalyticsOverview, checkBackendHealth, downloadUserBackup } from '@/services/backendApi.service';
 import { downloadLastAnalysisReport } from '@/services/resumeExport.service';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function getLastAnalysis() {
-  try {
-    const raw = localStorage.getItem('lastAnalysisResult');
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
+  try { return JSON.parse(localStorage.getItem('lastAnalysisResult') ?? 'null'); }
+  catch { return null; }
 }
-
 function getHistory(): Array<{ score: number; date: string }> {
-  try {
-    const raw = localStorage.getItem('analysisHistory');
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
+  try { return JSON.parse(localStorage.getItem('analysisHistory') ?? '[]'); }
+  catch { return []; }
 }
-
 function getRole(): string {
   try { return localStorage.getItem('lastDetectedRole') ?? ''; }
   catch { return ''; }
 }
-
 function roleLabel(r: string) {
   return r ? r.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Not set';
 }
-
-function scoreColor(s: number) {
-  if (s >= 80) return 'text-green-600';
-  if (s >= 60) return 'text-blue-600';
-  if (s >= 40) return 'text-amber-500';
-  return 'text-red-500';
+function scoreHex(s: number) {
+  if (s >= 80) return '#10B981';
+  if (s >= 60) return '#2563EB';
+  if (s >= 40) return '#F59E0B';
+  return '#EF4444';
 }
-
+function scoreLabel(s: number) {
+  if (s >= 80) return 'Excellent';
+  if (s >= 60) return 'Good';
+  if (s >= 40) return 'Fair';
+  return 'Needs Work';
+}
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
@@ -58,30 +54,87 @@ function timeAgo(iso: string) {
 // ── Quick actions ─────────────────────────────────────────────────────────────
 
 const QUICK_ACTIONS = [
-  { title: 'Resume Analyzer',   desc: 'Upload & analyze your resume',         icon: FileText,      href: '/resume',                gradient: 'from-indigo-500 to-purple-600' },
-  { title: 'Resume Score',      desc: 'Detailed score breakdown & tips',       icon: Award,         href: '/score',                 gradient: 'from-amber-500 to-orange-500' },
-  { title: 'Resume Insights',   desc: 'View charts & skill breakdown',         icon: BarChart3,     href: '/analytics',             gradient: 'from-blue-500 to-cyan-500' },
-  { title: 'Job Matching',      desc: 'Compare resume vs job description',     icon: Briefcase,     href: '/job-matching',          gradient: 'from-emerald-500 to-teal-500' },
-  { title: 'Skill Gap',         desc: 'Current → target role learning plan',   icon: Layers,        href: '/skill-gap',             gradient: 'from-violet-500 to-purple-600' },
-  { title: 'Resume Ranking',    desc: 'Rank multiple resumes for a role',      icon: Trophy,        href: '/ranking',               gradient: 'from-yellow-500 to-orange-500' },
-  { title: 'Search Resumes',    desc: 'Full-text search with PostgreSQL FTS',  icon: Search,        href: '/search',                gradient: 'from-sky-500 to-blue-600' },
-  { title: 'DBMS Analytics',    desc: 'Stored procedures & live DB views',     icon: Database,      href: '/dbms-analytics',        gradient: 'from-violet-500 to-pink-500' },
-  { title: 'Prod Analytics',    desc: 'Live charts from FastAPI backend',      icon: TrendingUp,    href: '/production-analytics',  gradient: 'from-rose-500 to-pink-600' },
-  { title: 'Career Roadmap',    desc: 'Step-by-step growth plan',              icon: Route,         href: '/roadmap',               gradient: 'from-orange-500 to-amber-500' },
-  { title: 'AI Career Mentor',  desc: 'Chat with your AI mentor',              icon: MessageSquare, href: '/mentor',                gradient: 'from-fuchsia-500 to-purple-600' },
-  { title: 'Architecture',      desc: 'System diagram & ADBMS features',      icon: GitBranch,     href: '/architecture',          gradient: 'from-slate-500 to-gray-600' },
+  { title: 'Resume Analyzer',  desc: 'Upload & run ML analysis',           icon: FileText,      href: '/resume',                color: '#2563EB' },
+  { title: 'Resume Score',     desc: 'Detailed score breakdown',            icon: Award,         href: '/score',                 color: '#F59E0B' },
+  { title: 'Resume Insights',  desc: 'Charts & skill breakdown',            icon: BarChart3,     href: '/analytics',             color: '#0EA5E9' },
+  { title: 'Job Matching',     desc: 'Resume vs job description',           icon: Briefcase,     href: '/job-matching',          color: '#10B981' },
+  { title: 'Skill Gap',        desc: 'Current → target role plan',          icon: Layers,        href: '/skill-gap',             color: '#8B5CF6' },
+  { title: 'Resume Ranking',   desc: 'Rank multiple resumes',               icon: Trophy,        href: '/ranking',               color: '#F59E0B' },
+  { title: 'Search Resumes',   desc: 'PostgreSQL full-text search',         icon: Search,        href: '/search',                color: '#0EA5E9' },
+  { title: 'DBMS Analytics',   desc: 'Stored procs & live DB views',        icon: Database,      href: '/dbms-analytics',        color: '#6366F1' },
+  { title: 'Prod Analytics',   desc: 'FastAPI backend charts',              icon: TrendingUp,    href: '/production-analytics',  color: '#EC4899' },
+  { title: 'Career Roadmap',   desc: 'Step-by-step growth plan',            icon: Route,         href: '/roadmap',               color: '#F97316' },
+  { title: 'AI Career Mentor', desc: 'Personalised career advice',          icon: MessageSquare, href: '/mentor',                color: '#A855F7' },
+  { title: 'Architecture',     desc: 'System diagram & ADBMS checklist',   icon: GitBranch,     href: '/architecture',          color: '#64748B' },
 ];
-
-// ── Platform stats (static) ───────────────────────────────────────────────────
 
 const PLATFORM_STATS = [
-  { label: 'Resumes Analyzed', value: '10,000+', icon: FileText },
-  { label: 'Career Paths',     value: '500+',    icon: Route },
-  { label: 'Success Rate',     value: '94%',     icon: TrendingUp },
-  { label: 'Happy Users',      value: '2,500+',  icon: Users },
+  { label: 'Resumes Analyzed', value: '10,000+', icon: FileText,   color: '#2563EB' },
+  { label: 'Career Paths',     value: '500+',    icon: Route,      color: '#10B981' },
+  { label: 'Success Rate',     value: '94%',     icon: TrendingUp, color: '#F59E0B' },
+  { label: 'Happy Users',      value: '2,500+',  icon: Users,      color: '#8B5CF6' },
 ];
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function MetricCard({ label, value, sub, icon: Icon, color, delay }: {
+  label: string; value: string | number; sub: string;
+  icon: React.ElementType; color: string; delay: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.35 }}
+      className="metric-card"
+    >
+      <div className="flex items-start justify-between mb-3">
+        <div className="w-9 h-9 rounded-lg flex items-center justify-center"
+          style={{ background: `${color}18` }}>
+          <Icon className="h-4.5 w-4.5" style={{ color }} aria-hidden="true" />
+        </div>
+        <span className="text-xs font-medium px-2 py-0.5 rounded-full"
+          style={{ background: `${color}12`, color }}>
+          Live
+        </span>
+      </div>
+      <p className="stat-number" style={{ color }}>{value}</p>
+      <p className="text-sm font-semibold mt-1" style={{ color: 'hsl(var(--foreground))' }}>{label}</p>
+      <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{sub}</p>
+    </motion.div>
+  );
+}
+
+function ActionCard({ action, index }: { action: typeof QUICK_ACTIONS[0]; index: number }) {
+  const navigate = useNavigate();
+  return (
+    <motion.button
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.05 + index * 0.04, duration: 0.3 }}
+      onClick={() => navigate(action.href)}
+      className="ent-card text-left p-4 w-full group"
+      aria-label={`Open ${action.title}`}
+    >
+      <div className="flex items-start gap-3">
+        <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-110"
+          style={{ background: `${action.color}18` }}>
+          <action.icon className="h-4 w-4" style={{ color: action.color }} aria-hidden="true" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold leading-tight">{action.title}</p>
+          <p className="text-xs mt-0.5 truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>
+            {action.desc}
+          </p>
+        </div>
+        <ChevronRight className="h-4 w-4 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ color: action.color }} aria-hidden="true" />
+      </div>
+    </motion.button>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 export function Dashboard() {
   const navigate  = useNavigate();
@@ -89,7 +142,6 @@ export function Dashboard() {
   const history   = useMemo(getHistory, []);
   const role      = useMemo(getRole, []);
 
-  // Live backend metrics
   const [liveMetrics, setLiveMetrics] = useState<{
     total_resumes: number; avg_match_score: number; total_skills: number; total_analyses: number;
   } | null>(null);
@@ -103,295 +155,314 @@ export function Dashboard() {
   }, []);
 
   const hasAnalysis   = analysis !== null;
-  const matchScore    = analysis?.skillMatch?.matchScore ?? 0;
+  const matchScore    = analysis?.skillMatch?.matchScore ?? analysis?.mlResult?.finalScore ?? 0;
   const totalScore    = analysis?.resumeScore?.totalScore ?? 0;
-  const matchedCount  = analysis?.skillMatch?.matchedSkills?.length ?? 0;
-  const missingCount  = analysis?.skillMatch?.missingSkills?.length ?? 0;
+  const matchedCount  = (analysis?.skillMatch?.matchedSkills ?? analysis?.mlResult?.matchedSkills ?? []).length;
+  const missingCount  = (analysis?.skillMatch?.missingSkills ?? analysis?.mlResult?.missingSkills ?? []).length;
   const analysisCount = history.length + (hasAnalysis ? 1 : 0);
 
-  // Trend: compare last two history entries
   const prevScore = history.length >= 2 ? history[history.length - 2].score : null;
   const lastScore = history.length >= 1 ? history[history.length - 1].score : null;
   const trend = prevScore !== null && lastScore !== null ? lastScore - prevScore : null;
 
-  // Recent activity from history
-  const recentActivity = history
-    .slice(-5)
-    .reverse()
-    .map((h, i) => ({
-      label: `Resume analysis #${history.length - i}`,
-      score: h.score,
-      date: h.date,
-    }));
-
-  const fadeUp = (delay = 0) => ({
-    initial: { opacity: 0, y: 16 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.4, delay },
-  });
+  const recentActivity = history.slice(-5).reverse().map((h, i) => ({
+    label: `Resume analysis #${history.length - i}`,
+    score: h.score,
+    date: h.date,
+  }));
 
   return (
-    <div className="min-h-screen bg-gradient-surface">
-      <div className="page-content max-w-6xl space-y-10">
+    <div className="page-content max-w-6xl space-y-8">
 
-        {/* ── Hero ── */}
-        <motion.div {...fadeUp()} className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full border border-primary/20">
-            <Sparkles className="h-4 w-4 text-primary animate-pulse" />
-            <span className="text-sm font-medium">Powered by Advanced AI + DBMS</span>
+      {/* ── Welcome banner ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="rounded-2xl overflow-hidden relative"
+        style={{
+          background: 'var(--gradient-navy)',
+          padding: '28px 32px',
+        }}
+      >
+        {/* Dot pattern overlay */}
+        <div className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 1px)',
+            backgroundSize: '24px 24px',
+          }}
+        />
+        <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ background: 'rgba(37,99,235,0.3)' }}>
+                <Zap className="h-4 w-4 text-white" aria-hidden="true" />
+              </div>
+              <span className="text-xs font-semibold uppercase tracking-widest"
+                style={{ color: 'rgba(255,255,255,0.6)' }}>
+                Next Step Career AI
+              </span>
+            </div>
+            <h1 className="font-display text-2xl font-bold text-white mb-1">
+              Welcome back{role ? `, ${roleLabel(role).split(' ')[0]}` : ''}
+            </h1>
+            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.65)' }}>
+              AI-powered resume intelligence · TF-IDF + Naive Bayes · PostgreSQL ADBMS
+            </p>
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold">
-            <span className="gradient-text">Next Step</span>{' '}
-            <span className="text-foreground">Career AI</span>
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-            AI-powered resume analysis, skill matching, and career guidance — all in one place.
+          <div className="flex gap-2">
+            <Button
+              onClick={() => navigate('/resume')}
+              className="text-sm font-semibold"
+              style={{ background: '#2563EB', color: 'white', border: 'none' }}
+            >
+              Analyze Resume <ArrowRight className="ml-1.5 h-3.5 w-3.5" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/summary')}
+              className="text-sm"
+              style={{ borderColor: 'rgba(255,255,255,0.2)', color: 'white', background: 'rgba(255,255,255,0.08)' }}
+            >
+              Project Summary
+            </Button>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ── Your Progress ── */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <p className="section-label flex items-center gap-2">
+            <Activity className="h-3.5 w-3.5" aria-hidden="true" /> Your Progress
           </p>
-          <div className="flex flex-wrap gap-3 justify-center pt-2">
-            <Button size="lg" className="gradient-bg text-white" onClick={() => navigate('/resume')}>
-              Analyze Resume <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate('/analytics')}>
-              View Insights
-            </Button>
-          </div>
-        </motion.div>
+          {hasAnalysis && (
+            <button
+              onClick={() => navigate('/score')}
+              className="text-xs font-medium flex items-center gap-1 transition-colors hover:text-primary"
+              style={{ color: 'hsl(var(--muted-foreground))' }}
+            >
+              View full score <ChevronRight className="h-3 w-3" aria-hidden="true" />
+            </button>
+          )}
+        </div>
 
-        {/* ── Personal stats (live from localStorage) ── */}
-        <motion.div {...fadeUp(0.1)}>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
-            <Zap className="h-4 w-4" /> Your Progress
-          </h2>
-          {!hasAnalysis ? (
-            <Card className="border-dashed border-2 border-primary/20">
-              <CardContent className="py-10 text-center">
-                <FileText className="h-10 w-10 mx-auto mb-3 text-muted-foreground opacity-40" />
-                <p className="font-medium mb-1">No analysis yet</p>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Upload your resume to see your personal stats here.
-                </p>
-                <Button onClick={() => navigate('/resume')}>
-                  Analyze My Resume <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
+        {!hasAnalysis ? (
+          /* Empty state */
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="rounded-xl border-2 border-dashed p-10 text-center"
+            style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--muted) / 0.3)' }}
+          >
+            <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+              style={{ background: 'hsl(var(--primary) / 0.08)' }}>
+              <FileText className="h-7 w-7" style={{ color: 'hsl(var(--primary))' }} aria-hidden="true" />
+            </div>
+            <p className="font-display font-semibold text-base mb-1">No analysis yet</p>
+            <p className="text-sm mb-5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+              Upload your resume to see your personal stats, skill gaps, and match score.
+            </p>
+            <Button onClick={() => navigate('/resume')} className="gradient-bg text-white">
+              Analyze My Resume <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+            </Button>
+          </motion.div>
+        ) : (
+          <div className="space-y-4">
+            {/* KPI cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {[
-                {
-                  label: 'Match Score',
-                  value: `${matchScore}%`,
-                  icon: Target,
-                  color: scoreColor(matchScore),
-                  sub: trend !== null
-                    ? trend > 0 ? `↑ +${trend}% vs last` : trend < 0 ? `↓ ${trend}% vs last` : 'No change'
-                    : `${analysisCount} analysis${analysisCount !== 1 ? 'es' : ''}`,
-                },
-                {
-                  label: 'Resume Score',
-                  value: `${totalScore}/100`,
-                  icon: Award,
-                  color: scoreColor(totalScore),
-                  sub: totalScore >= 75 ? 'Excellent' : totalScore >= 55 ? 'Competitive' : 'Needs work',
-                },
-                {
-                  label: 'Skills Matched',
-                  value: matchedCount,
-                  icon: CheckCircle2,
-                  color: 'text-green-600',
-                  sub: `${missingCount} gaps to close`,
-                },
-                {
-                  label: 'Target Role',
-                  value: roleLabel(role).split(' ')[0],
-                  icon: Star,
-                  color: 'text-purple-600',
-                  sub: roleLabel(role),
-                },
-              ].map(({ label, value, icon: Icon, color, sub }) => (
-                <Card key={label}>
-                  <CardContent className="pt-5 pb-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <Icon className={`h-5 w-5 ${color}`} />
+              <MetricCard
+                label="Match Score" value={`${matchScore}%`}
+                sub={trend !== null ? (trend > 0 ? `↑ +${trend}% vs last` : trend < 0 ? `↓ ${trend}% vs last` : 'No change') : `${analysisCount} analyses`}
+                icon={Target} color={scoreHex(matchScore)} delay={0.05}
+              />
+              <MetricCard
+                label="Resume Score" value={`${totalScore}/100`}
+                sub={scoreLabel(totalScore)}
+                icon={Award} color={scoreHex(totalScore)} delay={0.1}
+              />
+              <MetricCard
+                label="Skills Matched" value={matchedCount}
+                sub={`${missingCount} gaps to close`}
+                icon={CheckCircle2} color="#10B981" delay={0.15}
+              />
+              <MetricCard
+                label="Target Role" value={roleLabel(role).split(' ')[0]}
+                sub={roleLabel(role)}
+                icon={Star} color="#8B5CF6" delay={0.2}
+              />
+            </div>
+
+            {/* Progress bar */}
+            <div className="ent-card p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-semibold">Overall Match Progress</span>
+                <span className="text-sm font-bold" style={{ color: scoreHex(matchScore) }}>
+                  {matchScore}% — {scoreLabel(matchScore)}
+                </span>
+              </div>
+              <div className="progress-enterprise">
+                <motion.div
+                  className="progress-enterprise-fill"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${matchScore}%` }}
+                  transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
+                />
+              </div>
+              <div className="flex justify-between mt-2">
+                {[
+                  { pct: 0,  label: '0%' },
+                  { pct: 40, label: '40% Fair' },
+                  { pct: 60, label: '60% Good' },
+                  { pct: 80, label: '80%+ Excellent' },
+                ].map(m => (
+                  <span key={m.pct} className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                    {m.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Quick Actions ── */}
+      <div>
+        <p className="section-label mb-4 flex items-center gap-2">
+          <Zap className="h-3.5 w-3.5" aria-hidden="true" /> Quick Actions
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {QUICK_ACTIONS.map((action, i) => (
+            <ActionCard key={action.href} action={action} index={i} />
+          ))}
+        </div>
+      </div>
+
+      {/* ── Recent Activity + Platform Stats ── */}
+      <div className="grid lg:grid-cols-2 gap-6">
+
+        {/* Recent Activity */}
+        <div>
+          <p className="section-label mb-4 flex items-center gap-2">
+            <Clock className="h-3.5 w-3.5" aria-hidden="true" /> Recent Activity
+          </p>
+          {recentActivity.length === 0 ? (
+            <div className="ent-card p-8 text-center">
+              <Clock className="h-8 w-8 mx-auto mb-2 opacity-20" aria-hidden="true" />
+              <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                No activity yet — analyze a resume to get started
+              </p>
+            </div>
+          ) : (
+            <div className="ent-card divide-y" style={{ divideColor: 'hsl(var(--border))' }}>
+              {recentActivity.map((item, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 + i * 0.05 }}
+                  className="flex items-center justify-between p-3 first:pt-4 last:pb-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+                      style={{ background: 'hsl(var(--primary) / 0.08)' }}>
+                      <FileText className="h-3.5 w-3.5" style={{ color: 'hsl(var(--primary))' }} aria-hidden="true" />
                     </div>
-                    <p className={`text-2xl font-bold ${color}`}>{value}</p>
-                    <p className="text-xs font-medium mt-0.5">{label}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
-                  </CardContent>
-                </Card>
+                    <div>
+                      <p className="text-sm font-medium">{item.label}</p>
+                      <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{timeAgo(item.date)}</p>
+                    </div>
+                  </div>
+                  <span
+                    className="text-xs font-bold px-2 py-0.5 rounded-full"
+                    style={{
+                      background: `${scoreHex(item.score)}18`,
+                      color: scoreHex(item.score),
+                    }}
+                  >
+                    {item.score}%
+                  </span>
+                </motion.div>
               ))}
             </div>
           )}
-        </motion.div>
+        </div>
 
-        {/* ── Score progress bar ── */}
-        {hasAnalysis && (
-          <motion.div {...fadeUp(0.15)}>
-            <Card>
-              <CardContent className="pt-5 pb-4 space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">Overall Match Progress</span>
-                  <span className={`font-bold ${scoreColor(matchScore)}`}>{matchScore}%</span>
-                </div>
-                <Progress value={matchScore} className="h-3" />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>0% — No match</span>
-                  <span>40% — Fair</span>
-                  <span>60% — Good</span>
-                  <span>80%+ — Excellent</span>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* ── Quick actions grid ── */}
-        <motion.div {...fadeUp(0.2)}>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
-            <ArrowRight className="h-4 w-4" /> Quick Actions
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {QUICK_ACTIONS.map((action, i) => (
-              <motion.div
-                key={action.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.22 + i * 0.07 }}
-                whileHover={{ y: -3, scale: 1.01 }}
-                className="cursor-pointer"
-                onClick={() => navigate(action.href)}
-              >
-                <Card className="h-full hover:shadow-md transition-all duration-200 border-border/50">
-                  <CardHeader className="pb-2 space-y-3">
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center`}>
-                      <action.icon className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-base">{action.title}</CardTitle>
-                      <CardDescription className="text-xs mt-0.5">{action.desc}</CardDescription>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <Button variant="ghost" size="sm" className="w-full justify-between text-primary hover:bg-primary/5 px-0">
-                      Open <ArrowRight className="h-3.5 w-3.5" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+        {/* Platform Stats */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <p className="section-label flex items-center gap-2">
+              <Bot className="h-3.5 w-3.5" aria-hidden="true" /> Platform Stats
+            </p>
+            <span
+              className="text-xs font-medium px-2 py-0.5 rounded-full"
+              style={backendOnline
+                ? { background: '#10B98118', color: '#059669' }
+                : { background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }
+              }
+            >
+              {backendOnline ? '● Backend Online' : '○ Browser Mode'}
+            </span>
           </div>
-        </motion.div>
-
-        {/* ── Recent activity ── */}
-        {recentActivity.length > 0 && (
-          <motion.div {...fadeUp(0.3)}>
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
-              <Clock className="h-4 w-4" /> Recent Activity
-            </h2>
-            <Card>
-              <CardContent className="pt-4 divide-y">
-                {recentActivity.map((item, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.32 + i * 0.05 }}
-                    className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <FileText className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">{item.label}</p>
-                        <p className="text-xs text-muted-foreground">{timeAgo(item.date)}</p>
-                      </div>
-                    </div>
-                    <Badge
-                      className={`text-xs ${
-                        item.score >= 80 ? 'bg-green-100 text-green-700' :
-                        item.score >= 60 ? 'bg-blue-100 text-blue-700' :
-                        item.score >= 40 ? 'bg-amber-100 text-amber-700' :
-                                           'bg-red-100 text-red-700'
-                      }`}
-                    >
-                      {item.score}%
-                    </Badge>
-                  </motion.div>
-                ))}
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* ── Platform stats ── */}
-        <motion.div {...fadeUp(0.35)}>
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
-            <Bot className="h-4 w-4" /> Platform Stats
-            {backendOnline
-              ? <Badge className="text-xs bg-green-100 text-green-700 ml-1">Backend Online</Badge>
-              : <Badge className="text-xs bg-gray-100 text-gray-500 ml-1">Browser Mode</Badge>
-            }
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             {(liveMetrics ? [
-              { label: 'Total Resumes',    value: liveMetrics.total_resumes,   icon: FileText },
-              { label: 'Avg Match Score',  value: `${liveMetrics.avg_match_score}%`, icon: Target },
-              { label: 'Skills Tracked',   value: liveMetrics.total_skills,    icon: TrendingUp },
-              { label: 'Analyses Run',     value: liveMetrics.total_analyses,  icon: Users },
-            ] : PLATFORM_STATS).map(({ label, value, icon: Icon }, i) => (
+              { label: 'Total Resumes',   value: liveMetrics.total_resumes,              icon: FileText,   color: '#2563EB' },
+              { label: 'Avg Match Score', value: `${liveMetrics.avg_match_score}%`,      icon: Target,     color: '#10B981' },
+              { label: 'Skills Tracked',  value: liveMetrics.total_skills,               icon: TrendingUp, color: '#F59E0B' },
+              { label: 'Analyses Run',    value: liveMetrics.total_analyses,             icon: Users,      color: '#8B5CF6' },
+            ] : PLATFORM_STATS).map(({ label, value, icon: Icon, color }, i) => (
               <motion.div
                 key={label}
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.37 + i * 0.07 }}
+                transition={{ delay: 0.1 + i * 0.06 }}
+                className="ent-card p-4 text-center"
               >
-                <Card>
-                  <CardContent className="pt-5 pb-4 text-center">
-                    <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 mb-2">
-                      <Icon className="h-5 w-5 text-primary" />
-                    </div>
-                    <p className="text-2xl font-bold">{value}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
-                  </CardContent>
-                </Card>
+                <div className="w-9 h-9 rounded-lg mx-auto mb-2 flex items-center justify-center"
+                  style={{ background: `${color}18` }}>
+                  <Icon className="h-4 w-4" style={{ color }} aria-hidden="true" />
+                </div>
+                <p className="font-display text-xl font-bold">{value}</p>
+                <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{label}</p>
               </motion.div>
             ))}
           </div>
-        </motion.div>
-
-        {/* ── Backup / Export ── */}
-        <motion.div {...fadeUp(0.4)}>
-          <Card className="border-dashed border-2 border-blue-200 bg-blue-50/30">
-            <CardContent className="py-5 flex items-center justify-between flex-wrap gap-3">
-              <div>
-                <p className="font-semibold text-sm">Export Your Data</p>
-                <p className="text-xs text-muted-foreground">Download your resume analysis as HTML report or full JSON backup</p>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-blue-300 text-blue-700 hover:bg-blue-100"
-                  onClick={() => downloadLastAnalysisReport()}
-                >
-                  <Download className="h-4 w-4 mr-1" /> Analysis Report
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-blue-300 text-blue-700 hover:bg-blue-100"
-                  onClick={() => downloadUserBackup('00000000-0000-0000-0000-000000000001')}
-                >
-                  <Download className="h-4 w-4 mr-1" /> JSON Backup
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
+        </div>
       </div>
+
+      {/* ── Export ── */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="ent-card p-4 flex items-center justify-between flex-wrap gap-3"
+        style={{ borderStyle: 'dashed' }}
+      >
+        <div>
+          <p className="text-sm font-semibold">Export Your Data</p>
+          <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+            Download your resume analysis as HTML report or full JSON backup
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline" size="sm"
+            onClick={() => downloadLastAnalysisReport()}
+            className="text-xs gap-1.5"
+          >
+            <Download className="h-3.5 w-3.5" aria-hidden="true" /> Analysis Report
+          </Button>
+          <Button
+            variant="outline" size="sm"
+            onClick={() => downloadUserBackup('00000000-0000-0000-0000-000000000001')}
+            className="text-xs gap-1.5"
+          >
+            <Download className="h-3.5 w-3.5" aria-hidden="true" /> JSON Backup
+          </Button>
+        </div>
+      </motion.div>
+
     </div>
   );
 }
-

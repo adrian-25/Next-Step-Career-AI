@@ -74,13 +74,19 @@ export function MultiResumeRankingPage() {
 
   return (
     <div className="page-content max-w-5xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Trophy className="h-6 w-6 text-yellow-500" /> Multi-Resume Ranking
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Upload multiple resumes and rank them against a single job role.
-        </p>
+      <div className="mb-6">
+        <div className="flex items-center gap-3 mb-1">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #F59E0B, #F97316)' }}>
+            <Trophy className="h-4.5 w-4.5 text-white" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="font-display text-xl font-bold">Multi-Resume Ranking</h1>
+            <p className="text-sm text-muted-foreground">
+              Upload multiple resumes and rank them against a single job role.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Config */}

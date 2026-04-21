@@ -233,15 +233,19 @@ export function Courses() {
 
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <GraduationCap className="h-6 w-6 text-primary" /> Learning Resources
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {hasResume
-              ? `${gapCount} courses matched to your skill gaps — ${allCourses.length} total available`
-              : `${allCourses.length} curated courses across all tech skills`}
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #10B981, #0EA5E9)' }}>
+            <GraduationCap className="h-4.5 w-4.5 text-white" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="font-display text-xl font-bold">Learning Resources</h1>
+            <p className="text-sm text-muted-foreground">
+              {hasResume
+                ? `${gapCount} courses matched to your skill gaps — ${allCourses.length} total available`
+                : `${allCourses.length} curated courses across all tech skills`}
+            </p>
+          </div>
         </div>
         {!hasResume && (
           <Button variant="outline" size="sm" onClick={() => navigate('/resume')} className="gap-1">

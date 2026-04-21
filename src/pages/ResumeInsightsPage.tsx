@@ -223,9 +223,12 @@ export function ResumeInsightsPage() {
 
         {/* Header */}
         <motion.div {...fadeUp()} className="flex items-center gap-3">
-          <FileText className="h-7 w-7 text-primary" />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ background: 'var(--gradient-primary)' }}>
+            <FileText className="h-5 w-5 text-white" aria-hidden="true" />
+          </div>
           <div>
-            <h1 className="text-2xl font-bold">Resume Insights</h1>
+            <h1 className="font-display text-2xl font-bold">Resume Insights</h1>
             <p className="text-sm text-muted-foreground">
               Personalised analysis based on your uploaded resume
             </p>

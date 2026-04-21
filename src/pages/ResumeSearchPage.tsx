@@ -36,13 +36,19 @@ export function ResumeSearchPage() {
 
   return (
     <div className="page-content max-w-5xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Search className="h-6 w-6 text-primary" /> Resume Search
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Full-text search across all resumes using PostgreSQL tsvector + GIN index.
-        </p>
+      <div className="mb-6">
+        <div className="flex items-center gap-3 mb-1">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #0EA5E9, #2563EB)' }}>
+            <Search className="h-4.5 w-4.5 text-white" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="font-display text-xl font-bold">Resume Search</h1>
+            <p className="text-sm text-muted-foreground">
+              Full-text search across all resumes using PostgreSQL tsvector + GIN index.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Search bar */}
