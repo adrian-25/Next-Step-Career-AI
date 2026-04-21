@@ -74,18 +74,53 @@ function MLResultsView({ result, selectedRole, onReset }: {
 }) {
   const navigate = useNavigate();
   const [showExplain, setShowExplain] = useState(false);
-  const roleLabel = ROLES.find(r => r.key === selectedRole)?.label ?? selectedRole;
+  const roleLabel         = ROLES.find(r => r.key === selectedRole)?.label ?? selectedRole;
+  const predictedLabel    = ROLES.find(r => r.key === result.predictedRole)?.label ?? result.predictedRole;
   const recMap = new Map(result.recommendations.map(r => [r.skill.toLowerCase(), r.resources]));
 
-  // Build explainability on demand
-  const explain = showExplain
-    ? explainPrediction(
-        result.extractedSkills.join(' '),
-        result.predictedRole,
-        result.probabilities,
-        result.extractedSkills
-      )
-    : null;
+  // ── 100% Dynamic Explainable AI ──────────────────────────────────────────
+  // Uses actual resume text from localStorage + real ML output
+  const explain = showExplain ? (() => {
+    // Get full resume text (not just skill names)
+    let resumeText = result.extractedSkills.join(' ');
+    try {
+      const raw = localStorage.getItem('lastAnalysisResult');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const fullText = parsed?.parsedResume?.text ?? parsed?.mlResult?.resumeText ?? '';
+        if (fullText.length > 50) resumeText = fullText;
+      }
+    } catch { /* use skill join fallback */ }
+
+    return explainPrediction(
+      resumeText,
+      result.predictedRole,
+      result.probabilities,
+      result.extractedSkills,
+      selectedRole,
+      result.matchedSkills,
+      result.missingSkills
+    );
+  })() : null;
+
+  // ── Dynamic explanation text (per spec) ──────────────────────────────────
+  const dynamicExplanation = (() => {
+    const topSkills = result.matchedSkills.slice(0, 4);
+    const missingSkills = result.missingSkills.slice(0, 3);
+    const confidence = result.confidence ?? result.mlConfidence ?? 0;
+
+    if (result.predictedRole === selectedRole) {
+      return `Your resume strongly matches ${roleLabel} because of high presence of: ${
+        topSkills.length > 0 ? topSkills.join(', ') : 'relevant technical skills'
+      }. Confidence: ${confidence}%. Final score: ${result.finalScore}% (0.7 × ML + 0.3 × Fuzzy).`;
+    } else {
+      return `Your resume is closer to ${predictedLabel} (${confidence}% confidence) due to skills like ${
+        topSkills.length > 0 ? topSkills.join(', ') : 'detected skills'
+      }, but is missing ${
+        missingSkills.length > 0 ? missingSkills.join(', ') : 'key skills'
+      } required for ${roleLabel}. Final match score: ${result.finalScore}%.`;
+    }
+  })();
 
   return (
     <div className="space-y-6">
@@ -178,98 +213,134 @@ function MLResultsView({ result, selectedRole, onReset }: {
             </Button>
           </div>
         </CardHeader>
-        {showExplain && explain && (
+        {showExplain && (
           <CardContent className="space-y-4">
-            {/* Human-readable explanation */}
-            <div className="p-3 rounded-lg text-sm bg-indigo-50 border border-indigo-100 text-indigo-800">
-              {explain.explanation}
+            {/* ── Dynamic explanation (100% runtime-generated) ── */}
+            <div className={`p-3 rounded-lg text-sm border ${
+              result.predictedRole === selectedRole
+                ? 'bg-green-50 border-green-200 text-green-800'
+                : 'bg-amber-50 border-amber-200 text-amber-800'
+            }`}>
+              <div className="flex items-start gap-2">
+                <Brain className="h-4 w-4 shrink-0 mt-0.5" />
+                <span>{dynamicExplanation}</span>
+              </div>
             </div>
 
-            {/* Role signals */}
-            {explain.roleSignals.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Why This Role</p>
-                <div className="space-y-1">
-                  {explain.roleSignals.map((signal, i) => (
-                    <div key={i} className="flex items-start gap-2 text-xs">
-                      <span className="text-indigo-500 font-bold shrink-0">→</span>
-                      <span>{signal}</span>
-                    </div>
-                  ))}
-                </div>
+            {/* ── Role match status ── */}
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="p-2.5 rounded-lg border bg-muted/30">
+                <p className="text-muted-foreground mb-0.5">Selected Role</p>
+                <p className="font-semibold capitalize">{roleLabel}</p>
               </div>
-            )}
-
-            {/* Top contributing keywords */}
-            {explain.topKeywords.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                  Top Contributing Keywords (TF-IDF)
-                </p>
-                <div className="space-y-1.5">
-                  {explain.topKeywords.slice(0, 6).map(kw => (
-                    <div key={kw.keyword} className="flex items-center gap-2">
-                      <span className="text-xs font-medium capitalize w-28 shrink-0">{kw.keyword}</span>
-                      <div className="flex-1 progress-enterprise">
-                        <div className="progress-enterprise-fill" style={{ width: `${kw.contribution}%`, background: '#6366F1' }} />
-                      </div>
-                      <span className="text-xs text-muted-foreground w-10 text-right">{kw.contribution}%</span>
-                      <Badge className="text-xs bg-indigo-100 text-indigo-700 shrink-0">{kw.category}</Badge>
-                    </div>
-                  ))}
-                </div>
+              <div className={`p-2.5 rounded-lg border ${
+                result.predictedRole === selectedRole
+                  ? 'bg-green-50 border-green-200'
+                  : 'bg-amber-50 border-amber-200'
+              }`}>
+                <p className="text-muted-foreground mb-0.5">ML Predicted Role</p>
+                <p className="font-semibold capitalize">{predictedLabel}</p>
+                {result.predictedRole !== selectedRole && (
+                  <p className="text-amber-600 text-xs mt-0.5">↑ Closest match to your resume</p>
+                )}
               </div>
-            )}
+            </div>
 
-            {/* Skill confidence */}
-            {explain.skillConfidences.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                  Skill Confidence Scores
-                </p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {explain.skillConfidences.slice(0, 8).map(sc => (
-                    <div key={sc.skill} className="flex items-center justify-between p-1.5 rounded text-xs"
-                      style={{
-                        background: sc.context === 'high' ? '#F0FDF4' : sc.context === 'medium' ? '#FFFBEB' : '#FEF2F2',
-                        border: `1px solid ${sc.context === 'high' ? '#BBF7D0' : sc.context === 'medium' ? '#FDE68A' : '#FECACA'}`,
-                      }}>
-                      <span className="font-medium capitalize truncate">{sc.skill}</span>
-                      <span className="font-bold ml-1 shrink-0"
-                        style={{ color: sc.context === 'high' ? '#059669' : sc.context === 'medium' ? '#B45309' : '#DC2626' }}>
-                        {sc.confidence}%
-                      </span>
+            {explain && (
+              <>
+                {/* Role signals — dynamic per resume */}
+                {explain.roleSignals.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                      Why {predictedLabel} Was Predicted
+                    </p>
+                    <div className="space-y-1">
+                      {explain.roleSignals.map((signal, i) => (
+                        <div key={i} className="flex items-start gap-2 text-xs">
+                          <span className="text-indigo-500 font-bold shrink-0">→</span>
+                          <span>{signal}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Decision path */}
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Decision Path</p>
-              <div className="space-y-1">
-                {explain.decisionPath.map((step, i) => (
-                  <div key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
-                    <span className="w-4 h-4 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</span>
-                    {step.replace(/^Step \d+: /, '')}
                   </div>
-                ))}
-              </div>
-            </div>
+                )}
 
-            {/* Alternative roles */}
-            {explain.alternativeRoles.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Alternative Roles</p>
-                <div className="flex flex-wrap gap-2">
-                  {explain.alternativeRoles.map(r => (
-                    <Badge key={r.role} className="text-xs bg-gray-100 text-gray-700">
-                      {r.display} ({r.probability}%)
-                    </Badge>
-                  ))}
+                {/* Top contributing keywords — dynamic TF-IDF weights */}
+                {explain.topKeywords.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                      Top Contributing Keywords (TF-IDF Weights)
+                    </p>
+                    <div className="space-y-1.5">
+                      {explain.topKeywords.slice(0, 6).map(kw => (
+                        <div key={kw.keyword} className="flex items-center gap-2">
+                          <span className="text-xs font-medium capitalize w-28 shrink-0">{kw.keyword}</span>
+                          <div className="flex-1 progress-enterprise">
+                            <div className="progress-enterprise-fill" style={{ width: `${kw.contribution}%`, background: '#6366F1' }} />
+                          </div>
+                          <span className="text-xs text-muted-foreground w-10 text-right">{kw.contribution}%</span>
+                          <Badge className="text-xs bg-indigo-100 text-indigo-700 shrink-0">{kw.category}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Skill confidence — dynamic per extracted skills */}
+                {explain.skillConfidences.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                      Skill Confidence Scores (from your resume)
+                    </p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {explain.skillConfidences.slice(0, 8).map(sc => (
+                        <div key={sc.skill} className="flex items-center justify-between p-1.5 rounded text-xs"
+                          style={{
+                            background: sc.context === 'high' ? '#F0FDF4' : sc.context === 'medium' ? '#FFFBEB' : '#FEF2F2',
+                            border: `1px solid ${sc.context === 'high' ? '#BBF7D0' : sc.context === 'medium' ? '#FDE68A' : '#FECACA'}`,
+                          }}>
+                          <span className="font-medium capitalize truncate">{sc.skill}</span>
+                          <span className="font-bold ml-1 shrink-0"
+                            style={{ color: sc.context === 'high' ? '#059669' : sc.context === 'medium' ? '#B45309' : '#DC2626' }}>
+                            {sc.confidence}%
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Decision path — dynamic step count */}
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                    ML Decision Path
+                  </p>
+                  <div className="space-y-1">
+                    {explain.decisionPath.map((step, i) => (
+                      <div key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+                        <span className="w-4 h-4 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold shrink-0">{i + 1}</span>
+                        {step.replace(/^Step \d+: /, '')}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+
+                {/* Alternative roles — dynamic probabilities */}
+                {explain.alternativeRoles.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                      Other Possible Roles (by probability)
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {explain.alternativeRoles.map(r => (
+                        <Badge key={r.role} className="text-xs bg-gray-100 text-gray-700">
+                          {r.display} ({r.probability}%)
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </CardContent>
         )}

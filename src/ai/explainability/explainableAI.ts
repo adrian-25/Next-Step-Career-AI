@@ -84,10 +84,14 @@ export function explainPrediction(
   resumeText: string,
   predictedRole: string,
   probabilities: Record<string, number>,
-  extractedSkills: string[]
+  extractedSkills: string[],
+  selectedRole?: string,   // the role the user selected (may differ from predicted)
+  matchedSkills?: string[], // skills matched to selected role
+  missingSkills?: string[]  // skills missing for selected role
 ): ExplainabilityResult {
   const dataset = getDataset();
   const entry = dataset.find((e: JobRoleEntry) => e.role === predictedRole);
+  const selectedEntry = selectedRole ? dataset.find((e: JobRoleEntry) => e.role === selectedRole) : null;
   const words = resumeText.split(/\s+/).filter(w => w.length > 1);
   const totalWords = Math.max(1, words.length);
 
@@ -170,16 +174,34 @@ export function explainPrediction(
     `Step 6: Final score = 0.7 × ML + 0.3 × Fuzzy`,
   ];
 
-  // ── Human-readable explanation ─────────────────────────────────────────────
+  // ── Human-readable explanation — 100% dynamic ────────────────────────────
   const topKw = topKeywords.slice(0, 3).map(k => k.keyword).join(', ');
   const confidence = Math.round((probabilities[predictedRole] ?? 0) * 100);
-  const explanation = `Predicted "${entry?.display ?? predictedRole}" with ${confidence}% confidence. ` +
-    `The resume shows strong presence of ${topKw || 'relevant technical skills'}, ` +
-    `which are core requirements for this role. ` +
-    `TF-IDF analysis identified ${topKeywords.length} matching role-specific terms. ` +
-    (alternativeRoles[0]
-      ? `Second closest match: ${alternativeRoles[0].display} (${alternativeRoles[0].probability}%).`
-      : '');
+  const topMatched = (matchedSkills ?? extractedSkills).slice(0, 4);
+  const topMissing = (missingSkills ?? []).slice(0, 3);
+  const selectedDisplay = selectedEntry?.display ?? selectedRole ?? entry?.display ?? predictedRole;
+
+  let explanation: string;
+
+  if (!selectedRole || selectedRole === predictedRole) {
+    // Predicted role matches selected role
+    explanation = `Your resume strongly matches ${entry?.display ?? predictedRole} ` +
+      `because of high presence of: ${topMatched.length > 0 ? topMatched.join(', ') : topKw || 'relevant technical skills'}. ` +
+      `Confidence: ${confidence}%. ` +
+      `TF-IDF analysis identified ${topKeywords.length} matching role-specific terms. ` +
+      (alternativeRoles[0]
+        ? `Second closest match: ${alternativeRoles[0].display} (${alternativeRoles[0].probability}%).`
+        : '');
+  } else {
+    // Predicted role differs from selected role
+    explanation = `Your resume is closer to ${entry?.display ?? predictedRole} ` +
+      `(${confidence}% confidence) due to skills like ${
+        topMatched.length > 0 ? topMatched.join(', ') : topKw || 'detected skills'
+      }, but is missing ${
+        topMissing.length > 0 ? topMissing.join(', ') : 'key skills'
+      } required for ${selectedDisplay}. ` +
+      `To improve your match for ${selectedDisplay}, focus on acquiring the missing skills listed below.`;
+  }
 
   return {
     predictedRole,
