@@ -248,23 +248,22 @@ export function ResumeInsightsPage() {
         {/* KPI row */}
         <motion.div {...fadeUp(0.08)} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            {
-              value: `${matchScore}%`,
-              label: 'Match Score',
-              color: scoreColor(matchScore),
-              sub: scoreLabel(matchScore),
-            },
-            { value: matchedSkills.length, label: 'Matched Skills', color: '#22c55e', sub: 'skills found' },
-            { value: missingSkills.length, label: 'Skill Gaps',     color: '#ef4444', sub: 'to address' },
-            { value: totalScore || '—',    label: 'Resume Score',   color: '#6366f1', sub: 'out of 100' },
-          ].map(({ value, label, color, sub }) => (
-            <Card key={label}>
-              <CardContent className="pt-4 pb-3">
-                <p className="text-3xl font-bold" style={{ color }}>{value}</p>
-                <p className="text-xs font-medium mt-0.5">{label}</p>
-                <p className="text-xs text-muted-foreground">{sub}</p>
-              </CardContent>
-            </Card>
+            { value: `${matchScore}%`, label: 'Match Score',    color: scoreColor(matchScore), sub: scoreLabel(matchScore) },
+            { value: matchedSkills.length, label: 'Matched Skills', color: '#10B981', sub: 'skills found' },
+            { value: missingSkills.length, label: 'Skill Gaps',     color: '#EF4444', sub: 'to address' },
+            { value: totalScore || '—',    label: 'Resume Score',   color: '#6366F1', sub: 'out of 100' },
+          ].map(({ value, label, color, sub }, i) => (
+            <motion.div
+              key={label}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08 + i * 0.06 }}
+              className="metric-card"
+            >
+              <p className="stat-number" style={{ color }}>{value}</p>
+              <p className="text-sm font-semibold mt-1">{label}</p>
+              <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{sub}</p>
+            </motion.div>
           ))}
         </motion.div>
 

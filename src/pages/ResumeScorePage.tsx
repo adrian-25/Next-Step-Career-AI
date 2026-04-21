@@ -92,31 +92,42 @@ function ScoreRing({ score, size = 160 }: { score: number; size?: number }) {
 // ── Component score card ──────────────────────────────────────────────────────
 
 function ComponentCard({
-  label, score, contribution, weight, icon: Icon, delay,
+  label, score, contribution, weight, icon: Icon, delay, color,
 }: {
   label: string; score: number; contribution: number;
-  weight: string; icon: React.ElementType; delay: number;
+  weight: string; icon: React.ElementType; delay: number; color: string;
 }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
+      className="metric-card"
     >
-      <Card className={`border ${scoreBg(score)}`}>
-        <CardContent className="pt-4 pb-3">
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Icon className="h-4 w-4" />
-              <span className="text-sm font-semibold">{label}</span>
-            </div>
-            <Badge className="text-xs bg-white/60 border-current">{weight}</Badge>
-          </div>
-          <p className="text-3xl font-bold mb-1">{score}</p>
-          <Progress value={score} className="h-1.5 mb-1" />
-          <p className="text-xs opacity-70">Contributes {contribution} pts to total</p>
-        </CardContent>
-      </Card>
+      <div className="flex items-start justify-between mb-3">
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+          style={{ background: `${color}18` }}>
+          <Icon className="h-4 w-4" style={{ color }} aria-hidden="true" />
+        </div>
+        <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
+          style={{ background: `${color}12`, color }}>
+          {weight}
+        </span>
+      </div>
+      <p className="stat-number" style={{ color }}>{score}</p>
+      <p className="text-sm font-semibold mt-1">{label}</p>
+      <div className="progress-enterprise mt-2">
+        <motion.div
+          className="progress-enterprise-fill"
+          initial={{ width: 0 }}
+          animate={{ width: `${score}%` }}
+          transition={{ duration: 0.7, ease: 'easeOut', delay: delay + 0.2 }}
+          style={{ background: color }}
+        />
+      </div>
+      <p className="text-xs mt-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+        Contributes {contribution} pts
+      </p>
     </motion.div>
   );
 }
@@ -208,14 +219,17 @@ export function ResumeScorePage() {
 
   if (!hasData) {
     return (
-      <div className="max-w-2xl mx-auto p-6 text-center py-20">
-        <FileText className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-30" />
-        <h1 className="text-2xl font-bold mb-2">No Resume Analyzed Yet</h1>
+      <div className="page-content max-w-2xl text-center py-20">
+        <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+          style={{ background: 'hsl(var(--muted))' }}>
+          <FileText className="h-8 w-8" style={{ color: 'hsl(var(--muted-foreground))' }} aria-hidden="true" />
+        </div>
+        <h1 className="font-display text-2xl font-bold mb-2">No Resume Analyzed Yet</h1>
         <p className="text-muted-foreground mb-6">
           Upload and analyze your resume first to see your detailed score breakdown.
         </p>
-        <Button onClick={() => navigate('/resume')} className="gap-2">
-          <ArrowRight className="h-4 w-4" /> Analyze My Resume
+        <Button onClick={() => navigate('/resume')} className="gradient-bg text-white gap-2">
+          <ArrowRight className="h-4 w-4" aria-hidden="true" /> Analyze My Resume
         </Button>
       </div>
     );
@@ -226,86 +240,91 @@ export function ResumeScorePage() {
 
       {/* Header */}
       <motion.div {...fadeUp()} className="flex items-start justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Award className="h-6 w-6 text-primary" /> Resume Score Breakdown
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Detailed analysis for <span className="font-medium text-foreground">{roleLabel}</span>
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #F59E0B, #F97316)' }}>
+            <Award className="h-5 w-5 text-white" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="font-display text-2xl font-bold">Resume Score Breakdown</h1>
+            <p className="text-sm text-muted-foreground">
+              Detailed analysis for <span className="font-semibold" style={{ color: 'hsl(var(--foreground))' }}>{roleLabel}</span>
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button
             variant="outline" size="sm"
-            onClick={() => {
-              const ok = downloadLastAnalysisReport();
-              if (!ok) navigate('/resume');
-            }}
-            className="gap-1 border-blue-300 text-blue-700 hover:bg-blue-50"
+            onClick={() => { const ok = downloadLastAnalysisReport(); if (!ok) navigate('/resume'); }}
+            className="gap-1.5 text-xs"
           >
-            <Download className="h-3.5 w-3.5" /> Export Report
+            <Download className="h-3.5 w-3.5" aria-hidden="true" /> Export Report
           </Button>
-          <Button variant="outline" size="sm" onClick={() => navigate('/resume')} className="gap-1">
-            <RotateCcw className="h-3.5 w-3.5" /> Re-analyze
+          <Button variant="outline" size="sm" onClick={() => navigate('/resume')} className="gap-1.5 text-xs">
+            <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" /> Re-analyze
           </Button>
         </div>
       </motion.div>
 
       {/* Hero score + quality flag */}
       <motion.div {...fadeUp(0.05)}>
-        <Card>
-          <CardContent className="pt-6 pb-5">
-            <div className="flex flex-col sm:flex-row items-center gap-8">
-              <ScoreRing score={totalScore} />
-              <div className="flex-1 space-y-3 text-center sm:text-left">
-                <div className="flex items-center gap-2 justify-center sm:justify-start flex-wrap">
-                  <Badge className={`text-sm px-3 py-1 ${scoreBg(totalScore)}`}>
-                    {scoreLabel(totalScore)}
-                  </Badge>
-                  {qualityFlag === 'excellent' && (
-                    <Badge className="bg-yellow-100 text-yellow-700 border-yellow-200 gap-1">
-                      <Star className="h-3 w-3" /> Top Candidate
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-muted-foreground text-sm max-w-md">
-                  {totalScore >= 80
-                    ? 'Your resume is highly competitive. You have strong alignment with the target role.'
-                    : totalScore >= 60
-                    ? 'Good foundation. A few targeted improvements will make you significantly more competitive.'
-                    : totalScore >= 40
-                    ? 'Fair match. Focus on the skill gaps and project experience to boost your score.'
-                    : 'Upload a more detailed resume or work on the key skill areas to improve your score.'}
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-                  {[
-                    { label: 'Skills',     value: skillsContrib,     color: 'text-blue-600'   },
-                    { label: 'Projects',   value: projectsContrib,   color: 'text-purple-600' },
-                    { label: 'Experience', value: experienceContrib, color: 'text-emerald-600' },
-                    { label: 'Education',  value: educationContrib,  color: 'text-amber-600'  },
-                  ].map(({ label, value, color }) => (
-                    <div key={label} className="text-center">
-                      <p className={`text-xl font-bold ${color}`}>{value}</p>
-                      <p className="text-xs text-muted-foreground">{label}</p>
-                    </div>
-                  ))}
-                </div>
+        <div className="ent-card p-6">
+          <div className="flex flex-col sm:flex-row items-center gap-8">
+            <ScoreRing score={totalScore} />
+            <div className="flex-1 space-y-3 text-center sm:text-left">
+              <div className="flex items-center gap-2 justify-center sm:justify-start flex-wrap">
+                <span className="text-sm font-semibold px-3 py-1 rounded-full"
+                  style={{
+                    background: `${scoreColor(totalScore)}18`,
+                    color: scoreColor(totalScore),
+                    border: `1px solid ${scoreColor(totalScore)}30`,
+                  }}>
+                  {scoreLabel(totalScore)}
+                </span>
+                {qualityFlag === 'excellent' && (
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1"
+                    style={{ background: '#FEF3C718', color: '#B45309', border: '1px solid #FDE68A' }}>
+                    <Star className="h-3 w-3" aria-hidden="true" /> Top Candidate
+                  </span>
+                )}
+              </div>
+              <p className="text-sm max-w-md" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                {totalScore >= 80
+                  ? 'Your resume is highly competitive. You have strong alignment with the target role.'
+                  : totalScore >= 60
+                  ? 'Good foundation. A few targeted improvements will make you significantly more competitive.'
+                  : totalScore >= 40
+                  ? 'Fair match. Focus on the skill gaps and project experience to boost your score.'
+                  : 'Upload a more detailed resume or work on the key skill areas to improve your score.'}
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                {[
+                  { label: 'Skills',     value: skillsContrib,     color: '#2563EB' },
+                  { label: 'Projects',   value: projectsContrib,   color: '#8B5CF6' },
+                  { label: 'Experience', value: experienceContrib, color: '#10B981' },
+                  { label: 'Education',  value: educationContrib,  color: '#F59E0B' },
+                ].map(({ label, value, color }) => (
+                  <div key={label} className="text-center p-2 rounded-lg" style={{ background: `${color}0A` }}>
+                    <p className="font-display text-xl font-bold" style={{ color }}>{value}</p>
+                    <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{label}</p>
+                  </div>
+                ))}
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </motion.div>
 
       {/* Component score cards */}
       <motion.div {...fadeUp(0.1)}>
-        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
-          <Zap className="h-4 w-4" /> Component Scores
-        </h2>
+        <p className="section-label mb-3 flex items-center gap-2">
+          <Zap className="h-3.5 w-3.5" aria-hidden="true" /> Component Scores
+        </p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <ComponentCard label="Skills"     score={skillsScore}     contribution={skillsContrib}     weight="40%" icon={Code2}          delay={0.12} />
-          <ComponentCard label="Projects"   score={projectsScore}   contribution={projectsContrib}   weight="25%" icon={Briefcase}      delay={0.16} />
-          <ComponentCard label="Experience" score={experienceScore} contribution={experienceContrib} weight="20%" icon={TrendingUp}     delay={0.20} />
-          <ComponentCard label="Education"  score={educationScore}  contribution={educationContrib}  weight="15%" icon={GraduationCap}  delay={0.24} />
+          <ComponentCard label="Skills"     score={skillsScore}     contribution={skillsContrib}     weight="40%" icon={Code2}         delay={0.12} color="#2563EB" />
+          <ComponentCard label="Projects"   score={projectsScore}   contribution={projectsContrib}   weight="25%" icon={Briefcase}     delay={0.16} color="#8B5CF6" />
+          <ComponentCard label="Experience" score={experienceScore} contribution={experienceContrib} weight="20%" icon={TrendingUp}    delay={0.20} color="#10B981" />
+          <ComponentCard label="Education"  score={educationScore}  contribution={educationContrib}  weight="15%" icon={GraduationCap} delay={0.24} color="#F59E0B" />
         </div>
       </motion.div>
 

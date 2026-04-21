@@ -79,18 +79,22 @@ export function ProjectSummaryPage() {
 
       {/* Header */}
       <motion.div {...fadeUp()} className="text-center space-y-3">
-        <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full border border-primary/20">
-          <Zap className="h-4 w-4 text-primary animate-pulse" />
-          <span className="text-sm font-medium">Production Platform — Full Feature Overview</span>
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold"
+          style={{ background: 'hsl(var(--primary) / 0.08)', color: 'hsl(var(--primary))', border: '1px solid hsl(var(--primary) / 0.2)' }}>
+          <Zap className="h-3.5 w-3.5 animate-pulse" aria-hidden="true" />
+          Production Platform — Full Feature Overview
         </div>
-        <h1 className="text-3xl font-bold">Next Step Career AI</h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
+        <h1 className="font-display text-3xl font-bold">Next Step Career AI</h1>
+        <p className="text-muted-foreground max-w-2xl mx-auto text-sm">
           Enterprise-grade resume intelligence platform with ML role prediction, ADBMS features,
           FastAPI backend, and 14 fully functional pages.
         </p>
         <div className="flex flex-wrap gap-2 justify-center pt-1">
           {['React 18', 'FastAPI', 'PostgreSQL', 'TF-IDF + Naive Bayes', 'Fuzzy Logic', 'Supabase', 'Docker'].map(t => (
-            <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>
+            <span key={t} className="text-xs font-medium px-2.5 py-1 rounded-full"
+              style={{ background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}>
+              {t}
+            </span>
           ))}
         </div>
       </motion.div>
@@ -98,17 +102,22 @@ export function ProjectSummaryPage() {
       {/* Stats row */}
       <motion.div {...fadeUp(0.05)} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { value: '14',   label: 'App Pages',        color: 'border-blue-200 bg-blue-50 text-blue-700'   },
-          { value: '17',   label: 'DB Migrations',    color: 'border-purple-200 bg-purple-50 text-purple-700' },
-          { value: '12',   label: 'ADBMS Features',   color: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
-          { value: '200+', label: 'Skill Aliases',    color: 'border-amber-200 bg-amber-50 text-amber-700' },
-        ].map(({ value, label, color }) => (
-          <Card key={label} className={`border ${color}`}>
-            <CardContent className="pt-4 pb-3 text-center">
-              <p className="text-3xl font-bold">{value}</p>
-              <p className="text-xs mt-0.5">{label}</p>
-            </CardContent>
-          </Card>
+          { value: '14',   label: 'App Pages',      sub: 'fully functional', color: '#2563EB' },
+          { value: '17',   label: 'DB Migrations',  sub: 'SQL migrations',   color: '#8B5CF6' },
+          { value: '12',   label: 'ADBMS Features', sub: 'implemented',      color: '#10B981' },
+          { value: '200+', label: 'Skill Aliases',  sub: 'ML mappings',      color: '#F59E0B' },
+        ].map(({ value, label, sub, color }, i) => (
+          <motion.div
+            key={label}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.07 + i * 0.06 }}
+            className="metric-card"
+          >
+            <p className="stat-number" style={{ color }}>{value}</p>
+            <p className="text-sm font-semibold mt-1">{label}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{sub}</p>
+          </motion.div>
         ))}
       </motion.div>
 

@@ -1,14 +1,21 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { GitBranch } from 'lucide-react';
 
 export function ArchitecturePage() {
   return (
     <div className="page-content max-w-6xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">System Architecture</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Production-grade Resume Intelligence Platform — data flow diagram
-        </p>
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+          style={{ background: 'linear-gradient(135deg, #475569, #1E293B)' }}>
+          <GitBranch className="h-5 w-5 text-white" aria-hidden="true" />
+        </div>
+        <div>
+          <h1 className="font-display text-xl font-bold">System Architecture</h1>
+          <p className="text-sm text-muted-foreground">
+            Production-grade Resume Intelligence Platform — data flow diagram
+          </p>
+        </div>
       </div>
 
       <Card>

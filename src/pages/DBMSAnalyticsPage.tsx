@@ -317,26 +317,29 @@ export function DBMSAnalyticsPage() {
 
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Database className="h-6 w-6 text-primary" />
-            Advanced DBMS Analytics
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Real-time data from stored procedures, materialized views, JSONB queries & triggers
-          </p>
-          {lastUpdated && (
-            <p className="text-xs text-muted-foreground mt-0.5">Last updated: {lastUpdated.toLocaleTimeString()}</p>
-          )}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #6366F1, #8B5CF6)' }}>
+            <Database className="h-5 w-5 text-white" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="font-display text-xl font-bold">Advanced DBMS Analytics</h1>
+            <p className="text-sm text-muted-foreground">
+              Real-time data from stored procedures, materialized views, JSONB queries & triggers
+            </p>
+            {lastUpdated && (
+              <p className="text-xs text-muted-foreground mt-0.5">Last updated: {lastUpdated.toLocaleTimeString()}</p>
+            )}
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button 
-            variant="outline" size="sm" 
-            onClick={handleDownloadBackup} 
-            disabled={isDownloading} 
-            className="border-indigo-300 text-indigo-700 hover:bg-indigo-50"
+          <Button
+            variant="outline" size="sm"
+            onClick={handleDownloadBackup}
+            disabled={isDownloading}
+            className="text-xs gap-1.5"
           >
-            <Download className={`h-4 w-4 mr-1 ${isDownloading ? 'animate-bounce' : ''}`} />
+            <Download className={`h-3.5 w-3.5 ${isDownloading ? 'animate-bounce' : ''}`} aria-hidden="true" />
             {isDownloading ? 'Exporting...' : 'Download Data'}
           </Button>
           <Button
