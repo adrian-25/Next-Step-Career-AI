@@ -258,10 +258,15 @@ export function ResumeBuilderPage() {
   };
 
   return (
-    <div className="page-content max-w-[1280px] space-y-0">
+    <div style={{
+      width: '100%',
+      minHeight: '100vh',
+      padding: '20px 32px',
+      background: 'hsl(var(--background))',
+    }}>
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center"
             style={{ background: 'linear-gradient(135deg, #2563EB, #0EA5E9)' }}>
@@ -282,16 +287,19 @@ export function ResumeBuilderPage() {
         </div>
       </div>
 
-      {/* Full desktop two-column layout */}
+      {/* Full-width desktop two-column grid */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
-        gap: '1.5rem',
-        alignItems: 'start',
-      }}>
+        gap: '24px',
+        alignItems: 'flex-start',
+        width: '100%',
+      }}
+      className="resume-builder-grid"
+      >
 
         {/* ── Left: Form (scrollable) ── */}
-        <div className="space-y-3 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 140px)' }}>
+        <div className="space-y-3 overflow-y-auto scrollbar-thin" style={{ maxHeight: 'calc(100vh - 160px)' }}>
 
           {/* Target Role */}
           <div className="ent-card p-4">
@@ -482,17 +490,17 @@ export function ResumeBuilderPage() {
           </div>
         </div>
 
-        {/* ── Right: Preview (sticky) ── */}
-        <div style={{ position: 'sticky', top: '1rem', maxHeight: 'calc(100vh - 140px)', overflow: 'hidden' }}>
-          <div className="ent-card overflow-hidden h-full">
-            <div className="px-4 py-3 border-b flex items-center justify-between"
+        {/* ── Right: Preview (sticky, full height) ── */}
+        <div style={{ position: 'sticky', top: '20px', maxHeight: 'calc(100vh - 160px)', overflow: 'hidden', width: '100%' }}>
+          <div className="ent-card overflow-hidden" style={{ height: 'calc(100vh - 160px)', display: 'flex', flexDirection: 'column' }}>
+            <div className="px-4 py-3 border-b flex items-center justify-between shrink-0"
               style={{ borderColor: 'hsl(var(--border))' }}>
               <p className="section-label">Live Preview</p>
               <Badge className="text-xs badge-info">ATS-Friendly Format</Badge>
             </div>
             <div
-              className="overflow-auto"
-              style={{ height: 'calc(100vh - 200px)', background: 'white' }}
+              className="overflow-auto flex-1"
+              style={{ background: 'white', minHeight: '500px' }}
               dangerouslySetInnerHTML={{ __html: generateResumeHTML(data) }}
             />
           </div>

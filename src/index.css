@@ -541,3 +541,14 @@ body::before {
   .scrollbar-thin::-webkit-scrollbar { width: 4px; }
   .scrollbar-thin::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 2px; }
 }
+
+/* ── Resume Builder — Full Desktop Layout ────────────────────── */
+.resume-builder-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 768px) {
+  .resume-builder-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
