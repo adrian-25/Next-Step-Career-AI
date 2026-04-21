@@ -30,6 +30,9 @@ import { SkillGapPage } from "@/pages/SkillGapPage";
 import { ResumeScorePage } from "@/pages/ResumeScorePage";
 import { ProjectSummaryPage } from "@/pages/ProjectSummaryPage";
 import { ATSCheckerPage } from "@/pages/ATSCheckerPage";
+import { ResumeBuilderPage } from "@/pages/ResumeBuilderPage";
+import { AutoImproverPage } from "@/pages/AutoImproverPage";
+import { EmployerDashboardPage } from "@/pages/EmployerDashboardPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -75,6 +78,9 @@ const App = () => (
                   <Route path="/score" element={<ResumeScorePage />} />
                   <Route path="/summary" element={<ProjectSummaryPage />} />
                   <Route path="/ats" element={<ATSCheckerPage />} />
+                  <Route path="/builder" element={<ResumeBuilderPage />} />
+                  <Route path="/improver" element={<AutoImproverPage />} />
+                  <Route path="/employer" element={<EmployerDashboardPage />} />
                 </Route>
                 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

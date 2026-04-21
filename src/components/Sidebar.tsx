@@ -3,9 +3,10 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   FileText, BarChart3, Briefcase, Trophy, Layers, Search,
-  Database, TrendingUp, Route, Bot, Users, GitBranch,
+  Database, TrendingUp, Route, GitBranch,
   Award, BookMarked, ChevronLeft, ChevronRight,
-  Zap, LogOut, User, Settings, GraduationCap, ShieldCheck,
+  Zap, LogOut, User, GraduationCap, ShieldCheck,
+  Wand2, Building2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
@@ -25,6 +26,8 @@ const NAV_GROUPS = [
       { name: 'Resume Score',     href: '/score',                icon: Award,       },
       { name: 'Resume Insights',  href: '/analytics',            icon: BarChart3,   },
       { name: 'ATS Checker',      href: '/ats',                  icon: ShieldCheck, },
+      { name: 'Resume Builder',   href: '/builder',              icon: FileText,    },
+      { name: 'Auto Improver',    href: '/improver',             icon: Wand2,       },
     ],
   },
   {
@@ -39,6 +42,7 @@ const NAV_GROUPS = [
   {
     label: 'Analytics',
     items: [
+      { name: 'Employer Dashboard', href: '/employer',           icon: Building2,  },
       { name: 'DBMS Analytics',   href: '/dbms-analytics',       icon: Database,   },
       { name: 'Prod Analytics',   href: '/production-analytics', icon: TrendingUp, },
     ],
