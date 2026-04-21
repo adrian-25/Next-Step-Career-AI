@@ -5,11 +5,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import {
   Wand2, CheckCircle2, AlertCircle, ArrowRight, Copy,
-  TrendingUp, FileText, Lightbulb, Zap, RefreshCw,
+  TrendingUp, FileText, Lightbulb, Zap, RefreshCw, Upload,
 } from 'lucide-react';
 import { getDataset } from '@/ai/ml/rolePredictor';
 import { extractSkillsFromText } from '@/ai/ml/skillAnalyzer';
 import { getResourcesForSkill } from '@/data/learningResources';
+import { extractResumeText, isSupportedResumeFile } from '@/lib/resumeTextExtractor';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -213,6 +214,9 @@ export function AutoImproverPage() {
   const [targetRole, setTargetRole] = useState('software_developer');
   const [result, setResult]         = useState<ImproverResult | null>(null);
   const [loading, setLoading]       = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState('');
+  const [fileError, setFileError]   = useState('');
   const [copied, setCopied]         = useState(false);
 
   const loadFromStorage = () => {
@@ -222,8 +226,25 @@ export function AutoImproverPage() {
       const parsed = JSON.parse(raw);
       const text = parsed?.parsedResume?.text ?? '';
       const role = localStorage.getItem('lastDetectedRole') ?? 'software_developer';
-      if (text) { setResumeText(text); setTargetRole(role); }
+      if (text) { setResumeText(text); setTargetRole(role); setUploadedFile('Last Analysis'); }
     } catch { /* ignore */ }
+  };
+
+  const handleFileUpload = async (file: File) => {
+    setFileError('');
+    if (!isSupportedResumeFile(file)) {
+      setFileError('Unsupported file type. Please upload PDF, DOCX, or TXT.');
+      return;
+    }
+    setExtracting(true);
+    const result = await extractResumeText(file);
+    setExtracting(false);
+    if (result.error || !result.text) {
+      setFileError(result.error ?? 'Could not extract text from file.');
+      return;
+    }
+    setResumeText(result.text);
+    setUploadedFile(file.name);
   };
 
   const handleAnalyze = () => {
@@ -280,14 +301,36 @@ export function AutoImproverPage() {
           </div>
 
           <div className="ent-card p-4">
-            <p className="section-label mb-2 flex items-center gap-2">
-              <FileText className="h-3.5 w-3.5" /> Resume Text
-            </p>
+            <div className="flex items-center justify-between mb-2">
+              <p className="section-label flex items-center gap-2">
+                <FileText className="h-3.5 w-3.5" />
+                {uploadedFile ? `File: ${uploadedFile}` : 'Resume Text'}
+              </p>
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  accept=".pdf,.docx,.txt"
+                  className="hidden"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }}
+                  aria-label="Upload resume file"
+                />
+                <span className="text-xs font-medium px-2.5 py-1 rounded-lg border transition-colors hover:bg-muted/50 flex items-center gap-1.5"
+                  style={{ borderColor: 'hsl(var(--border))' }}>
+                  <Upload className="h-3 w-3" aria-hidden="true" />
+                  {extracting ? 'Extracting...' : 'Upload PDF/DOCX'}
+                </span>
+              </label>
+            </div>
+            {fileError && (
+              <p className="text-xs text-red-500 mb-2 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" /> {fileError}
+              </p>
+            )}
             <Textarea
-              placeholder="Paste your resume text here..."
-              className="min-h-[300px] font-code text-xs resize-none"
+              placeholder="Paste your resume text here, or upload a PDF/DOCX file above..."
+              className="min-h-[260px] font-code text-xs resize-none"
               value={resumeText}
-              onChange={e => setResumeText(e.target.value)}
+              onChange={e => { setResumeText(e.target.value); setUploadedFile(''); }}
               aria-label="Resume text"
             />
           </div>

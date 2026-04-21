@@ -258,10 +258,10 @@ export function ResumeBuilderPage() {
   };
 
   return (
-    <div className="page-content max-w-6xl space-y-0">
+    <div className="page-content max-w-[1280px] space-y-0">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center"
             style={{ background: 'linear-gradient(135deg, #2563EB, #0EA5E9)' }}>
@@ -273,10 +273,6 @@ export function ResumeBuilderPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setPreview(!preview)} className="gap-1.5 text-xs">
-            {preview ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-            {preview ? 'Edit' : 'Preview'}
-          </Button>
           <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1.5 text-xs">
             <Download className="h-3.5 w-3.5" aria-hidden="true" /> Print / PDF
           </Button>
@@ -286,10 +282,16 @@ export function ResumeBuilderPage() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      {/* Full desktop two-column layout */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '1.5rem',
+        alignItems: 'start',
+      }}>
 
-        {/* ── Left: Form ── */}
-        <div className="space-y-3">
+        {/* ── Left: Form (scrollable) ── */}
+        <div className="space-y-3 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 140px)' }}>
 
           {/* Target Role */}
           <div className="ent-card p-4">
@@ -480,9 +482,9 @@ export function ResumeBuilderPage() {
           </div>
         </div>
 
-        {/* ── Right: Preview ── */}
-        <div className="lg:sticky lg:top-4 lg:self-start">
-          <div className="ent-card overflow-hidden">
+        {/* ── Right: Preview (sticky) ── */}
+        <div style={{ position: 'sticky', top: '1rem', maxHeight: 'calc(100vh - 140px)', overflow: 'hidden' }}>
+          <div className="ent-card overflow-hidden h-full">
             <div className="px-4 py-3 border-b flex items-center justify-between"
               style={{ borderColor: 'hsl(var(--border))' }}>
               <p className="section-label">Live Preview</p>
@@ -490,7 +492,7 @@ export function ResumeBuilderPage() {
             </div>
             <div
               className="overflow-auto"
-              style={{ maxHeight: 'calc(100vh - 200px)', background: 'white' }}
+              style={{ height: 'calc(100vh - 200px)', background: 'white' }}
               dangerouslySetInnerHTML={{ __html: generateResumeHTML(data) }}
             />
           </div>

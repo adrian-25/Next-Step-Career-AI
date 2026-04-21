@@ -8,14 +8,18 @@ import {
   CheckCircle, AlertCircle, ExternalLink, BookOpen, Target,
   ChevronRight, RotateCcw, Briefcase, Brain, Upload,
   FileText, Cpu, ScanText, Search, UploadCloud, CheckCircle2, Award, Download,
-} from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+} from 'lucide-react';import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { MLAnalysisService, MLAnalysisResult } from '@/services/mlAnalysis.service';
 import { downloadAnalysisReport } from '@/services/resumeExport.service';
 import { explainPrediction, ExplainabilityResult } from '@/ai/explainability/explainableAI';
 import { getDataset, JobRoleEntry } from '@/ai/ml/rolePredictor';
 import { FileProcessingService } from '@/lib/fileProcessingService';
+import { parseResumeSections, scoreSections, ParsedSections, SectionScores } from '@/ai/parser/resumeSectionParser';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
+  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+} from 'recharts';
 
 // ── Role list from dataset ────────────────────────────────────────────────────
 const ROLES: { key: string; label: string }[] = getDataset().map((e: JobRoleEntry) => ({
@@ -102,6 +106,20 @@ function MLResultsView({ result, selectedRole, onReset }: {
       result.missingSkills
     );
   })() : null;
+
+  // ── FIX 2: Parse resume sections from stored text ─────────────────────────
+  const { sections: parsedSections, sectionScores } = (() => {
+    try {
+      const raw = localStorage.getItem('lastAnalysisResult');
+      if (!raw) return { sections: null, sectionScores: null };
+      const parsed = JSON.parse(raw);
+      const fullText = parsed?.parsedResume?.text ?? '';
+      if (!fullText || fullText.length < 50) return { sections: null, sectionScores: null };
+      const sections = parseResumeSections(fullText);
+      const scores   = scoreSections(sections, result.finalScore);
+      return { sections, sectionScores: scores };
+    } catch { return { sections: null, sectionScores: null }; }
+  })();
 
   // ── Dynamic explanation text (per spec) ──────────────────────────────────
   const dynamicExplanation = (() => {
@@ -345,6 +363,172 @@ function MLResultsView({ result, selectedRole, onReset }: {
           </CardContent>
         )}
       </Card>
+
+      {/* ── FIX 3: Resume Strength Analysis Chart (replaces ML vs Fuzzy) ── */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Target className="h-4 w-4 text-primary" />
+            Resume Strength Analysis
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* Bar chart: component scores */}
+            <div>
+              <p className="text-xs text-muted-foreground mb-2">Component Breakdown (out of max)</p>
+              <ResponsiveContainer width="100%" height={180}>
+                <BarChart
+                  data={[
+                    { name: 'Skills',     score: result.mlScore,    max: 40, fill: '#2563EB' },
+                    { name: 'Projects',   score: sectionScores?.projectsScore   ?? 0, max: 25, fill: '#10B981' },
+                    { name: 'Experience', score: sectionScores?.experienceScore ?? 0, max: 20, fill: '#F59E0B' },
+                    { name: 'Education',  score: sectionScores?.educationScore  ?? 0, max: 15, fill: '#8B5CF6' },
+                  ]}
+                  margin={{ top: 4, right: 8, left: -16, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                  <YAxis domain={[0, 40]} tick={{ fontSize: 10 }} />
+                  <Tooltip formatter={(v, n, p) => [`${v} / ${p.payload.max}`, n]} />
+                  <Bar dataKey="score" radius={[4, 4, 0, 0]}>
+                    {[
+                      { fill: '#2563EB' }, { fill: '#10B981' },
+                      { fill: '#F59E0B' }, { fill: '#8B5CF6' },
+                    ].map((e, i) => <Cell key={i} fill={e.fill} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            {/* Skill distribution donut-style */}
+            <div>
+              <p className="text-xs text-muted-foreground mb-2">Skill Distribution</p>
+              <ResponsiveContainer width="100%" height={180}>
+                <BarChart
+                  data={[
+                    { name: 'Matched',    count: result.matchedSkills.length,  fill: '#10B981' },
+                    { name: 'Partial',    count: result.partialSkills?.length ?? 0, fill: '#F59E0B' },
+                    { name: 'Missing',    count: result.missingSkills.length,  fill: '#EF4444' },
+                  ]}
+                  margin={{ top: 4, right: 8, left: -16, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 10 }} />
+                  <Tooltip />
+                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                    {[{ fill: '#10B981' }, { fill: '#F59E0B' }, { fill: '#EF4444' }].map((e, i) => (
+                      <Cell key={i} fill={e.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── FIX 2: Section Detection Results ── */}
+      {parsedSections && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <FileText className="h-4 w-4 text-blue-600" />
+              Section Detection — Parsed from Resume
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Section scores */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: 'Skills',     score: sectionScores?.skillsScore ?? 0,     max: 40, color: '#2563EB', count: parsedSections.skills.length },
+                { label: 'Projects',   score: sectionScores?.projectsScore ?? 0,   max: 25, color: '#10B981', count: parsedSections.projects.length },
+                { label: 'Experience', score: sectionScores?.experienceScore ?? 0, max: 20, color: '#F59E0B', count: parsedSections.experience.length },
+                { label: 'Education',  score: sectionScores?.educationScore ?? 0,  max: 15, color: '#8B5CF6', count: parsedSections.education.length },
+              ].map(({ label, score, max, color, count }) => (
+                <div key={label} className="text-center p-3 rounded-lg border"
+                  style={{ background: `${color}08`, borderColor: `${color}30` }}>
+                  <p className="font-display text-xl font-bold" style={{ color }}>{score}/{max}</p>
+                  <p className="text-xs font-semibold mt-0.5">{label}</p>
+                  <p className="text-xs text-muted-foreground">{count} detected</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Projects detected */}
+            {parsedSections.projects.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                  Projects Detected ({parsedSections.projects.length})
+                </p>
+                <div className="space-y-1.5">
+                  {parsedSections.projects.slice(0, 4).map((p, i) => (
+                    <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-green-50 border border-green-100 text-xs">
+                      <span className="font-semibold text-green-700 shrink-0">{i + 1}.</span>
+                      <div>
+                        <span className="font-medium">{p.name}</span>
+                        {p.techStack.length > 0 && (
+                          <span className="text-muted-foreground ml-1">— {p.techStack.slice(0, 4).join(', ')}</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Experience detected */}
+            {parsedSections.experience.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                  Experience Detected ({parsedSections.experience.length})
+                </p>
+                <div className="space-y-1.5">
+                  {parsedSections.experience.slice(0, 3).map((e, i) => (
+                    <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-amber-50 border border-amber-100 text-xs">
+                      <span className="font-semibold text-amber-700 shrink-0">{i + 1}.</span>
+                      <div>
+                        <span className="font-medium">{e.role}</span>
+                        {e.company && <span className="text-muted-foreground"> @ {e.company}</span>}
+                        {e.duration && <span className="text-muted-foreground ml-1">({e.duration})</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Education detected */}
+            {parsedSections.education.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                  Education Detected ({parsedSections.education.length})
+                </p>
+                <div className="space-y-1.5">
+                  {parsedSections.education.slice(0, 3).map((e, i) => (
+                    <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-purple-50 border border-purple-100 text-xs">
+                      <span className="font-semibold text-purple-700 shrink-0">{i + 1}.</span>
+                      <div>
+                        <span className="font-medium">{e.degree}</span>
+                        {e.institution && <span className="text-muted-foreground"> — {e.institution}</span>}
+                        {e.year && <span className="text-muted-foreground ml-1">({e.year})</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* No sections detected */}
+            {parsedSections.projects.length === 0 && parsedSections.experience.length === 0 && parsedSections.education.length === 0 && (
+              <div className="text-center py-4 text-muted-foreground text-sm">
+                <AlertCircle className="h-6 w-6 mx-auto mb-2 opacity-40" />
+                <p>No structured sections detected. Ensure your resume has clear section headings like "Experience", "Projects", "Education".</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Score cards */}
       <div className="grid grid-cols-3 gap-4">

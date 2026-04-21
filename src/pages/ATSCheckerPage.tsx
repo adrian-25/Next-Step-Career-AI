@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { checkATS, ATSResult, ATSIssue } from '@/ai/ats/atsChecker';
 import { getDataset } from '@/ai/ml/rolePredictor';
+import { extractResumeText, isSupportedResumeFile } from '@/lib/resumeTextExtractor';
 
 const ROLES = getDataset().map(e => ({ key: e.role, label: e.display }));
 
@@ -60,8 +61,11 @@ export function ATSCheckerPage() {
   const [targetRole, setTargetRole] = useState('');
   const [result, setResult]         = useState<ATSResult | null>(null);
   const [loading, setLoading]       = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<string>('');
   const [expandedIssue, setExpandedIssue] = useState<number | null>(null);
   const [drag, setDrag]             = useState(false);
+  const [fileError, setFileError]   = useState('');
 
   // Load from localStorage if available
   const loadFromStorage = () => {
@@ -70,9 +74,27 @@ export function ATSCheckerPage() {
       if (!raw) return;
       const parsed = JSON.parse(raw);
       const text = parsed?.parsedResume?.text ?? parsed?.mlResult?.resumeText ?? '';
-      if (text) { setResumeText(text); }
+      if (text) { setResumeText(text); setUploadedFile('Last Analysis'); }
     } catch { /* ignore */ }
   };
+
+  // Handle file upload — PDF, DOCX, or TXT
+  const handleFileUpload = useCallback(async (file: File) => {
+    setFileError('');
+    if (!isSupportedResumeFile(file)) {
+      setFileError('Unsupported file type. Please upload PDF, DOCX, or TXT.');
+      return;
+    }
+    setExtracting(true);
+    const result = await extractResumeText(file);
+    setExtracting(false);
+    if (result.error || !result.text) {
+      setFileError(result.error ?? 'Could not extract text from file.');
+      return;
+    }
+    setResumeText(result.text);
+    setUploadedFile(file.name);
+  }, []);
 
   const handleCheck = () => {
     if (!resumeText.trim()) return;
@@ -89,10 +111,8 @@ export function ATSCheckerPage() {
     setDrag(false);
     const file = e.dataTransfer.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => setResumeText(reader.result as string);
-    reader.readAsText(file);
-  }, []);
+    handleFileUpload(file);
+  }, [handleFileUpload]);
 
   const errorCount   = result?.issues.filter(i => i.type === 'error').length ?? 0;
   const warningCount = result?.issues.filter(i => i.type === 'warning').length ?? 0;
@@ -133,7 +153,7 @@ export function ATSCheckerPage() {
             </select>
           </div>
 
-          {/* Resume input */}
+          {/* Resume input — text paste + file upload */}
           <div
             className={`upload-zone p-4 ${drag ? 'drag-over' : ''}`}
             onDragEnter={e => { e.preventDefault(); setDrag(true); }}
@@ -141,14 +161,36 @@ export function ATSCheckerPage() {
             onDragOver={e => e.preventDefault()}
             onDrop={handleDrop}
           >
-            <p className="section-label mb-2 flex items-center gap-2">
-              <FileText className="h-3.5 w-3.5" aria-hidden="true" /> Resume Text
-            </p>
+            <div className="flex items-center justify-between mb-2">
+              <p className="section-label flex items-center gap-2">
+                <FileText className="h-3.5 w-3.5" aria-hidden="true" />
+                {uploadedFile ? `File: ${uploadedFile}` : 'Resume Text'}
+              </p>
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  accept=".pdf,.docx,.txt"
+                  className="hidden"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }}
+                  aria-label="Upload resume file"
+                />
+                <span className="text-xs font-medium px-2.5 py-1 rounded-lg border transition-colors hover:bg-muted/50 flex items-center gap-1.5"
+                  style={{ borderColor: 'hsl(var(--border))' }}>
+                  <Upload className="h-3 w-3" aria-hidden="true" />
+                  {extracting ? 'Extracting...' : 'Upload PDF/DOCX'}
+                </span>
+              </label>
+            </div>
+            {fileError && (
+              <p className="text-xs text-red-500 mb-2 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" /> {fileError}
+              </p>
+            )}
             <Textarea
-              placeholder="Paste your resume text here, or drag & drop a .txt file..."
-              className="min-h-[280px] font-code text-xs resize-none border-0 bg-transparent p-0 focus-visible:ring-0"
+              placeholder="Paste your resume text here, or upload a PDF/DOCX file above..."
+              className="min-h-[240px] font-code text-xs resize-none border-0 bg-transparent p-0 focus-visible:ring-0"
               value={resumeText}
-              onChange={e => setResumeText(e.target.value)}
+              onChange={e => { setResumeText(e.target.value); setUploadedFile(''); }}
               aria-label="Resume text input"
             />
           </div>
