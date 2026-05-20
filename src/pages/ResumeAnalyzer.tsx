@@ -700,6 +700,12 @@ function UploadWidget({ targetRole, onComplete }: {
       const ca = fileResult.comprehensiveAnalysis;
       setStage('complete'); setProgress(100);
 
+      // DEBUG: Log comprehensive analysis structure
+      console.log('[ResumeAnalyzer] Comprehensive Analysis:', ca);
+      console.log('[ResumeAnalyzer] Resume Score:', ca?.resumeScore);
+      console.log('[ResumeAnalyzer] Resume Score Total:', ca?.resumeScore?.totalScore);
+      console.log('[ResumeAnalyzer] Component Scores:', ca?.resumeScore?.componentScores);
+
       // Persist for other pages
       try {
         if (ca) {

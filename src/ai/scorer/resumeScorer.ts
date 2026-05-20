@@ -54,6 +54,16 @@ export class ResumeScorer {
       educationContribution
     );
 
+    // DEBUG: Log score calculation
+    console.log('[ResumeScorer] Component Scores:', componentScores);
+    console.log('[ResumeScorer] Weighted Contributions:', {
+      skillsContribution,
+      projectsContribution,
+      experienceContribution,
+      educationContribution,
+    });
+    console.log('[ResumeScorer] Total Score:', totalScore);
+
     // Calculate scoring factors
     const factors = this.calculateScoringFactors(parsedResume, skillMatch);
 
@@ -76,13 +86,17 @@ export class ResumeScorer {
       qualityFlag
     );
 
-    return {
+    const result: ResumeScore = {
       totalScore,
       componentScores,
       breakdown,
       qualityFlag,
       recommendations,
     };
+
+    console.log('[ResumeScorer] Final Resume Score:', result);
+
+    return result;
   }
 
   /**
