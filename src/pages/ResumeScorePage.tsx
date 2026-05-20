@@ -203,7 +203,7 @@ export function ResumeScorePage() {
   }
 
   // Extract scores
-  const totalScore: number = analysis?.resumeScore?.totalScore ?? 0;
+  let totalScore: number = analysis?.resumeScore?.totalScore ?? 0;
   const cs = analysis?.resumeScore?.componentScores ?? {};
   const bd = analysis?.resumeScore?.breakdown ?? {};
   const recs: string[] = analysis?.resumeScore?.recommendations ?? [];
@@ -213,6 +213,17 @@ export function ResumeScorePage() {
   const projectsScore    = cs.projectsScore    ?? 0;
   const experienceScore  = cs.experienceScore  ?? 0;
   const educationScore   = cs.educationScore   ?? 0;
+
+  // Fallback: Calculate total score from component scores if totalScore is 0
+  if (totalScore === 0 && (skillsScore > 0 || projectsScore > 0 || experienceScore > 0 || educationScore > 0)) {
+    totalScore = Math.round(
+      (skillsScore * 0.40) +
+      (projectsScore * 0.25) +
+      (experienceScore * 0.20) +
+      (educationScore * 0.15)
+    );
+    console.log('[ResumeScorePage] Calculated total score from components:', totalScore);
+  }
 
   const skillsContrib     = bd.skillsContribution     ?? Math.round(skillsScore * 0.40);
   const projectsContrib   = bd.projectsContribution   ?? Math.round(projectsScore * 0.25);
