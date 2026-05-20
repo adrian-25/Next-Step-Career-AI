@@ -116,6 +116,7 @@ export class ResumeScorer {
 
   /**
    * Calculate projects component score (0-100)
+   * Dynamic scoring based on actual project count and quality
    */
   private calculateProjectsScore(parsedResume: ParsedResume): number {
     const projectsSection = parsedResume.sections.projects;
@@ -130,28 +131,34 @@ export class ResumeScorer {
 
     let score = 0;
 
-    // Base score from section quality (use calculated quality or derive from content)
-    const qualityScore = projectsSection?.qualityScore ?? this.calculateSectionQuality(content);
-    score += qualityScore * 0.4; // Up to 40 points
-
-    // Content length score (up to 30 points)
-    const contentLength = content.length;
-    if (contentLength > 1000) {
-      score += 30;
-    } else if (contentLength > 500) {
-      score += 20;
-    } else if (contentLength > 200) {
-      score += 10;
-    }
-
-    // Project count estimation (up to 30 points)
+    // Project count (up to 50 points) - dynamic based on actual count
     const projectCount = this.estimateProjectCount(content);
     if (projectCount >= 5) {
-      score += 30;
+      score += 50;
+    } else if (projectCount >= 4) {
+      score += 40;
     } else if (projectCount >= 3) {
+      score += 30;
+    } else if (projectCount >= 2) {
       score += 20;
     } else if (projectCount >= 1) {
       score += 10;
+    }
+
+    // Content quality (up to 30 points)
+    const qualityScore = projectsSection?.qualityScore ?? this.calculateSectionQuality(content);
+    score += qualityScore * 0.3;
+
+    // Content length score (up to 20 points)
+    const contentLength = content.length;
+    if (contentLength > 1000) {
+      score += 20;
+    } else if (contentLength > 500) {
+      score += 15;
+    } else if (contentLength > 200) {
+      score += 10;
+    } else if (contentLength > 100) {
+      score += 5;
     }
 
     return Math.round(Math.min(100, score));
@@ -174,6 +181,7 @@ export class ResumeScorer {
 
   /**
    * Calculate experience component score (0-100)
+   * Includes internships and dynamic scoring based on actual experience
    */
   private calculateExperienceScore(parsedResume: ParsedResume): number {
     const experienceSection = parsedResume.sections.experience;
@@ -187,32 +195,55 @@ export class ResumeScorer {
     }
 
     let score = 0;
+    const lowerContent = content.toLowerCase();
+    const lowerText = resumeText.toLowerCase();
 
-    // Base score from section quality
-    const qualityScore = experienceSection?.qualityScore ?? this.calculateSectionQuality(content);
-    score += qualityScore * 0.4; // Up to 40 points
+    // Check for internships (include in experience)
+    const hasInternship = lowerText.includes('intern') || 
+                        lowerText.includes('internship') || 
+                        lowerText.includes('trainee') ||
+                        lowerText.includes('internship program');
 
-    // Experience level score (up to 40 points)
+    // Experience count estimation (up to 40 points)
+    const expCount = this.estimateExperienceCount(content);
+    if (hasInternship) {
+      // Bonus for having internship experience
+      score += 10;
+    }
+    if (expCount >= 4) {
+      score += 40;
+    } else if (expCount >= 3) {
+      score += 30;
+    } else if (expCount >= 2) {
+      score += 20;
+    } else if (expCount >= 1) {
+      score += 10;
+    }
+
+    // Experience level score (up to 30 points)
     switch (parsedResume.experienceLevel) {
       case 'Executive':
-        score += 40;
+        score += 30;
         break;
       case 'Senior Level':
-        score += 35;
+        score += 25;
         break;
       case 'Mid Level':
-        score += 25;
+        score += 20;
         break;
       case 'Entry Level':
         score += 15;
         break;
     }
 
-    // Content richness (up to 20 points)
-    const lowerContent = content.toLowerCase();
+    // Content quality (up to 20 points)
+    const qualityScore = experienceSection?.qualityScore ?? this.calculateSectionQuality(content);
+    score += qualityScore * 0.2;
+
+    // Content richness with action verbs (up to 10 points)
     const actionVerbs = ['developed', 'implemented', 'managed', 'led', 'created', 'designed', 'achieved', 'improved'];
     const verbCount = actionVerbs.filter(verb => lowerContent.includes(verb)).length;
-    score += Math.min(verbCount * 3, 20);
+    score += Math.min(verbCount * 2, 10);
 
     return Math.round(Math.min(100, score));
   }
@@ -426,6 +457,23 @@ export class ResumeScorer {
     const numbers = (content.match(/^\d+\./gm) || []).length;
     
     return Math.max(bullets, numbers, 1);
+  }
+
+  /**
+   * Estimate experience count from content
+   */
+  private estimateExperienceCount(content: string): number {
+    if (!content) return 0;
+    
+    // Count bullet points or numbered items in experience section
+    const bullets = (content.match(/[•\-\*]\s/g) || []).length;
+    const numbers = (content.match(/^\d+\./gm) || []).length;
+    
+    // Also count job title keywords
+    const jobKeywords = ['engineer', 'developer', 'analyst', 'manager', 'lead', 'director', 'intern', 'trainee'];
+    const jobCount = jobKeywords.filter(kw => content.toLowerCase().includes(kw)).length;
+    
+    return Math.max(bullets, numbers, Math.floor(jobCount / 2), 1);
   }
 
   /**
