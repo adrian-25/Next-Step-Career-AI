@@ -19,6 +19,9 @@ export default defineConfig(({ mode }) => ({
     'global': 'globalThis',
   },
   optimizeDeps: {
+    // Exclude pdfjs-dist from pre-bundling — it uses new URL() worker references
+    // that must be resolved at build time, not pre-bundle time.
+    exclude: ['pdfjs-dist'],
     esbuildOptions: {
       define: {
         global: 'globalThis'
@@ -47,8 +50,8 @@ export default defineConfig(({ mode }) => ({
           'vendor-motion': ['framer-motion'],
           // Supabase
           'vendor-supabase': ['@supabase/supabase-js'],
-          // PDF parsing (largest chunk)
-          'vendor-pdf': ['pdfjs-dist'],
+          // NOTE: pdfjs-dist is intentionally NOT in manualChunks.
+          // It uses new URL() worker references that Rollup must handle inline.
         },
       },
     },

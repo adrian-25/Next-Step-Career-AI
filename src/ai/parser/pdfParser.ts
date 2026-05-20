@@ -1,9 +1,13 @@
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Use CDN worker URL — avoids Vite dynamic import issues with the local worker file.
-// Version must match the installed pdfjs-dist package version exactly.
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.5.207/pdf.worker.min.mjs';
+// ── Worker setup for Vite + pdfjs-dist v5 ────────────────────────────────────
+// Using new URL() with import.meta.url tells Vite to bundle the worker file
+// as a static asset and gives us the correct hashed URL at build time.
+// This works in both dev (localhost) and production (Vercel).
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url
+).toString();
 
 /**
  * Parse PDF file and extract text content using pdfjs-dist (browser-compatible).
