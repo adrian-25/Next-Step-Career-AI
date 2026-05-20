@@ -716,6 +716,8 @@ function UploadWidget({ targetRole, onComplete }: {
       try {
         const ca = fileResult.comprehensiveAnalysis;
         if (ca) {
+          // Clear old cached data before storing new analysis
+          localStorage.removeItem('lastAnalysisResult');
           localStorage.setItem('lastAnalysisResult', JSON.stringify({
             ...ca,
             mlResult,
