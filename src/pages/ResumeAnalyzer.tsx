@@ -710,8 +710,15 @@ function UploadWidget({ targetRole, onComplete }: {
           const history = JSON.parse(localStorage.getItem('analysisHistory') ?? '[]');
           history.push({ score: ca.skillMatch.matchScore, date: new Date().toISOString() });
           localStorage.setItem('analysisHistory', JSON.stringify(history.slice(-10)));
+          
+          // DEBUG: Verify localStorage save
+          console.log('[ResumeAnalyzer] Saved to localStorage');
+          console.log('[ResumeAnalyzer] lastAnalysisResult:', localStorage.getItem('lastAnalysisResult'));
+          console.log('[ResumeAnalyzer] resumeScore.totalScore:', ca.resumeScore?.totalScore);
         }
-      } catch { /* ignore */ }
+      } catch (error) {
+        console.error('[ResumeAnalyzer] Error saving to localStorage:', error);
+      }
 
       toast({ title: 'Analysis complete!', description: `${ca?.skillMatch.matchScore ?? 0}% match for ${targetRole.replace(/_/g, ' ')}` });
       setTimeout(() => onComplete({
