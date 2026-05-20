@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { getAnalyticsOverview, checkBackendHealth, downloadUserBackup } from '@/services/backendApi.service';
 import { downloadLastAnalysisReport } from '@/services/resumeExport.service';
 import { useAuth } from '@/contexts/AuthContext';
@@ -90,18 +92,16 @@ function MetricCard({ label, value, sub, icon: Icon, color, delay }: {
       className="metric-card"
     >
       <div className="flex items-start justify-between mb-3">
-        <div className="w-9 h-9 rounded-lg flex items-center justify-center"
-          style={{ background: `${color}18` }}>
-          <Icon className="h-4.5 w-4.5" style={{ color }} aria-hidden="true" />
+        <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-primary/10">
+          <Icon className="h-4.5 w-4.5 text-primary" aria-hidden="true" />
         </div>
-        <span className="text-xs font-medium px-2 py-0.5 rounded-full"
-          style={{ background: `${color}12`, color }}>
+        <Badge variant="secondary" className="text-xs">
           Live
-        </span>
+        </Badge>
       </div>
-      <p className="stat-number" style={{ color }}>{value}</p>
-      <p className="text-sm font-semibold mt-1" style={{ color: 'hsl(var(--foreground))' }}>{label}</p>
-      <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{sub}</p>
+      <p className="text-2xl font-bold text-primary">{value}</p>
+      <p className="text-sm font-semibold mt-1 text-foreground">{label}</p>
+      <p className="text-xs mt-0.5 text-muted-foreground">{sub}</p>
     </motion.div>
   );
 }
@@ -114,22 +114,20 @@ function ActionCard({ action, index }: { action: typeof QUICK_ACTIONS[0]; index:
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.05 + index * 0.04, duration: 0.3 }}
       onClick={() => navigate(action.href)}
-      className="ent-card text-left p-4 w-full group"
+      className="clean-card text-left p-4 w-full group hover:shadow-soft-lg"
       aria-label={`Open ${action.title}`}
     >
       <div className="flex items-start gap-3">
-        <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-110"
-          style={{ background: `${action.color}18` }}>
-          <action.icon className="h-4 w-4" style={{ color: action.color }} aria-hidden="true" />
+        <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 bg-primary/10">
+          <action.icon className="h-4 w-4 text-primary" aria-hidden="true" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold leading-tight">{action.title}</p>
-          <p className="text-xs mt-0.5 truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>
+          <p className="text-xs mt-0.5 truncate text-muted-foreground">
             {action.desc}
           </p>
         </div>
-        <ChevronRight className="h-4 w-4 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-          style={{ color: action.color }} aria-hidden="true" />
+        <ChevronRight className="h-4 w-4 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
       </div>
     </motion.button>
   );
@@ -186,52 +184,30 @@ export function Dashboard() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="rounded-2xl overflow-hidden relative"
-        style={{
-          background: 'var(--gradient-navy)',
-          padding: '28px 32px',
-        }}
+        className="clean-card p-8"
       >
-        {/* Dot pattern overlay */}
-        <div className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.4) 1px, transparent 1px)',
-            backgroundSize: '24px 24px',
-          }}
-        />
-        <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ background: 'rgba(37,99,235,0.3)' }}>
-                <Zap className="h-4 w-4 text-white" aria-hidden="true" />
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary/10">
+                <Zap className="h-4 w-4 text-primary" aria-hidden="true" />
               </div>
-              <span className="text-xs font-semibold uppercase tracking-widest"
-                style={{ color: 'rgba(255,255,255,0.6)' }}>
+              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 Next Step Career AI
               </span>
             </div>
-            <h1 className="font-display text-2xl font-bold text-white mb-1">
+            <h1 className="font-display text-2xl font-bold text-foreground mb-1">
               Welcome back{role ? `, ${roleLabel(role).split(' ')[0]}` : ''}
             </h1>
-            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.65)' }}>
+            <p className="text-sm text-muted-foreground">
               AI-powered resume intelligence · TF-IDF + Naive Bayes · PostgreSQL ADBMS
             </p>
           </div>
           <div className="flex gap-2">
-            <Button
-              onClick={() => navigate('/resume')}
-              className="text-sm font-semibold"
-              style={{ background: '#2563EB', color: 'white', border: 'none' }}
-            >
+            <Button onClick={() => navigate('/resume')} className="text-sm font-semibold">
               Analyze Resume <ArrowRight className="ml-1.5 h-3.5 w-3.5" aria-hidden="true" />
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate('/summary')}
-              className="text-sm"
-              style={{ borderColor: 'rgba(255,255,255,0.2)', color: 'white', background: 'rgba(255,255,255,0.08)' }}
-            >
+            <Button variant="outline" onClick={() => navigate('/summary')} className="text-sm">
               Project Summary
             </Button>
           </div>
@@ -260,18 +236,16 @@ export function Dashboard() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="rounded-xl border-2 border-dashed p-10 text-center"
-            style={{ borderColor: 'hsl(var(--border))', background: 'hsl(var(--muted) / 0.3)' }}
+            className="clean-card p-10 text-center border-2 border-dashed border-border"
           >
-            <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-              style={{ background: 'hsl(var(--primary) / 0.08)' }}>
-              <FileText className="h-7 w-7" style={{ color: 'hsl(var(--primary))' }} aria-hidden="true" />
+            <div className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center bg-primary/10">
+              <FileText className="h-7 w-7 text-primary" aria-hidden="true" />
             </div>
             <p className="font-display font-semibold text-base mb-1">No analysis yet</p>
-            <p className="text-sm mb-5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+            <p className="text-sm mb-5 text-muted-foreground">
               Upload your resume to see your personal stats, skill gaps, and match score.
             </p>
-            <Button onClick={() => navigate('/resume')} className="gradient-bg text-white">
+            <Button onClick={() => navigate('/resume')}>
               Analyze My Resume <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
             </Button>
           </motion.div>
@@ -302,21 +276,14 @@ export function Dashboard() {
             </div>
 
             {/* Progress bar */}
-            <div className="ent-card p-4">
+            <Card className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-semibold">Overall Match Progress</span>
-                <span className="text-sm font-bold" style={{ color: scoreHex(matchScore) }}>
+                <span className="text-sm font-bold text-primary">
                   {matchScore}% — {scoreLabel(matchScore)}
                 </span>
               </div>
-              <div className="progress-enterprise">
-                <motion.div
-                  className="progress-enterprise-fill"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${matchScore}%` }}
-                  transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
-                />
-              </div>
+              <Progress value={matchScore} className="h-2" />
               <div className="flex justify-between mt-2">
                 {[
                   { pct: 0,  label: '0%' },
@@ -324,12 +291,12 @@ export function Dashboard() {
                   { pct: 60, label: '60% Good' },
                   { pct: 80, label: '80%+ Excellent' },
                 ].map(m => (
-                  <span key={m.pct} className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                  <span key={m.pct} className="text-xs text-muted-foreground">
                     {m.label}
                   </span>
                 ))}
               </div>
-            </div>
+            </Card>
           </div>
         )}
       </div>
@@ -355,14 +322,14 @@ export function Dashboard() {
             <Clock className="h-3.5 w-3.5" aria-hidden="true" /> Recent Activity
           </p>
           {recentActivity.length === 0 ? (
-            <div className="ent-card p-8 text-center">
+            <Card className="p-8 text-center">
               <Clock className="h-8 w-8 mx-auto mb-2 opacity-20" aria-hidden="true" />
-              <p className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
+              <p className="text-sm text-muted-foreground">
                 No activity yet — analyze a resume to get started
               </p>
-            </div>
+            </Card>
           ) : (
-            <div className="ent-card divide-y" style={{ divideColor: 'hsl(var(--border))' }}>
+            <Card className="divide-y divide-border">
               {recentActivity.map((item, i) => (
                 <motion.div
                   key={i}
@@ -372,27 +339,20 @@ export function Dashboard() {
                   className="flex items-center justify-between p-3 first:pt-4 last:pb-4"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-                      style={{ background: 'hsl(var(--primary) / 0.08)' }}>
-                      <FileText className="h-3.5 w-3.5" style={{ color: 'hsl(var(--primary))' }} aria-hidden="true" />
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary/10">
+                      <FileText className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
                     </div>
                     <div>
                       <p className="text-sm font-medium">{item.label}</p>
-                      <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>{timeAgo(item.date)}</p>
+                      <p className="text-xs text-muted-foreground">{timeAgo(item.date)}</p>
                     </div>
                   </div>
-                  <span
-                    className="text-xs font-bold px-2 py-0.5 rounded-full"
-                    style={{
-                      background: `${scoreHex(item.score)}18`,
-                      color: scoreHex(item.score),
-                    }}
-                  >
+                  <Badge variant="secondary" className="text-xs font-bold">
                     {item.score}%
-                  </span>
+                  </Badge>
                 </motion.div>
               ))}
-            </div>
+            </Card>
           )}
         </div>
 
@@ -402,15 +362,9 @@ export function Dashboard() {
             <p className="section-label flex items-center gap-2">
               <Bot className="h-3.5 w-3.5" aria-hidden="true" /> Platform Stats
             </p>
-            <span
-              className="text-xs font-medium px-2 py-0.5 rounded-full"
-              style={backendOnline
-                ? { background: '#10B98118', color: '#059669' }
-                : { background: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }
-              }
-            >
-              {backendOnline ? '● Backend Online' : '○ Browser Mode'}
-            </span>
+            <Badge variant={backendOnline ? "success" : "secondary"} className="text-xs font-medium">
+              {backendOnline ? 'Backend Online' : 'Browser Mode'}
+            </Badge>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {(liveMetrics ? [
@@ -424,14 +378,13 @@ export function Dashboard() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 + i * 0.06 }}
-                className="ent-card p-4 text-center"
+                className="clean-card p-4 text-center"
               >
-                <div className="w-9 h-9 rounded-lg mx-auto mb-2 flex items-center justify-center"
-                  style={{ background: `${color}18` }}>
-                  <Icon className="h-4 w-4" style={{ color }} aria-hidden="true" />
+                <div className="w-9 h-9 rounded-lg mx-auto mb-2 flex items-center justify-center bg-primary/10">
+                  <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
                 </div>
                 <p className="font-display text-xl font-bold">{value}</p>
-                <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{label}</p>
+                <p className="text-xs mt-0.5 text-muted-foreground">{label}</p>
               </motion.div>
             ))}
           </div>
@@ -443,12 +396,11 @@ export function Dashboard() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="ent-card p-4 flex items-center justify-between flex-wrap gap-3"
-        style={{ borderStyle: 'dashed' }}
+        className="clean-card p-4 flex items-center justify-between flex-wrap gap-3 border-2 border-dashed border-border"
       >
         <div>
           <p className="text-sm font-semibold">Export Your Data</p>
-          <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+          <p className="text-xs mt-0.5 text-muted-foreground">
             Download your resume analysis as HTML report or full JSON backup
           </p>
         </div>

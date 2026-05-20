@@ -2,11 +2,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Layout } from "@/components/Layout";
+import { AnimatePresence, motion } from "framer-motion";
 import Index from "@/pages/Index";
 import { TopicsPage } from "@/pages/TopicsPage";
 import { Dashboard } from "@/pages/Dashboard";
@@ -37,6 +38,25 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Page transition wrapper component
+const PageTransition = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
@@ -48,43 +68,43 @@ const App = () => (
             <BrowserRouter>
               <Routes>
                 {/* Landing Page - No Layout, No Auth Required */}
-                <Route path="/" element={<Index />} />
+                <Route path="/" element={<PageTransition><Index /></PageTransition>} />
                 
                 {/* Topics Page - No Layout, No Auth Required */}
-                <Route path="/topics" element={<TopicsPage />} />
+                <Route path="/topics" element={<PageTransition><TopicsPage /></PageTransition>} />
                 
                 {/* Authentication Page - Optional (No Layout) */}
-                <Route path="/auth" element={<AuthPage />} />
+                <Route path="/auth" element={<PageTransition><AuthPage /></PageTransition>} />
                 
                 {/* DEMO MODE: All App Pages - With Layout, NO Authentication Required */}
                 <Route element={<Layout />}>
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/resume" element={<ResumeAnalyzer />} />
-                  <Route path="/analytics" element={<ResumeInsightsPage />} />
-                  <Route path="/dbms-analytics" element={<DBMSAnalyticsPage />} />
-                  <Route path="/roadmap" element={<CareerRoadmap />} />
-                  <Route path="/mentor" element={<CareerMentorPage />} />
-                  <Route path="/chatbot" element={<CareerChatbotPage />} />
-                  <Route path="/job-matches" element={<JobRecommendationsPage />} />
-                  <Route path="/portfolio" element={<PortfolioSuggestions />} />
-                  <Route path="/networking" element={<NetworkingAssistant />} />
-                  <Route path="/courses" element={<Courses />} />
-                  <Route path="/job-matching" element={<JobMatchingPage />} />
-                  <Route path="/ranking" element={<MultiResumeRankingPage />} />
-                  <Route path="/search" element={<ResumeSearchPage />} />
-                  <Route path="/architecture" element={<ArchitecturePage />} />
-                  <Route path="/production-analytics" element={<ProductionAnalyticsPage />} />
-                  <Route path="/skill-gap" element={<SkillGapPage />} />
-                  <Route path="/score" element={<ResumeScorePage />} />
-                  <Route path="/summary" element={<ProjectSummaryPage />} />
-                  <Route path="/ats" element={<ATSCheckerPage />} />
-                  <Route path="/builder" element={<ResumeBuilderPage />} />
-                  <Route path="/improver" element={<AutoImproverPage />} />
-                  <Route path="/employer" element={<EmployerDashboardPage />} />
+                  <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
+                  <Route path="/resume" element={<PageTransition><ResumeAnalyzer /></PageTransition>} />
+                  <Route path="/analytics" element={<PageTransition><ResumeInsightsPage /></PageTransition>} />
+                  <Route path="/dbms-analytics" element={<PageTransition><DBMSAnalyticsPage /></PageTransition>} />
+                  <Route path="/roadmap" element={<PageTransition><CareerRoadmap /></PageTransition>} />
+                  <Route path="/mentor" element={<PageTransition><CareerMentorPage /></PageTransition>} />
+                  <Route path="/chatbot" element={<PageTransition><CareerChatbotPage /></PageTransition>} />
+                  <Route path="/job-matches" element={<PageTransition><JobRecommendationsPage /></PageTransition>} />
+                  <Route path="/portfolio" element={<PageTransition><PortfolioSuggestions /></PageTransition>} />
+                  <Route path="/networking" element={<PageTransition><NetworkingAssistant /></PageTransition>} />
+                  <Route path="/courses" element={<PageTransition><Courses /></PageTransition>} />
+                  <Route path="/job-matching" element={<PageTransition><JobMatchingPage /></PageTransition>} />
+                  <Route path="/ranking" element={<PageTransition><MultiResumeRankingPage /></PageTransition>} />
+                  <Route path="/search" element={<PageTransition><ResumeSearchPage /></PageTransition>} />
+                  <Route path="/architecture" element={<PageTransition><ArchitecturePage /></PageTransition>} />
+                  <Route path="/production-analytics" element={<PageTransition><ProductionAnalyticsPage /></PageTransition>} />
+                  <Route path="/skill-gap" element={<PageTransition><SkillGapPage /></PageTransition>} />
+                  <Route path="/score" element={<PageTransition><ResumeScorePage /></PageTransition>} />
+                  <Route path="/summary" element={<PageTransition><ProjectSummaryPage /></PageTransition>} />
+                  <Route path="/ats" element={<PageTransition><ATSCheckerPage /></PageTransition>} />
+                  <Route path="/builder" element={<PageTransition><ResumeBuilderPage /></PageTransition>} />
+                  <Route path="/improver" element={<PageTransition><AutoImproverPage /></PageTransition>} />
+                  <Route path="/employer" element={<PageTransition><EmployerDashboardPage /></PageTransition>} />
                 </Route>
                 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
+                <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
               </Routes>
             </BrowserRouter>
           </TooltipProvider>

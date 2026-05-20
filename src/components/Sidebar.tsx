@@ -118,18 +118,19 @@ export function Sidebar() {
       transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
       className="relative flex flex-col h-screen shrink-0 overflow-hidden"
       style={{
-        background: 'hsl(var(--sidebar-background))',
-        borderRight: '1px solid hsl(var(--sidebar-border))',
+        background: 'rgba(0,0,0,0.3)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderRight: '1px solid rgba(255,255,255,0.06)',
       }}
     >
       {/* ── Logo ── */}
-      <div className="flex items-center h-14 px-4 shrink-0" style={{ borderBottom: '1px solid hsl(var(--sidebar-border))' }}>
+      <div className="flex items-center h-14 px-4 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div
           className="flex items-center gap-2.5 cursor-pointer min-w-0"
           onClick={() => navigate('/dashboard')}
         >
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-            style={{ background: 'var(--gradient-primary)' }}>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}>
             <Zap className="h-4 w-4 text-white" />
           </div>
           <AnimatePresence>
@@ -141,8 +142,8 @@ export function Sidebar() {
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <p className="font-display font-700 text-sm text-white leading-tight whitespace-nowrap">Next Step</p>
-                <p className="text-xs whitespace-nowrap" style={{ color: 'hsl(var(--sidebar-foreground) / 0.5)' }}>Career AI</p>
+                <p className="font-display font-bold text-sm text-sidebar-foreground leading-tight whitespace-nowrap">Next Step</p>
+                <p className="text-xs whitespace-nowrap text-sidebar-foreground/60">Career AI</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -151,8 +152,7 @@ export function Sidebar() {
         {/* Collapse toggle */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="ml-auto p-1 rounded-md transition-colors"
-          style={{ color: 'hsl(var(--sidebar-foreground) / 0.4)' }}
+          className="ml-auto p-1 rounded-md transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed
@@ -173,27 +173,39 @@ export function Sidebar() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="nav-group-label"
+                  className="px-3 py-2 text-xs font-semibold text-sidebar-foreground/60 uppercase tracking-wider"
                 >
                   {group.label}
                 </motion.div>
               )}
             </AnimatePresence>
-            {collapsed && gi > 0 && <div className="nav-divider mx-1 my-2" />}
+            {collapsed && gi > 0 && <div className="mx-1 my-2 h-px bg-sidebar-border" />}
 
             {/* Items */}
             {group.items.map(item => {
               const isActive = location.pathname === item.href
               return (
                 <NavLink key={item.href} to={item.href} aria-label={item.name}>
-                  <div
-                    className={cn('nav-item', isActive && 'active')}
+                  <motion.div
+                    whileHover={{ translateX: 4 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    className={cn(
+                      'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
+                      isActive 
+                        ? 'text-white font-medium' 
+                        : 'text-white/50 hover:text-white hover:bg-white/[0.04]'
+                    )}
+                    style={isActive ? {
+                      background: 'rgba(255,255,255,0.07)',
+                    } : undefined}
                     title={collapsed ? item.name : undefined}
                   >
                     <item.icon
-                      className="h-4 w-4 shrink-0"
+                      className={cn(
+                        'h-4 w-4 shrink-0',
+                        isActive ? 'text-white' : 'text-white/40'
+                      )}
                       aria-hidden="true"
-                      style={{ color: isActive ? 'hsl(var(--sidebar-primary))' : 'hsl(var(--sidebar-foreground) / 0.65)' }}
                     />
                     <AnimatePresence>
                       {!collapsed && (
@@ -211,11 +223,10 @@ export function Sidebar() {
                     {isActive && !collapsed && (
                       <motion.div
                         layoutId="activeIndicator"
-                        className="ml-auto w-1.5 h-1.5 rounded-full shrink-0"
-                        style={{ background: 'hsl(var(--sidebar-primary))' }}
+                        className="ml-auto w-1.5 h-1.5 rounded-full shrink-0 bg-primary-foreground"
                       />
                     )}
-                  </div>
+                  </motion.div>
                 </NavLink>
               )
             })}
@@ -224,19 +235,17 @@ export function Sidebar() {
       </nav>
 
       {/* ── User Profile ── */}
-      <div className="shrink-0 p-2" style={{ borderTop: '1px solid hsl(var(--sidebar-border))' }}>
+      <div className="shrink-0 p-2 border-t border-sidebar-border">
         {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className="w-full flex items-center gap-2.5 p-2 rounded-lg transition-colors"
-                style={{ color: 'hsl(var(--sidebar-foreground))' }}
+                className="w-full flex items-center gap-2.5 p-2 rounded-lg transition-colors text-sidebar-foreground hover:bg-sidebar-accent"
                 aria-label="User menu"
               >
                 <Avatar className="h-7 w-7 shrink-0">
-                  <AvatarImage src={profile?.avatar_url} />
-                  <AvatarFallback className="text-xs font-semibold"
-                    style={{ background: 'hsl(var(--primary) / 0.2)', color: 'hsl(var(--sidebar-primary))' }}>
+                  <AvatarImage src={user?.user_metadata?.avatar_url || ''} />
+                  <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
                     {getUserInitials()}
                   </AvatarFallback>
                 </Avatar>
@@ -248,10 +257,10 @@ export function Sidebar() {
                       exit={{ opacity: 0, width: 0 }}
                       className="flex-1 text-left overflow-hidden"
                     >
-                      <p className="text-xs font-semibold truncate text-white">
+                      <p className="text-xs font-semibold truncate text-sidebar-foreground">
                         {profile?.full_name || user?.email?.split('@')[0] || 'User'}
                       </p>
-                      <p className="text-xs truncate" style={{ color: 'hsl(var(--sidebar-foreground) / 0.5)' }}>
+                      <p className="text-xs truncate text-sidebar-foreground/60">
                         {profile?.job_title || 'Professional'}
                       </p>
                     </motion.div>
@@ -274,13 +283,11 @@ export function Sidebar() {
         ) : (
           <button
             onClick={() => navigate('/auth')}
-            className="w-full flex items-center gap-2.5 p-2 rounded-lg transition-colors"
-            style={{ color: 'hsl(var(--sidebar-foreground) / 0.6)' }}
+            className="w-full flex items-center gap-2.5 p-2 rounded-lg transition-colors text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
             aria-label="Login"
           >
-            <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-              style={{ background: 'hsl(var(--sidebar-accent))' }}>
-              <User className="h-3.5 w-3.5" style={{ color: 'hsl(var(--sidebar-foreground) / 0.6)' }} />
+            <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-sidebar-accent">
+              <User className="h-3.5 w-3.5 text-sidebar-foreground/60" />
             </div>
             <AnimatePresence>
               {!collapsed && (
@@ -290,10 +297,10 @@ export function Sidebar() {
                   exit={{ opacity: 0, width: 0 }}
                   className="overflow-hidden"
                 >
-                  <p className="text-xs font-medium whitespace-nowrap" style={{ color: 'hsl(var(--sidebar-foreground) / 0.6)' }}>
+                  <p className="text-xs font-medium whitespace-nowrap text-sidebar-foreground/60">
                     Login (Optional)
                   </p>
-                  <p className="text-xs whitespace-nowrap" style={{ color: 'hsl(var(--sidebar-foreground) / 0.35)' }}>
+                  <p className="text-xs whitespace-nowrap text-sidebar-foreground/35">
                     Demo Mode Active
                   </p>
                 </motion.div>

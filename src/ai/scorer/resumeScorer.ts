@@ -89,11 +89,12 @@ export class ResumeScorer {
    * Calculate skills component score (0-100)
    */
   private calculateSkillsScore(skillMatch: SkillMatch): number {
-    // Base score from weighted match
-    let score = skillMatch.weightedMatchScore;
+    // Base score from weighted match — fall back to matchScore if weightedMatchScore is 0
+    let score = skillMatch.weightedMatchScore > 0
+      ? skillMatch.weightedMatchScore
+      : skillMatch.matchScore;
 
     // Bonus for skill diversity (up to +10 points)
-    const totalSkills = skillMatch.matchedSkills.length + skillMatch.missingSkills.length;
     const matchedCount = skillMatch.matchedSkills.length;
     
     if (matchedCount >= 15) {
@@ -118,18 +119,23 @@ export class ResumeScorer {
    */
   private calculateProjectsScore(parsedResume: ParsedResume): number {
     const projectsSection = parsedResume.sections.projects;
-    
-    if (!projectsSection) {
+    const resumeText = parsedResume.text || '';
+
+    // If no section detected, fall back to scanning full resume text
+    const content = projectsSection?.content ?? this.extractProjectsFromText(resumeText);
+
+    if (!content || content.length === 0) {
       return 0;
     }
 
     let score = 0;
 
-    // Base score from section quality
-    score += projectsSection.qualityScore * 0.4; // Up to 40 points
+    // Base score from section quality (use calculated quality or derive from content)
+    const qualityScore = projectsSection?.qualityScore ?? this.calculateSectionQuality(content);
+    score += qualityScore * 0.4; // Up to 40 points
 
     // Content length score (up to 30 points)
-    const contentLength = projectsSection.content.length;
+    const contentLength = content.length;
     if (contentLength > 1000) {
       score += 30;
     } else if (contentLength > 500) {
@@ -139,7 +145,7 @@ export class ResumeScorer {
     }
 
     // Project count estimation (up to 30 points)
-    const projectCount = this.estimateProjectCount(projectsSection.content);
+    const projectCount = this.estimateProjectCount(content);
     if (projectCount >= 5) {
       score += 30;
     } else if (projectCount >= 3) {
@@ -152,19 +158,39 @@ export class ResumeScorer {
   }
 
   /**
+   * Fallback: extract project-like content from full resume text
+   */
+  private extractProjectsFromText(text: string): string {
+    if (!text) return '';
+    const lower = text.toLowerCase();
+    const projectKeywords = ['developed', 'built', 'created', 'implemented', 'designed', 'deployed', 'github', 'project'];
+    const lines = text.split('\n');
+    const projectLines = lines.filter(line => {
+      const l = line.toLowerCase();
+      return projectKeywords.some(kw => l.includes(kw));
+    });
+    return projectLines.join('\n');
+  }
+
+  /**
    * Calculate experience component score (0-100)
    */
   private calculateExperienceScore(parsedResume: ParsedResume): number {
     const experienceSection = parsedResume.sections.experience;
-    
-    if (!experienceSection) {
+    const resumeText = parsedResume.text || '';
+
+    // If no section detected, fall back to scanning full resume text
+    const content = experienceSection?.content ?? this.extractExperienceFromText(resumeText);
+
+    if (!content || content.length === 0) {
       return 0;
     }
 
     let score = 0;
 
     // Base score from section quality
-    score += experienceSection.qualityScore * 0.4; // Up to 40 points
+    const qualityScore = experienceSection?.qualityScore ?? this.calculateSectionQuality(content);
+    score += qualityScore * 0.4; // Up to 40 points
 
     // Experience level score (up to 40 points)
     switch (parsedResume.experienceLevel) {
@@ -183,12 +209,26 @@ export class ResumeScorer {
     }
 
     // Content richness (up to 20 points)
-    const content = experienceSection.content.toLowerCase();
+    const lowerContent = content.toLowerCase();
     const actionVerbs = ['developed', 'implemented', 'managed', 'led', 'created', 'designed', 'achieved', 'improved'];
-    const verbCount = actionVerbs.filter(verb => content.includes(verb)).length;
+    const verbCount = actionVerbs.filter(verb => lowerContent.includes(verb)).length;
     score += Math.min(verbCount * 3, 20);
 
     return Math.round(Math.min(100, score));
+  }
+
+  /**
+   * Fallback: extract experience-like content from full resume text
+   */
+  private extractExperienceFromText(text: string): string {
+    if (!text) return '';
+    const experienceKeywords = ['intern', 'engineer', 'developer', 'analyst', 'manager', 'worked', 'employed', 'company', 'organization'];
+    const lines = text.split('\n');
+    const expLines = lines.filter(line => {
+      const l = line.toLowerCase();
+      return experienceKeywords.some(kw => l.includes(kw));
+    });
+    return expLines.join('\n');
   }
 
   /**
@@ -197,17 +237,23 @@ export class ResumeScorer {
   private calculateEducationScore(parsedResume: ParsedResume): number {
     const educationSection = parsedResume.sections.education;
     const certificationsSection = parsedResume.sections.certifications;
-    
+    const resumeText = parsedResume.text || '';
+
+    // If no section detected, fall back to scanning full resume text
+    const eduContent = educationSection?.content ?? this.extractEducationFromText(resumeText);
+
     let score = 0;
 
     // Education section score (up to 70 points)
-    if (educationSection) {
-      score += educationSection.qualityScore * 0.7;
+    if (eduContent && eduContent.length > 0) {
+      const qualityScore = educationSection?.qualityScore ?? this.calculateSectionQuality(eduContent);
+      score += qualityScore * 0.7;
     }
 
     // Certifications bonus (up to 30 points)
-    if (certificationsSection) {
-      const certCount = this.estimateCertificationCount(certificationsSection.content);
+    const certContent = certificationsSection?.content ?? '';
+    if (certContent) {
+      const certCount = this.estimateCertificationCount(certContent);
       if (certCount >= 5) {
         score += 30;
       } else if (certCount >= 3) {
@@ -217,7 +263,49 @@ export class ResumeScorer {
       }
     }
 
+    // Fallback: detect degree keywords in full text if score is still 0
+    if (score === 0) {
+      const lower = resumeText.toLowerCase();
+      if (lower.includes('phd') || lower.includes('doctorate')) score = 70;
+      else if (lower.includes('master') || lower.includes('msc') || lower.includes('mba')) score = 56;
+      else if (lower.includes('bachelor') || lower.includes('b.tech') || lower.includes('btech') || lower.includes('b.e') || lower.includes('b.sc')) score = 42;
+      else if (lower.includes('diploma') || lower.includes('associate')) score = 28;
+      else if (lower.includes('college') || lower.includes('university') || lower.includes('institute')) score = 20;
+    }
+
     return Math.round(Math.min(100, score));
+  }
+
+  /**
+   * Fallback: extract education-like content from full resume text
+   */
+  private extractEducationFromText(text: string): string {
+    if (!text) return '';
+    const eduKeywords = ['bachelor', 'master', 'phd', 'b.tech', 'btech', 'b.e', 'msc', 'mba', 'university', 'college', 'institute', 'degree', 'cgpa', 'gpa', 'graduation'];
+    const lines = text.split('\n');
+    const eduLines = lines.filter(line => {
+      const l = line.toLowerCase();
+      return eduKeywords.some(kw => l.includes(kw));
+    });
+    return eduLines.join('\n');
+  }
+
+  /**
+   * Calculate section quality score (mirrors parser logic, used as fallback)
+   */
+  private calculateSectionQuality(content: string): number {
+    let score = 0;
+    const length = content.length;
+    if (length > 500) score += 40;
+    else if (length > 200) score += 30;
+    else if (length > 100) score += 20;
+    else score += 10;
+    if (/[•\-\*]/.test(content)) score += 15;
+    if (/\d/.test(content)) score += 15;
+    const keywords = ['developed', 'implemented', 'managed', 'created', 'designed', 'led', 'achieved'];
+    const keywordCount = keywords.filter(kw => content.toLowerCase().includes(kw)).length;
+    score += Math.min(keywordCount * 5, 30);
+    return Math.min(score, 100);
   }
 
   /**

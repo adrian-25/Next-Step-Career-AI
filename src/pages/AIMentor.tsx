@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { supabase } from "@/integrations/supabase/client"
 
 interface Message {
   id: string
@@ -68,9 +69,25 @@ export function AIMentor() {
     setInputValue("")
     setIsTyping(true)
 
-    // TODO: Implement actual OpenAI API call
-    // Simulating AI response for now
-    setTimeout(() => {
+    // Call Edge Function for AI-powered career mentorship
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-resume', {
+        body: { resumeText: content, targetRole: 'career-advice' },
+      })
+
+      if (error) throw new Error(error.message)
+      if (data?.error) throw new Error(data.error)
+
+      const aiResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        content: data?.data?.summary_text || data?.data?.resume_elevator_pitch || generateAIResponse(content),
+        sender: "ai",
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, aiResponse])
+    } catch (err) {
+      // Fallback to simulated response if Edge Function is unavailable
+      console.warn('AI Mentor: Edge Function unavailable, using fallback:', err)
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         content: generateAIResponse(content),
@@ -78,12 +95,13 @@ export function AIMentor() {
         timestamp: new Date()
       }
       setMessages(prev => [...prev, aiResponse])
+    } finally {
       setIsTyping(false)
-    }, 1500)
+    }
   }
 
   const generateAIResponse = (userMessage: string): string => {
-    // Simple response simulation - replace with actual OpenAI API
+    // Fallback response simulation (used when Edge Function is unavailable)
     const responses = [
       "That's a great question! Based on current industry trends, I'd recommend focusing on developing both technical and soft skills. For technical skills, consider learning cloud platforms like AWS or Azure. For soft skills, work on communication and leadership abilities.",
       "Excellent point! When it comes to career development, it's important to set clear goals and create a timeline. I suggest breaking down your career objective into smaller, achievable milestones. Would you like me to help you create a specific action plan?",

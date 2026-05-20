@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
   RadialBarChart, RadialBar, ResponsiveContainer,
@@ -15,6 +15,7 @@ import {
   TrendingUp, Star, Zap, RotateCcw, Download,
 } from 'lucide-react';
 import { downloadLastAnalysisReport } from '@/services/resumeExport.service';
+import { getTextShadow } from '@/utils/colorUtils';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -67,6 +68,14 @@ function ScoreRing({ score, size = 160 }: { score: number; size?: number }) {
   const dash = (score / 100) * circ;
   const color = scoreColor(score);
 
+  // Count-up animation
+  const motionValue = useMotionValue(0);
+  const spring = useSpring(motionValue, { stiffness: 100, damping: 30 });
+  const displayValue = useTransform(spring, (v) => Math.round(v));
+
+  // Animate the value on mount
+  motionValue.set(score);
+
   return (
     <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
@@ -82,7 +91,9 @@ function ScoreRing({ score, size = 160 }: { score: number; size?: number }) {
         />
       </svg>
       <div className="absolute text-center">
-        <p className="text-4xl font-bold" style={{ color }}>{score}</p>
+        <motion.p className="text-4xl font-bold" style={{ color, textShadow: getTextShadow() }}>
+          {displayValue}
+        </motion.p>
         <p className="text-xs text-muted-foreground font-medium">/100</p>
       </div>
     </div>
@@ -97,11 +108,19 @@ function ComponentCard({
   label: string; score: number; contribution: number;
   weight: string; icon: React.ElementType; delay: number; color: string;
 }) {
+  // Count-up animation
+  const motionValue = useMotionValue(0);
+  const spring = useSpring(motionValue, { stiffness: 100, damping: 30 });
+  const displayValue = useTransform(spring, (v) => Math.round(v));
+
+  // Animate the value on mount
+  motionValue.set(score);
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay }}
+      initial={{ opacity: 0, y: 12, scale: 0.92 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ delay, duration: 0.4, ease: "easeOut" }}
       className="metric-card"
     >
       <div className="flex items-start justify-between mb-3">
@@ -114,7 +133,9 @@ function ComponentCard({
           {weight}
         </span>
       </div>
-      <p className="stat-number" style={{ color }}>{score}</p>
+      <motion.p className="stat-number" style={{ color, textShadow: getTextShadow() }}>
+        {displayValue}
+      </motion.p>
       <p className="text-sm font-semibold mt-1">{label}</p>
       <div className="progress-enterprise mt-2">
         <motion.div
@@ -169,6 +190,17 @@ export function ResumeScorePage() {
   const role      = useMemo(getRole, []);
 
   const hasData = analysis !== null || mlResult !== null;
+
+  // ── DEBUG: log raw stored data to console ─────────────────────────────────
+  if (process.env.NODE_ENV !== 'production') {
+    console.group('[ResumeScorePage] Raw localStorage data');
+    console.log('analysis:', analysis);
+    console.log('mlResult:', mlResult);
+    console.log('resumeScore:', analysis?.resumeScore);
+    console.log('componentScores:', analysis?.resumeScore?.componentScores);
+    console.log('parsedResume.sections:', analysis?.parsedResume?.sections);
+    console.groupEnd();
+  }
 
   // Extract scores
   const totalScore: number = analysis?.resumeScore?.totalScore ?? 0;
@@ -305,7 +337,7 @@ export function ResumeScorePage() {
                   { label: 'Education',  value: educationContrib,  color: '#F59E0B' },
                 ].map(({ label, value, color }) => (
                   <div key={label} className="text-center p-2 rounded-lg" style={{ background: `${color}0A` }}>
-                    <p className="font-display text-xl font-bold" style={{ color }}>{value}</p>
+                    <p className="font-display text-xl font-bold" style={{ color, textShadow: getTextShadow() }}>{value}</p>
                     <p className="text-xs mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>{label}</p>
                   </div>
                 ))}
@@ -416,7 +448,7 @@ export function ResumeScorePage() {
                   { key: 'certificationCount', label: 'Certifications',      suffix: '' },
                 ].filter(f => factors[f.key] !== undefined).map(({ key, label, suffix }) => (
                   <div key={key} className="text-center p-3 bg-muted/30 rounded-lg">
-                    <p className="text-2xl font-bold">{factors[key]}{suffix}</p>
+                    <p className="text-2xl font-bold" style={{ textShadow: getTextShadow() }}>{factors[key]}{suffix}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
                   </div>
                 ))}
@@ -472,6 +504,53 @@ export function ResumeScorePage() {
           <RotateCcw className="h-4 w-4" /> Re-analyze Resume
         </Button>
       </motion.div>
+
+      {/* ── DEBUG PANEL (remove before production) ── */}
+      {process.env.NODE_ENV !== 'production' && (
+        <details className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-xs">
+          <summary className="cursor-pointer font-semibold text-amber-400 mb-2">
+            🐛 Debug: Raw Parsed Data (dev only — remove before deploy)
+          </summary>
+          <div className="space-y-2 mt-2">
+            <div>
+              <p className="font-semibold text-amber-300 mb-1">Component Scores:</p>
+              <pre className="text-white/70 overflow-auto max-h-32">
+                {JSON.stringify(analysis?.resumeScore?.componentScores ?? 'null', null, 2)}
+              </pre>
+            </div>
+            <div>
+              <p className="font-semibold text-amber-300 mb-1">Detected Sections:</p>
+              <pre className="text-white/70 overflow-auto max-h-32">
+                {JSON.stringify(
+                  Object.fromEntries(
+                    Object.entries(analysis?.parsedResume?.sections ?? {}).map(([k, v]: [string, any]) => [
+                      k, { contentLength: v?.content?.length ?? 0, qualityScore: v?.qualityScore ?? 0 }
+                    ])
+                  ),
+                  null, 2
+                )}
+              </pre>
+            </div>
+            <div>
+              <p className="font-semibold text-amber-300 mb-1">Skill Match:</p>
+              <pre className="text-white/70 overflow-auto max-h-32">
+                {JSON.stringify({
+                  matchScore: analysis?.skillMatch?.matchScore,
+                  weightedMatchScore: analysis?.skillMatch?.weightedMatchScore,
+                  matchedCount: analysis?.skillMatch?.matchedSkills?.length,
+                  missingCount: analysis?.skillMatch?.missingSkills?.length,
+                }, null, 2)}
+              </pre>
+            </div>
+            <div>
+              <p className="font-semibold text-amber-300 mb-1">ML Result:</p>
+              <pre className="text-white/70 overflow-auto max-h-32">
+                {JSON.stringify(mlResult, null, 2)}
+              </pre>
+            </div>
+          </div>
+        </details>
+      )}
 
     </div>
   );

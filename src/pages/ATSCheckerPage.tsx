@@ -10,6 +10,7 @@ import {
 import { checkATS, ATSResult, ATSIssue } from '@/ai/ats/atsChecker';
 import { getDataset } from '@/ai/ml/rolePredictor';
 import { extractResumeText, isSupportedResumeFile } from '@/lib/resumeTextExtractor';
+import { getTextShadow } from '@/utils/colorUtils';
 
 const ROLES = getDataset().map(e => ({ key: e.role, label: e.display }));
 
@@ -48,9 +49,9 @@ function ScoreGauge({ score, grade }: { score: number; grade: string }) {
         />
       </svg>
       <div className="absolute text-center">
-        <p className="font-display text-4xl font-bold" style={{ color }}>{score}</p>
+        <p className="font-display text-4xl font-bold" style={{ color, textShadow: getTextShadow() }}>{score}</p>
         <p className="text-xs text-muted-foreground font-medium">/ 100</p>
-        <p className="font-display text-xl font-bold mt-0.5" style={{ color }}>Grade {grade}</p>
+        <p className="font-display text-xl font-bold mt-0.5" style={{ color, textShadow: getTextShadow() }}>Grade {grade}</p>
       </div>
     </div>
   );
@@ -226,16 +227,16 @@ export function ATSCheckerPage() {
                 <ScoreGauge score={result.score} grade={result.grade} />
                 <div className="grid grid-cols-3 gap-3 w-full text-center">
                   <div>
-                    <p className="font-display text-xl font-bold text-red-500">{errorCount}</p>
+                    <p className="font-display text-xl font-bold text-red-500" style={{ textShadow: getTextShadow() }}>{errorCount}</p>
                     <p className="text-xs text-muted-foreground">Errors</p>
                   </div>
                   <div>
-                    <p className="font-display text-xl font-bold text-amber-500">{warningCount}</p>
+                    <p className="font-display text-xl font-bold text-amber-500" style={{ textShadow: getTextShadow() }}>{warningCount}</p>
                     <p className="text-xs text-muted-foreground">Warnings</p>
                   </div>
                   <div>
                     <p className="font-display text-xl font-bold"
-                      style={{ color: result.passLikelihood === 'High' ? '#10B981' : result.passLikelihood === 'Medium' ? '#F59E0B' : '#EF4444' }}>
+                      style={{ color: result.passLikelihood === 'High' ? '#10B981' : result.passLikelihood === 'Medium' ? '#F59E0B' : '#EF4444', textShadow: getTextShadow() }}>
                       {result.passLikelihood}
                     </p>
                     <p className="text-xs text-muted-foreground">Pass Likelihood</p>
@@ -316,7 +317,13 @@ export function ATSCheckerPage() {
           </p>
           <div className="space-y-2">
             {result.issues.map((issue, i) => (
-              <div key={i} className="ent-card overflow-hidden">
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -15 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.07 }}
+                className="ent-card overflow-hidden"
+              >
                 <button
                   className="w-full flex items-start gap-3 p-3 text-left"
                   onClick={() => setExpandedIssue(expandedIssue === i ? null : i)}
@@ -350,7 +357,7 @@ export function ATSCheckerPage() {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+              </motion.div>
             ))}
           </div>
         </motion.div>
@@ -364,13 +371,19 @@ export function ATSCheckerPage() {
           </p>
           <div className="ent-card p-4 space-y-2">
             {result.suggestions.map((s, i) => (
-              <div key={i} className="flex items-start gap-2.5 text-sm">
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -15 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 + i * 0.07 }}
+                className="flex items-start gap-2.5 text-sm"
+              >
                 <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold"
                   style={{ background: 'hsl(var(--primary) / 0.1)', color: 'hsl(var(--primary))' }}>
                   {i + 1}
                 </div>
                 {s}
-              </div>
+              </motion.div>
             ))}
           </div>
         </motion.div>

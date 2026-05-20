@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { FileText, Target, TrendingUp, AlertCircle, CheckCircle, Brain, Award, Star, Zap, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getContrastText, getTextShadow } from '@/utils/colorUtils';
 
 // ── Staggered badge list ──────────────────────────────────────────────────────
 function SkillBadgeList({ skills, className }: { skills: string[]; className?: string }) {
@@ -18,8 +19,8 @@ function SkillBadgeList({ skills, className }: { skills: string[]; className?: s
         <motion.div
           key={`${skill}-${i}`}
           variants={{
-            hidden:  { opacity: 0, y: 10 },
-            visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: 'easeOut' } },
+            hidden:  { opacity: 0, x: -15 },
+            visible: { opacity: 1, x: 0, transition: { duration: 0.25, ease: 'easeOut' } },
           }}
         >
           <Badge variant="secondary" className={className}>
@@ -74,8 +75,8 @@ export function AnalysisResults({ result, onStartOver }: AnalysisResultsProps) {
             </div>
           </div>
           {(metadata.analysisId || metadata.predictionId) && (
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-700">
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg" style={{ color: '#1a1a2e' }}>
+              <p className="text-sm" style={{ color: '#1a1a2e', textShadow: getTextShadow() }}>
                 ✅ Data saved to Advanced DBMS:
                 {metadata.analysisId && ` Analysis ID: ${metadata.analysisId.substring(0, 8)}...`}
                 {metadata.predictionId && ` | Prediction ID: ${metadata.predictionId.substring(0, 8)}...`}
@@ -124,9 +125,9 @@ export function AnalysisResults({ result, onStartOver }: AnalysisResultsProps) {
 
       {/* Neuro-Fuzzy AI Evaluation */}
       {(comprehensiveAnalysis?.neuralScore != null || comprehensiveAnalysis?.fuzzyRating) && (
-        <Card className="border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50">
+        <Card className="border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50" style={{ color: '#1a1a2e' }}>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
+            <CardTitle className="flex items-center space-x-2" style={{ color: '#1a1a2e' }}>
               <Zap className="h-5 w-5 text-purple-600" />
               <span>Neuro-Fuzzy AI Evaluation</span>
             </CardTitle>
@@ -134,8 +135,8 @@ export function AnalysisResults({ result, onStartOver }: AnalysisResultsProps) {
           <CardContent>
             <div className="grid gap-6 md:grid-cols-3">
               {comprehensiveAnalysis.neuralScore != null && (
-                <div className="text-center p-4 bg-white rounded-lg border border-purple-100">
-                  <div className="text-3xl font-bold text-purple-600 mb-1">
+                <div className="text-center p-4 bg-white rounded-lg border border-purple-100" style={{ color: '#1a1a2e' }}>
+                  <div className="text-3xl font-bold text-purple-600 mb-1" style={{ textShadow: getTextShadow() }}>
                     {Math.round(comprehensiveAnalysis.neuralScore)}
                   </div>
                   <p className="text-sm text-muted-foreground mb-2">Neural Score / 100</p>
@@ -143,7 +144,7 @@ export function AnalysisResults({ result, onStartOver }: AnalysisResultsProps) {
                 </div>
               )}
               {comprehensiveAnalysis.fuzzyRating && (
-                <div className="text-center p-4 bg-white rounded-lg border border-purple-100">
+                <div className="text-center p-4 bg-white rounded-lg border border-purple-100" style={{ color: '#1a1a2e' }}>
                   <Badge
                     className={`text-lg px-4 py-2 mb-2 ${
                       comprehensiveAnalysis.fuzzyRating === 'Excellent' ? 'bg-blue-100 text-blue-800' :
@@ -158,7 +159,7 @@ export function AnalysisResults({ result, onStartOver }: AnalysisResultsProps) {
                 </div>
               )}
               {comprehensiveAnalysis.hiringRecommendation && (
-                <div className="text-center p-4 bg-white rounded-lg border border-purple-100">
+                <div className="text-center p-4 bg-white rounded-lg border border-purple-100" style={{ color: '#1a1a2e' }}>
                   <div className="flex justify-center mb-2">
                     <Users className={`h-8 w-8 ${
                       comprehensiveAnalysis.hiringRecommendation === 'Strong Candidate' ? 'text-green-600' :
@@ -183,9 +184,9 @@ export function AnalysisResults({ result, onStartOver }: AnalysisResultsProps) {
 
       {/* Resume Score */}
       {comprehensiveAnalysis?.resumeScore && (
-        <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50" style={{ color: '#1a1a2e' }}>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
+            <CardTitle className="flex items-center space-x-2" style={{ color: '#1a1a2e' }}>
               <Award className="h-5 w-5 text-blue-600" />
               <span>Resume Score Analysis</span>
             </CardTitle>
@@ -193,7 +194,7 @@ export function AnalysisResults({ result, onStartOver }: AnalysisResultsProps) {
           <CardContent>
             <div className="grid gap-6 md:grid-cols-2">
               <div>
-                <div className="text-4xl font-bold text-blue-600 mb-2">
+                <div className="text-4xl font-bold text-blue-600 mb-2" style={{ textShadow: getTextShadow() }}>
                   {comprehensiveAnalysis.resumeScore.totalScore}/100
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">Overall Resume Score</p>
@@ -252,17 +253,17 @@ export function AnalysisResults({ result, onStartOver }: AnalysisResultsProps) {
                 </Badge>
               </div>
               <div className="space-y-2">
-                <div className="flex justify-between items-center p-2 bg-green-50 rounded">
+                <div className="flex justify-between items-center p-2 bg-green-50 rounded" style={{ color: '#1a1a2e' }}>
                   <span className="text-sm">Matched Skills</span>
-                  <span className="font-bold text-green-700">{comprehensiveAnalysis.skillMatch.matchedSkills.length}</span>
+                  <span className="font-bold text-green-700" style={{ textShadow: getTextShadow() }}>{comprehensiveAnalysis.skillMatch.matchedSkills.length}</span>
                 </div>
-                <div className="flex justify-between items-center p-2 bg-orange-50 rounded">
+                <div className="flex justify-between items-center p-2 bg-orange-50 rounded" style={{ color: '#1a1a2e' }}>
                   <span className="text-sm">Missing Skills</span>
-                  <span className="font-bold text-orange-700">{comprehensiveAnalysis.skillMatch.missingSkills.length}</span>
+                  <span className="font-bold text-orange-700" style={{ textShadow: getTextShadow() }}>{comprehensiveAnalysis.skillMatch.missingSkills.length}</span>
                 </div>
-                <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
+                <div className="flex justify-between items-center p-2 bg-blue-50 rounded" style={{ color: '#1a1a2e' }}>
                   <span className="text-sm">Target Role</span>
-                  <span className="font-bold text-blue-700">{comprehensiveAnalysis.skillMatch.targetRole}</span>
+                  <span className="font-bold text-blue-700" style={{ textShadow: getTextShadow() }}>{comprehensiveAnalysis.skillMatch.targetRole}</span>
                 </div>
               </div>
             </div>
@@ -359,10 +360,10 @@ export function AnalysisResults({ result, onStartOver }: AnalysisResultsProps) {
               <div className="space-y-3">
                 <h4 className="text-sm font-medium">Section Quality Scores</h4>
                 {Object.entries(comprehensiveAnalysis.sectionAnalysis.sectionQuality).map(([section, quality]: [string, any]) => (
-                  <div key={section} className="p-3 bg-gray-50 rounded-lg">
+                  <div key={section} className="p-3 bg-gray-50 rounded-lg" style={{ color: '#1a1a2e' }}>
                     <div className="flex justify-between items-center mb-2">
                       <span className="font-medium capitalize">{section}</span>
-                      <span className="text-sm font-bold">{quality.score}/100</span>
+                      <span className="text-sm font-bold" style={{ textShadow: getTextShadow() }}>{quality.score}/100</span>
                     </div>
                     <Progress value={quality.score} className="h-2 mb-2" />
                     {quality.issues?.length > 0 && (
@@ -392,7 +393,7 @@ export function AnalysisResults({ result, onStartOver }: AnalysisResultsProps) {
           <CardContent>
             <div className="grid gap-3 md:grid-cols-2">
               {comprehensiveAnalysis.trendingSkills.slice(0, 10).map((skill: any, idx: number) => (
-                <div key={idx} className="p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200">
+                <div key={idx} className="p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200" style={{ color: '#1a1a2e' }}>
                   <div className="flex justify-between items-start mb-2">
                     <span className="font-medium">{skill.skill}</span>
                     <Badge
@@ -520,7 +521,7 @@ export function AnalysisResults({ result, onStartOver }: AnalysisResultsProps) {
         <CardContent>
           <div className="space-y-3">
             {analysis.top_recommendations?.slice(0, 5).map((rec: any, index: number) => (
-              <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+              <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg" style={{ color: '#1a1a2e' }}>
                 <div className={`w-2 h-2 rounded-full mt-2 ${
                   rec.impact === 'high' ? 'bg-red-500' :
                   rec.impact === 'medium' ? 'bg-yellow-500' : 'bg-green-500'

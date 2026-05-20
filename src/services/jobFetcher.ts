@@ -8,6 +8,10 @@
  *
  * The fallback always returns valid job objects with real apply URLs
  * so the UI never shows an empty state due to missing API keys.
+ *
+ * ⚠️ SECURITY NOTE: VITE_RAPIDAPI_KEY is exposed to the frontend.
+ * For production, create a Supabase Edge Function (e.g. `fetch-jobs`)
+ * that holds the RapidAPI key server-side and proxies the request.
  */
 
 export interface RealJob {

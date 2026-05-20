@@ -168,10 +168,10 @@ export class ResumeParser {
    */
   private cleanText(text: string): string {
     return text
-      .replace(/\r\n/g, '\n') // Normalize line endings
-      .replace(/\n{3,}/g, '\n\n') // Remove excessive newlines
-      .replace(/\t/g, ' ') // Replace tabs with spaces
-      .replace(/\s{2,}/g, ' ') // Remove excessive spaces
+      .replace(/\r\n/g, '\n')          // Normalize line endings
+      .replace(/\r/g, '\n')             // Handle bare \r
+      .replace(/\n{4,}/g, '\n\n\n')    // Cap consecutive newlines at 3
+      .replace(/[^\S\n]{2,}/g, ' ')     // Collapse spaces/tabs but NOT newlines
       .trim();
   }
 
@@ -253,48 +253,36 @@ export class ResumeParser {
    * @param {string} text - Resume text content
    * @returns {ResumeSections} Object containing identified sections with metadata
    */
+  /**
+   * Robust regex-based section detection.
+   * Supports case variations, ALL-CAPS, trailing colons, and multi-word headings.
+   * A heading line must:
+   *   1. Be short (≤ 60 chars)
+   *   2. Match one of the regex patterns below
+   *   3. Not look like a normal sentence (no mid-line punctuation like '.,' unless it's after a colon)
+   */
+  private readonly HEADING_PATTERNS: Array<{ key: string; pattern: RegExp }> = [
+    { key: 'summary',        pattern: /^(summary|professional\s+summary|career\s+objective|objective|profile|about\s+me|personal\s+statement):?$/i },
+    { key: 'experience',     pattern: /^(experience|work\s+experience|professional\s+experience|employment|employment\s+history|work\s+history|internship|internships|career|career\s+history|professional\s+background):?$/i },
+    { key: 'education',      pattern: /^(education|educational\s+background|academic\s+background|academic\s+qualifications|qualifications|schooling|academics):?$/i },
+    { key: 'skills',         pattern: /^(skills|technical\s+skills|core\s+competencies|competencies|technologies|expertise|key\s+skills|professional\s+skills|proficiencies|tools\s+&\s+technologies):?$/i },
+    { key: 'projects',       pattern: /^(projects|project\s+experience|personal\s+projects|academic\s+projects|key\s+projects|portfolio|notable\s+projects|side\s+projects|work\s+samples):?$/i },
+    { key: 'certifications', pattern: /^(certifications?|certificates?|credentials?|licenses?|professional\s+certifications?|accreditations?):?$/i },
+    { key: 'achievements',   pattern: /^(achievements?|awards?|honors?|accomplishments?|recognition|publications?):?$/i },
+  ];
+
   private extractSections(text: string): ResumeSections {
     const sections: ResumeSections = {};
     const lines = text.split('\n');
-    
-    // Common section headers
-    const sectionHeaders = [
-      'summary',
-      'objective',
-      'experience',
-      'work experience',
-      'employment',
-      'education',
-      'skills',
-      'technical skills',
-      'projects',
-      'certifications',
-      'certificates',
-      'achievements',
-      'awards',
-      'publications',
-      'languages',
-    ];
 
     let currentSection = 'header';
     let currentContent: string[] = [];
     let startIndex = 0;
 
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const lowerLine = line.toLowerCase().trim();
-      
-      // Check if line is a section header
-      const matchedHeader = sectionHeaders.find(header => 
-        lowerLine === header || 
-        lowerLine.startsWith(header + ':') ||
-        lowerLine === header.toUpperCase()
-      );
-
-      if (matchedHeader) {
-        // Save previous section
-        if (currentContent.length > 0 && this.isValidSectionKey(currentSection)) {
-          const content = currentContent.join('\n').trim();
+    const saveCurrentSection = () => {
+      if (currentContent.length > 0 && this.isValidSectionKey(currentSection)) {
+        const content = currentContent.join('\n').trim();
+        if (content.length > 0) {
           const endIndex = startIndex + content.length;
           sections[currentSection as keyof ResumeSections] = {
             content,
@@ -303,27 +291,41 @@ export class ResumeParser {
             qualityScore: this.calculateSectionQuality(content),
           };
         }
-        
-        // Start new section
-        currentSection = this.normalizeSectionName(matchedHeader);
-        currentContent = [];
-        startIndex = text.indexOf(line);
-      } else if (line.trim().length > 0) {
+      }
+    };
+
+    let charOffset = 0;
+    for (const line of lines) {
+      const trimmed = line.trim();
+
+      // Check heading: short line matching one of our regex patterns
+      if (trimmed.length > 0 && trimmed.length <= 60) {
+        const match = this.HEADING_PATTERNS.find(({ pattern }) => pattern.test(trimmed));
+        if (match) {
+          saveCurrentSection();
+          currentSection = match.key;
+          currentContent = [];
+          startIndex = charOffset;
+          charOffset += line.length + 1;
+          continue;
+        }
+      }
+
+      if (trimmed.length > 0) {
         currentContent.push(line);
       }
+      charOffset += line.length + 1;
     }
 
     // Save last section
-    if (currentContent.length > 0 && this.isValidSectionKey(currentSection)) {
-      const content = currentContent.join('\n').trim();
-      const endIndex = startIndex + content.length;
-      sections[currentSection as keyof ResumeSections] = {
-        content,
-        startIndex,
-        endIndex,
-        qualityScore: this.calculateSectionQuality(content),
-      };
-    }
+    saveCurrentSection();
+
+    // ── Debug logging ──────────────────────────────────────────────────────────
+    const detected = Object.keys(sections);
+    console.log('[ResumeParser] Detected sections:', detected);
+    console.log('[ResumeParser] Projects content length:', sections.projects?.content?.length ?? 0);
+    console.log('[ResumeParser] Experience content length:', sections.experience?.content?.length ?? 0);
+    console.log('[ResumeParser] Education content length:', sections.education?.content?.length ?? 0);
 
     return sections;
   }
@@ -339,15 +341,16 @@ export class ResumeParser {
    * @returns {string} Normalized section key
    */
   private normalizeSectionName(header: string): string {
-    const normalized = header.toLowerCase().replace(/\s+/g, '');
-    
-    if (normalized.includes('skill')) return 'skills';
-    if (normalized.includes('project')) return 'projects';
-    if (normalized.includes('experience') || normalized.includes('employment')) return 'experience';
-    if (normalized.includes('education')) return 'education';
-    if (normalized.includes('certif')) return 'certifications';
-    if (normalized.includes('summary') || normalized.includes('objective')) return 'summary';
-    
+    const normalized = header.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+
+    if (/skill|competenc|technolog|expertis|proficien/.test(normalized)) return 'skills';
+    if (/project|portfolio|work\s+sample/.test(normalized)) return 'projects';
+    if (/experience|employment|internship|career|professional\s+background/.test(normalized)) return 'experience';
+    if (/education|academic|qualif|school/.test(normalized)) return 'education';
+    if (/certif|license|credential|accredit/.test(normalized)) return 'certifications';
+    if (/summary|objective|profile|about|personal\s+statement/.test(normalized)) return 'summary';
+    if (/achievement|award|honor|accomplishment|publication/.test(normalized)) return 'achievements';
+
     return header;
   }
 
@@ -359,7 +362,7 @@ export class ResumeParser {
    * @returns {boolean} True if key is valid, false otherwise
    */
   private isValidSectionKey(key: string): boolean {
-    return ['skills', 'projects', 'experience', 'education', 'certifications', 'summary'].includes(key);
+    return ['skills', 'projects', 'experience', 'education', 'certifications', 'summary', 'achievements', 'misc'].includes(key);
   }
 
   /**

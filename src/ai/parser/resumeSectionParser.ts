@@ -8,14 +8,16 @@
 
 // ── Step 1: Section heading patterns ─────────────────────────────────────────
 
-const SECTION_PATTERNS = {
-  projects:   /(projects?|personal\s+projects?|academic\s+projects?|portfolio|work\s+samples?)/i,
-  experience: /(experience|internship|work\s+experience|employment|work\s+history|career|professional\s+background)/i,
-  education:  /(education|academic\s+background|degree|university|college|qualification|schooling)/i,
-  skills:     /(skills?|technical\s+skills?|competencies|technologies|expertise|proficiencies)/i,
-  summary:    /(summary|objective|profile|about\s+me|professional\s+summary|career\s+objective)/i,
-  certifications: /(certifications?|certificates?|credentials?|licenses?|accreditations?)/i,
-};
+const SECTION_PATTERNS: Array<{ key: string; pattern: RegExp }> = [
+  { key: 'summary',        pattern: /^(summary|professional\s+summary|career\s+objective|objective|profile|about\s+me|personal\s+statement):?$/i },
+  { key: 'experience',     pattern: /^(experience|work\s+experience|professional\s+experience|employment|employment\s+history|work\s+history|internship|internships|career|career\s+history|professional\s+background):?$/i },
+  { key: 'education',      pattern: /^(education|educational\s+background|academic\s+background|academic\s+qualifications|qualifications|schooling|academics):?$/i },
+  { key: 'skills',         pattern: /^(skills|technical\s+skills|core\s+competencies|competencies|technologies|expertise|key\s+skills|professional\s+skills|proficiencies|tools\s*[&|]\s*technologies):?$/i },
+  { key: 'projects',       pattern: /^(projects|project\s+experience|personal\s+projects|academic\s+projects|key\s+projects|portfolio|notable\s+projects|side\s+projects|work\s+samples):?$/i },
+  { key: 'certifications', pattern: /^(certifications?|certificates?|credentials?|licenses?|professional\s+certifications?|accreditations?):?$/i },
+  // Terminators — content goes to 'misc' (not extracted, but stops bleeding into adjacent sections)
+  { key: 'misc',           pattern: /^(achievements?|awards?|honors?|accomplishments?|recognition|publications?|activities|extra.?curricular|volunteer|leadership|languages?|interests?|hobbies|references?|additional\s+information):?$/i },
+];
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -68,25 +70,25 @@ function splitIntoBlocks(text: string): Record<string, string> {
     const trimmed = line.trim();
     if (!trimmed) continue;
 
-    // Check if this line is a section heading
-    let matched = false;
-    for (const [sectionKey, pattern] of Object.entries(SECTION_PATTERNS)) {
-      // A heading is typically short (< 50 chars) and matches the pattern
-      if (trimmed.length < 50 && pattern.test(trimmed)) {
-        // Save previous block
-        if (currentLines.length > 0) {
-          blocks[currentSection] = (blocks[currentSection] ?? '') + '\n' + currentLines.join('\n');
+    // Check if this line is a section heading (short line matching a pattern)
+    if (trimmed.length <= 60) {
+      let matched = false;
+      for (const { key, pattern } of SECTION_PATTERNS) {
+        if (pattern.test(trimmed)) {
+          // Save previous block
+          if (currentLines.length > 0) {
+            blocks[currentSection] = (blocks[currentSection] ?? '') + '\n' + currentLines.join('\n');
+          }
+          currentSection = key as string;
+          currentLines = [];
+          matched = true;
+          break;
         }
-        currentSection = sectionKey;
-        currentLines = [];
-        matched = true;
-        break;
       }
+      if (matched) continue;
     }
 
-    if (!matched) {
-      currentLines.push(line);
-    }
+    currentLines.push(line);
   }
 
   // Save last block
@@ -94,76 +96,170 @@ function splitIntoBlocks(text: string): Record<string, string> {
     blocks[currentSection] = (blocks[currentSection] ?? '') + '\n' + currentLines.join('\n');
   }
 
+  // ── Debug logging ────────────────────────────────────────────────────────────
+  const detectedSections = Object.keys(blocks).filter(k => k !== 'header');
+  console.log('[SectionParser] Detected sections:', detectedSections);
+  console.log('[SectionParser] Block keys:', Object.keys(blocks));
+
   return blocks;
 }
 
-// ── Step 3: Extract structured data per section ───────────────────────────────
+// ── Keyword-clustering fallback ────────────────────────────────────────────────
+// Called when no section headings are found. Classifies lines by content.
 
-// Tech stack keywords for project extraction
-const TECH_KEYWORDS = [
-  'react', 'vue', 'angular', 'node', 'python', 'java', 'javascript', 'typescript',
-  'django', 'flask', 'fastapi', 'spring', 'express', 'next.js', 'html', 'css',
-  'sql', 'postgresql', 'mongodb', 'redis', 'mysql', 'sqlite',
-  'docker', 'kubernetes', 'aws', 'azure', 'gcp', 'terraform',
-  'tensorflow', 'pytorch', 'scikit-learn', 'pandas', 'numpy',
-  'git', 'github', 'ci/cd', 'jenkins', 'graphql', 'rest api',
-  'tailwind', 'bootstrap', 'firebase', 'supabase',
-];
+const PROJECT_VERBS = /\b(developed|built|created|implemented|designed|deployed|architected|engineered|programmed|launched|integrated)\b/i;
+const EXPERIENCE_ROLES = /\b(engineer|developer|analyst|manager|intern|lead|senior|junior|associate|director|consultant|specialist|coordinator)\b/i;
+const DATE_RANGE = /(\w+\s+\d{4}|\d{4})\s*[-–—to]+\s*(\w+\s+\d{4}|\d{4}|present|current)/i;
+const DEGREE_KEYWORDS = /\b(b\.?tech|b\.?e|b\.?sc|b\.?com|b\.?a|m\.?tech|m\.?sc|m\.?e|mba|phd|bachelor|master|doctorate|diploma|associate|engineering|science|arts|commerce)\b/i;
+
+function clusterByKeywords(text: string): Record<string, string> {
+  const lines = text.split('\n').filter(l => l.trim());
+  const projectLines: string[] = [];
+  const experienceLines: string[] = [];
+  const educationLines: string[] = [];
+  const skillLines: string[] = [];
+  const otherLines: string[] = [];
+
+  for (const line of lines) {
+    const t = line.trim();
+    if (DEGREE_KEYWORDS.test(t)) {
+      educationLines.push(t);
+    } else if (DATE_RANGE.test(t) && EXPERIENCE_ROLES.test(t)) {
+      experienceLines.push(t);
+    } else if (PROJECT_VERBS.test(t)) {
+      projectLines.push(t);
+    } else if (/github\.com|gitlab\.com|portfolio/i.test(t)) {
+      projectLines.push(t);
+    } else if (TECH_KEYWORDS.some(kw => t.toLowerCase().includes(kw)) && t.length < 100) {
+      skillLines.push(t);
+    } else {
+      otherLines.push(t);
+    }
+  }
+
+  const result: Record<string, string> = {};
+  if (projectLines.length > 0)    result.projects    = projectLines.join('\n');
+  if (experienceLines.length > 0) result.experience  = experienceLines.join('\n');
+  if (educationLines.length > 0)  result.education   = educationLines.join('\n');
+  if (skillLines.length > 0)      result.skills      = skillLines.join('\n');
+  if (otherLines.length > 0)      result.header      = otherLines.join('\n');
+
+  console.log('[SectionParser] Fallback clustering result:', Object.keys(result));
+  return result;
+}
+
+// ── Step 3: Extract structured data per section ────────────�// Action verbs that appear at the START of description lines (not project titles)
+const DESCRIPTION_VERBS = /^(developed|built|created|implemented|designed|deployed|architected|engineered|programmed|launched|integrated|solved|achieved|led|managed|reduced|increased|improved|optimized|automated|analyzed|trained|used|utilized|leveraged|worked|collaborated|maintained|contributed|performed|conducted|assisted|supported|tested|debugged|wrote|researched|gathered|built|configured|set\s+up|set\s*up|established)/i;
+
+// Prefixes that indicate a descriptor line, not a project title (should not start new project)
+const DESCRIPTOR_PREFIXES = /^(tech(?:nologies)?|tools?|stack|built\s+with|using|github|gitlab|link|description|role|languages?|frameworks?|duration|date|period|gpa|cgpa|percentage|grade)/i;
 
 function extractProjects(block: string): ProjectEntry[] {
   if (!block.trim()) return [];
-  const projects: ProjectEntry[] = [];
-  const lines = block.split('\n').filter(l => l.trim());
 
-  // Split by bullet points or numbered items or blank lines
+  const lines = block.split('\n').filter(l => l.trim());
   const projectChunks: string[][] = [];
   let current: string[] = [];
 
   for (const line of lines) {
     const trimmed = line.trim();
-    // New project starts with bullet, number, or capitalized title
-    if (/^[•\-\*\d]/.test(trimmed) || /^[A-Z][A-Za-z\s]+:/.test(trimmed)) {
+
+    // Strip leading bullet/number to get the actual content
+    const content = trimmed.replace(/^[•\-\*\d.)\s]+/, '').trim();
+
+    const hasBullet   = /^[•\-\*]\s/.test(trimmed);
+    const isNumbered  = /^\d+[.)\s]/.test(trimmed);
+
+    // A PROJECT TITLE bullet: has a bullet AND the content does NOT start with an action verb
+    // e.g. "• Next Step Career AI" → title ✓
+    // e.g. "• Developed an interactive dashboard..." → description ✗
+    const isProjectTitleBullet = (hasBullet || isNumbered)
+      && !DESCRIPTION_VERBS.test(content)
+      && !DESCRIPTOR_PREFIXES.test(content);
+
+    // A standalone capitalized title with colon (e.g. "E-Commerce App:") but NOT
+    // descriptor lines like "Tech Stack: ..." or "Technologies: ..."
+    const isColonTitle = /^[A-Z][\w\s\-\/]+:/.test(trimmed)
+      && trimmed.length < 70
+      && !DESCRIPTION_VERBS.test(trimmed)
+      && !DESCRIPTOR_PREFIXES.test(trimmed);
+
+    if (isProjectTitleBullet || isColonTitle) {
       if (current.length > 0) projectChunks.push(current);
       current = [trimmed];
     } else if (trimmed) {
+      // Everything else (descriptions, tech stacks, verbs) → part of current project
       current.push(trimmed);
     }
   }
   if (current.length > 0) projectChunks.push(current);
 
-  // If no clear structure, treat each non-empty line as a project
+  // Fallback: if nothing split (no bullets at all), try splitting on blank lines,
+  // then on capitalized short lines that don't have action verbs
+  if (projectChunks.length <= 1 && lines.length > 2) {
+    const altChunks: string[][] = [];
+    let altCurrent: string[] = [];
+    for (const line of lines) {
+      const t = line.trim();
+      // A "title" line: short, starts with capital, no action verb, no descriptor prefix
+      const looksLikeTitle = t.length < 70
+        && /^[A-Z]/.test(t)
+        && !DESCRIPTION_VERBS.test(t)
+        && !DESCRIPTOR_PREFIXES.test(t)
+        && !/[@\d{10}]|https?:|github\.com/i.test(t);
+      if (looksLikeTitle && altCurrent.length > 0) {
+        altChunks.push(altCurrent);
+        altCurrent = [t];
+      } else if (t) {
+        altCurrent.push(t);
+      }
+    }
+    if (altCurrent.length > 0) altChunks.push(altCurrent);
+    if (altChunks.length > projectChunks.length) {
+      projectChunks.length = 0;
+      projectChunks.push(...altChunks);
+    }
+  }
+
   const chunks = projectChunks.length > 0 ? projectChunks : lines.map(l => [l]);
 
-  for (const chunk of chunks.slice(0, 10)) {
+  const projects: ProjectEntry[] = [];
+  for (const chunk of chunks.slice(0, 12)) {
     const text = chunk.join(' ');
     if (text.length < 5) continue;
 
-    // Extract project name (first line, cleaned)
-    const name = chunk[0]
-      .replace(/^[•\-\*\d\.\)]\s*/, '')
-      .replace(/[:—–].*$/, '')
+    // Project name = first line, stripped of bullets/numbers/trailing descriptors
+    const rawName = chunk[0]
+      .replace(/^[•\-\*\d.)\s]+/, '')    // strip bullet/number prefix
+      .replace(/\s*[-–—|]\s*.*$/, '')     // strip " — description" suffixes
+      .split(':')[0]                       // take the part before any colon
       .trim()
       .slice(0, 80);
 
-    // Extract tech stack from the chunk
+    if (rawName.length < 3) continue;
+    if (/^https?:\/\//i.test(rawName)) continue;
+    if (DESCRIPTION_VERBS.test(rawName)) continue;  // skip if name is a verb phrase
+    if (DESCRIPTOR_PREFIXES.test(rawName)) continue; // skip "Tech Stack" etc.
+
+    // Extract tech stack from full chunk text
     const lowerText = text.toLowerCase();
     const techStack = TECH_KEYWORDS.filter(t => lowerText.includes(t));
-
-    // Also look for "Tech: X, Y, Z" or "Technologies: X, Y" patterns
-    const techMatch = text.match(/(?:tech(?:nologies)?|stack|built\s+with|using)[:\s]+([^.]+)/i);
+    const techMatch = text.match(/(?:tech(?:nologies)?|stack|built\s+with|using|tools?)[:\s]+([^.\n]{3,80})/i);
     if (techMatch) {
-      const extraTech = techMatch[1].split(/[,;]/).map(t => t.trim().toLowerCase()).filter(t => t.length > 1);
-      extraTech.forEach(t => { if (!techStack.includes(t)) techStack.push(t); });
+      techMatch[1].split(/[,;|]/)
+        .map(t => t.trim().toLowerCase())
+        .filter(t => t.length > 1 && t.length < 30)
+        .forEach(t => { if (!techStack.includes(t)) techStack.push(t); });
     }
 
     projects.push({
-      name: name || 'Project',
-      techStack: [...new Set(techStack)].slice(0, 8),
-      description: chunk.slice(1).join(' ').trim().slice(0, 200),
+      name:        rawName,
+      techStack:   [...new Set(techStack)].slice(0, 8),
+      description: chunk.slice(1).join(' ').trim().slice(0, 250),
     });
   }
 
-  return projects.filter(p => p.name.length > 2);
+  console.log('[SectionParser] Project chunks found:', projectChunks.length, '→ valid projects:', projects.length);
 }
 
 function extractExperience(block: string): ExperienceEntry[] {
@@ -228,46 +324,54 @@ function extractExperience(block: string): ExperienceEntry[] {
 
 function extractEducation(block: string): EducationEntry[] {
   if (!block.trim()) return [];
-  const entries: EducationEntry[] = [];
   const lines = block.split('\n').filter(l => l.trim());
 
-  const degreeKeywords = /\b(b\.?tech|b\.?e|b\.?sc|b\.?com|b\.?a|m\.?tech|m\.?sc|m\.?e|mba|phd|bachelor|master|doctorate|diploma|associate|degree|engineering|science|arts|commerce)\b/i;
+  // Only match lines that explicitly contain a degree keyword — do NOT match
+  // plain capitalized lines (that rule falsely caught header/contact lines).
+  const degreeKeywords = /\b(b\.?tech|b\.?e\.?|b\.?sc|b\.?com|b\.?a\.?|m\.?tech|m\.?sc|m\.?e\.?|mba|ph\.?d|bachelor|master|doctorate|diploma|associate|engineering|computer\s+science|information\s+technology|b\.?c\.?a|m\.?c\.?a)\b/i;
   const yearPattern = /\b(19|20)\d{2}\b/;
 
-  // Group into education entries
+  // Group lines into education entries — a new entry starts ONLY on a degree keyword match
   const chunks: string[][] = [];
   let current: string[] = [];
 
   for (const line of lines) {
     const trimmed = line.trim();
-    if (degreeKeywords.test(trimmed) || /^[A-Z]/.test(trimmed) && yearPattern.test(trimmed)) {
+    // Skip lines that look like contact info (email, phone, URLs)
+    if (/[@+]|\d{10}|linkedin|github|http/i.test(trimmed) && trimmed.length < 100) continue;
+
+    if (degreeKeywords.test(trimmed)) {
       if (current.length > 0) chunks.push(current);
       current = [trimmed];
-    } else if (trimmed) {
+    } else if (trimmed && current.length > 0) {
+      // Only append to an education entry already started
       current.push(trimmed);
     }
   }
   if (current.length > 0) chunks.push(current);
 
+  // Last-resort fallback: if no degree keywords found, grab lines with years
   if (chunks.length === 0) {
-    chunks.push(lines);
+    const yearLines = lines.filter(l => yearPattern.test(l) && !/[@+]|\d{10}|linkedin|github|http/i.test(l));
+    if (yearLines.length > 0) chunks.push(yearLines);
   }
 
+  const entries: EducationEntry[] = [];
   for (const chunk of chunks.slice(0, 5)) {
     const text = chunk.join(' ');
     const yearMatch = text.match(/\b(19|20)\d{2}\b/g);
     const year = yearMatch ? yearMatch.join('–') : '';
 
-    // Find degree
     const degreeMatch = text.match(degreeKeywords);
     const degree = degreeMatch
-      ? text.slice(0, text.indexOf(degreeMatch[0]) + degreeMatch[0].length + 30).trim()
+      ? text.slice(0, text.indexOf(degreeMatch[0]) + degreeMatch[0].length + 40).trim()
       : chunk[0].trim();
 
-    // Find institution (usually the longer part or second line)
     const institution = chunk.length > 1
       ? chunk[1].trim()
       : text.replace(degree, '').replace(year, '').trim().slice(0, 80);
+
+    if (degree.length < 3 && institution.length < 3) continue;
 
     entries.push({
       degree:      degree.slice(0, 100),
@@ -282,24 +386,21 @@ function extractEducation(block: string): EducationEntry[] {
 // ── Step 4: Score each section ────────────────────────────────────────────────
 
 export function scoreSections(parsed: ParsedSections, skillMatchScore = 0): SectionScores {
-  // Per spec:
-  // projectsScore   = detectedProjects.length   > 0 ? 25 : 0
-  // experienceScore = detectedExperience.length  > 0 ? 20 : 0
-  // educationScore  = detectedEducation.length   > 0 ? 15 : 0
-  // skillsScore     = from ML skill matching (0–40)
+  // Projects: 1-2 → 10 pts, 3-4 → 18 pts, 5+ → 25 pts
+  let projectsScore = 0;
+  if (parsed.projects.length >= 5)      projectsScore = 25;
+  else if (parsed.projects.length >= 3) projectsScore = 18;
+  else if (parsed.projects.length >= 1) projectsScore = 10;
 
-  const projectsScore   = parsed.projects.length   > 0
-    ? Math.min(25, 10 + parsed.projects.length * 5)
-    : 0;
+  // Experience: 1 entry (internship) → 10 pts, 2+ (full-time) → 20 pts
+  let experienceScore = 0;
+  if (parsed.experience.length >= 2)      experienceScore = 20;
+  else if (parsed.experience.length === 1) experienceScore = 10;
 
-  const experienceScore = parsed.experience.length > 0
-    ? Math.min(20, 8 + parsed.experience.length * 4)
-    : 0;
+  // Education: degree detected → full 15 pts
+  const educationScore = parsed.education.length > 0 ? 15 : 0;
 
-  const educationScore  = parsed.education.length  > 0
-    ? Math.min(15, 8 + parsed.education.length * 3)
-    : 0;
-
+  // Skills: derived from ML match score (0–40)
   const skillsScore = Math.round(Math.min(40, skillMatchScore * 0.4));
 
   const totalDetected = [
@@ -310,6 +411,9 @@ export function scoreSections(parsed: ParsedSections, skillMatchScore = 0): Sect
     parsed.summary.length > 0,
   ].filter(Boolean).length;
 
+  console.log('[SectionParser] Scores — projects:', projectsScore, '| experience:', experienceScore,
+    '| education:', educationScore, '| skills:', skillsScore);
+
   return { projectsScore, experienceScore, educationScore, skillsScore, totalDetected };
 }
 
@@ -317,12 +421,27 @@ export function scoreSections(parsed: ParsedSections, skillMatchScore = 0): Sect
 
 export function parseResumeSections(resumeText: string): ParsedSections {
   // Step 2: Split into blocks
-  const rawBlocks = splitIntoBlocks(resumeText);
+  let rawBlocks = splitIntoBlocks(resumeText);
+
+  // Step 9: Fallback — if no section headings detected, use keyword clustering
+  const detectedKeys = Object.keys(rawBlocks).filter(k => k !== 'header');
+  if (detectedKeys.length === 0) {
+    console.log('[SectionParser] No headings detected — falling back to keyword clustering');
+    rawBlocks = clusterByKeywords(resumeText);
+  }
 
   // Step 3: Extract structured data
   const projects   = extractProjects(rawBlocks.projects ?? '');
   const experience = extractExperience(rawBlocks.experience ?? '');
   const education  = extractEducation(rawBlocks.education ?? '');
+
+  // Debug logging (requirement #8)
+  console.log('[SectionParser] extracted_projects_count:', projects.length);
+  console.log('[SectionParser] extracted_experience_count:', experience.length);
+  console.log('[SectionParser] extracted_education_count:', education.length);
+  console.log('[SectionParser] projects_block_chars:', (rawBlocks.projects ?? '').length);
+  console.log('[SectionParser] experience_block_chars:', (rawBlocks.experience ?? '').length);
+  console.log('[SectionParser] education_block_chars:', (rawBlocks.education ?? '').length);
 
   // Extract skills list
   const skillsBlock = rawBlocks.skills ?? '';

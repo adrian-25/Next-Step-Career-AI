@@ -14,6 +14,7 @@ export default {
     },
     extend: {
       colors: {
+        // Clean Minimalist Color Palette
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -69,36 +70,64 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Premium AI SaaS Theme Colors
-        'dark-bg': '#0B0F1A',
-        'neon-green': '#B6FF00',
-        'card-bg': 'rgba(26, 31, 46, 0.6)',
-        'glass-border': 'rgba(182, 255, 0, 0.2)',
+        // Custom clean colors
+        indigo: {
+          50: '#EEF2FF',
+          100: '#E0E7FF',
+          200: '#C7D2FE',
+          300: '#A5B4FC',
+          400: '#818CF8',
+          500: '#6366F1',
+          600: '#4F46E5',
+          700: '#4338CA',
+          800: '#3730A3',
+          900: '#312E81',
+          950: '#1E1B4B',
+        },
+        slate: {
+          50: '#F8FAFC',
+          100: '#F1F5F9',
+          200: '#E2E8F0',
+          300: '#CBD5E1',
+          400: '#94A3B8',
+          500: '#64748B',
+          600: '#475569',
+          700: '#334155',
+          800: '#1E293B',
+          900: '#0F172A',
+          950: '#020617',
+        },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-        xl: "var(--radius-lg)",
-        "2xl": "var(--radius-xl)",
-      },
-      backdropBlur: {
-        'glass': '12px',
+        card: "12px",
+        button: "8px",
+        badge: "6px",
+        lg: "12px",
+        md: "8px",
+        sm: "6px",
+        xl: "16px",
+        "2xl": "20px",
       },
       boxShadow: {
-        'glow-sm': 'var(--shadow-sm)',
-        'glow-md': 'var(--shadow-md)',
-        'glow-lg': 'var(--shadow-lg)',
-        'glow': 'var(--shadow-glow)',
-        // Premium AI SaaS Glow Effects
-        'neon-glow': '0 0 20px rgba(182, 255, 0, 0.3)',
-        'neon-glow-lg': '0 0 30px rgba(182, 255, 0, 0.5)',
+        'soft': '0 1px 3px rgba(0,0,0,0.08)',
+        'soft-md': '0 2px 6px rgba(0,0,0,0.08)',
+        'soft-lg': '0 4px 12px rgba(0,0,0,0.08)',
       },
-      backgroundImage: {
-        'gradient-primary': 'var(--gradient-primary)',
-        'gradient-accent': 'var(--gradient-accent)',
-        'gradient-surface': 'var(--gradient-surface)',
-        'gradient-glow': 'var(--gradient-glow)',
+      fontFamily: {
+        sans: ['IBM Plex Sans', 'Inter', 'sans-serif'],
+        display: ['DM Sans', 'Inter', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        // Hero section fonts
+        'display-serif': ['Instrument Serif', 'serif'],
+        body: ['Inter', 'sans-serif'],
+      },
+      fontSize: {
+        base: ['16px', '1.6'],
+      },
+      spacing: {
+        '18': '4.5rem',
+        '88': '22rem',
+        '128': '32rem',
       },
       transitionTimingFunction: {
         'smooth': 'var(--ease-smooth)',
@@ -121,32 +150,20 @@ export default {
             height: "0",
           },
         },
-        // Premium AI SaaS Animations
-        'float': {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-20px)' },
-        },
-        'orbit-glow': {
-          '0%': { transform: 'rotate(0deg)' },
-          '100%': { transform: 'rotate(360deg)' },
-        },
         'fade-in': {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
         },
         'slide-up': {
-          '0%': { opacity: '0', transform: 'translateY(30px)' },
+          '0%': { opacity: '0', transform: 'translateY(20px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        // Premium AI SaaS Animations
-        'float': 'float 6s ease-in-out infinite',
-        'orbit-glow': 'orbit-glow 8s linear infinite',
-        'fade-in': 'fade-in 0.6s ease-out',
-        'slide-up': 'slide-up 0.6s ease-out',
+        'fade-in': 'fade-in 0.3s ease-out',
+        'slide-up': 'slide-up 0.4s ease-out',
       },
     },
   },

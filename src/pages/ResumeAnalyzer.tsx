@@ -37,14 +37,14 @@ function SkillCard({ skill, variant, resources }: {
   return (
     <motion.div
       variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0, transition: { duration: 0.2 } } }}
-      className={`flex items-center justify-between p-2.5 rounded-lg border text-sm ${
-        isMatched ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200'
+      className={`flex items-center justify-between p-3 rounded-lg border text-sm ${
+        isMatched ? 'bg-success/10 border-success/20' : 'bg-warning/10 border-warning/20'
       }`}
     >
       <div className="flex items-center gap-2 min-w-0">
         {isMatched
-          ? <CheckCircle className="h-3.5 w-3.5 text-green-600 shrink-0" />
-          : <AlertCircle className="h-3.5 w-3.5 text-orange-500 shrink-0" />
+          ? <CheckCircle className="h-3.5 w-3.5 text-success shrink-0" />
+          : <AlertCircle className="h-3.5 w-3.5 text-warning shrink-0" />
         }
         <span className="font-medium truncate capitalize">{skill}</span>
       </div>
@@ -52,14 +52,14 @@ function SkillCard({ skill, variant, resources }: {
         <div className="flex gap-1 shrink-0 ml-2">
           {resources.filter(r => r.type === 'free').slice(0, 1).map(r => (
             <a key={r.url} href={r.url} target="_blank" rel="noopener noreferrer">
-              <Badge className="text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 gap-1 cursor-pointer">
+              <Badge variant="secondary" className="text-xs gap-1 cursor-pointer">
                 <BookOpen className="h-2.5 w-2.5" /> Free
               </Badge>
             </a>
           ))}
           {resources.filter(r => r.type === 'paid').slice(0, 1).map(r => (
             <a key={r.url} href={r.url} target="_blank" rel="noopener noreferrer">
-              <Badge className="text-xs bg-purple-100 text-purple-700 hover:bg-purple-200 gap-1 cursor-pointer">
+              <Badge variant="outline" className="text-xs gap-1 cursor-pointer">
                 <ExternalLink className="h-2.5 w-2.5" /> Course
               </Badge>
             </a>
@@ -145,7 +145,7 @@ function MLResultsView({ result, selectedRole, onReset }: {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-2">
-          <CheckCircle className="h-6 w-6 text-green-500" />
+          <CheckCircle className="h-6 w-6 text-success" />
           <h2 className="text-xl font-semibold">ML Analysis Complete</h2>
           <Badge variant="secondary">{roleLabel}</Badge>
         </div>
@@ -172,37 +172,37 @@ function MLResultsView({ result, selectedRole, onReset }: {
       </div>
 
       {/* ML Prediction card */}
-      <Card className="border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50">
+      <Card className="clean-card">
         <CardContent className="pt-5">
           <div className="flex items-center gap-2 mb-3">
-            <Brain className="h-5 w-5 text-purple-600" />
-            <span className="font-semibold text-purple-700">ML + Soft Computing Analysis</span>
-            <Badge className="bg-purple-100 text-purple-700 text-xs">
+            <Brain className="h-5 w-5 text-primary" />
+            <span className="font-semibold text-foreground">ML + Soft Computing Analysis</span>
+            <Badge variant="secondary" className="text-xs">
               TF-IDF + Naive Bayes + Fuzzy Logic
             </Badge>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-white rounded-lg p-3 border border-purple-100 text-center">
+            <div className="bg-surface rounded-lg p-3 border border-border text-center">
               <p className="text-xs text-muted-foreground mb-1">ML Score</p>
-              <p className="text-2xl font-bold text-blue-600">{result.mlScore}%</p>
+              <p className="text-2xl font-bold text-primary">{result.mlScore}%</p>
               <Progress value={result.mlScore} className="h-1 mt-1" />
               <p className="text-xs text-muted-foreground mt-1">TF-IDF match</p>
             </div>
-            <div className="bg-white rounded-lg p-3 border border-purple-100 text-center">
+            <div className="bg-surface rounded-lg p-3 border border-border text-center">
               <p className="text-xs text-muted-foreground mb-1">Fuzzy Score</p>
-              <p className="text-2xl font-bold text-amber-600">{result.fuzzyScore}%</p>
+              <p className="text-2xl font-bold text-warning">{result.fuzzyScore}%</p>
               <Progress value={result.fuzzyScore} className="h-1 mt-1" />
               <p className="text-xs text-muted-foreground mt-1">Levenshtein</p>
             </div>
-            <div className="bg-white rounded-lg p-3 border border-purple-100 text-center">
+            <div className="bg-surface rounded-lg p-3 border border-border text-center">
               <p className="text-xs text-muted-foreground mb-1">Final Score</p>
-              <p className="text-2xl font-bold text-purple-700">{result.finalScore}%</p>
+              <p className="text-2xl font-bold text-primary">{result.finalScore}%</p>
               <Progress value={result.finalScore} className="h-1 mt-1" />
               <p className="text-xs text-muted-foreground mt-1">0.7×ML + 0.3×Fuzzy</p>
             </div>
-            <div className="bg-white rounded-lg p-3 border border-purple-100 text-center">
+            <div className="bg-surface rounded-lg p-3 border border-border text-center">
               <p className="text-xs text-muted-foreground mb-1">Confidence</p>
-              <p className="text-2xl font-bold text-green-600">{result.confidence}%</p>
+              <p className="text-2xl font-bold text-success">{result.confidence}%</p>
               <Progress value={result.confidence} className="h-1 mt-1" />
               <p className="text-xs text-muted-foreground mt-1">ML confidence</p>
             </div>

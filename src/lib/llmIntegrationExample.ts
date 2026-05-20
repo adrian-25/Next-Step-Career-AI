@@ -1,8 +1,15 @@
 /**
- * Example LLM Integration
- * 
- * This file shows how to integrate with a real LLM API (OpenAI, Anthropic, etc.)
- * Replace the mock implementation in resumeAnalysisService.ts with this approach.
+ * ⚠️  DEPRECATED — DO NOT USE IN FRONTEND ⚠️
+ *
+ * This file is kept for REFERENCE ONLY.
+ * Direct OpenAI/Anthropic API calls from the frontend expose API keys to users.
+ *
+ * All LLM calls must go through Supabase Edge Functions instead:
+ *   import { analyzeResume } from '@/services/edgeFunctionService';
+ *   const result = await analyzeResume(resumeText, targetRole);
+ *
+ * See: supabase/functions/analyze-resume/index.ts
+ * See: src/services/edgeFunctionService.ts
  */
 
 import { SkillAnalysis } from '@/components/SkillAnalyzerCard';

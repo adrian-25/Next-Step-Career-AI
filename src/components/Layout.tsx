@@ -63,24 +63,22 @@ export function Layout() {
 
         {/* ── Top Header Bar ── */}
         <header
-          className="flex items-center h-14 px-6 shrink-0 gap-3"
+          className="flex items-center h-14 px-6 shrink-0 gap-3 liquid-glass"
           style={{
-            background: 'hsl(var(--card))',
-            borderBottom: '1px solid hsl(var(--border))',
-            boxShadow: 'var(--shadow-xs)',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
           }}
         >
           {/* Breadcrumbs */}
           <nav className="flex items-center gap-1.5 text-sm" aria-label="Breadcrumb">
             <button
               onClick={() => navigate(homeRoute)}
-              className="flex items-center gap-1 transition-colors hover:text-primary"
+              className="flex items-center gap-1 transition-colors hover:text-white"
               style={{ color: 'hsl(var(--muted-foreground))' }}
               aria-label="Home"
             >
               <Home className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
-            <ChevronRight className="h-3.5 w-3.5" style={{ color: 'hsl(var(--border))' }} aria-hidden="true" />
+            <ChevronRight className="h-3.5 w-3.5" style={{ color: 'rgba(255,255,255,0.2)' }} aria-hidden="true" />
             <span
               className="font-medium text-sm"
               style={{ color: 'hsl(var(--foreground))' }}
@@ -98,9 +96,9 @@ export function Layout() {
             <div
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
               style={{
-                background: 'hsl(var(--success) / 0.1)',
-                color: 'hsl(160 84% 28%)',
-                border: '1px solid hsl(var(--success) / 0.2)',
+                background: 'rgba(255,255,255,0.08)',
+                color: 'rgba(255,255,255,0.8)',
+                border: '1px solid rgba(255,255,255,0.12)',
               }}
             >
               <Building2 className="h-3 w-3" aria-hidden="true" />
@@ -110,9 +108,9 @@ export function Layout() {
             <div
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
               style={{
-                background: 'hsl(var(--primary) / 0.08)',
-                color: 'hsl(var(--primary))',
-                border: '1px solid hsl(var(--primary) / 0.2)',
+                background: 'rgba(255,255,255,0.06)',
+                color: 'rgba(255,255,255,0.7)',
+                border: '1px solid rgba(255,255,255,0.1)',
               }}
             >
               <User className="h-3 w-3" aria-hidden="true" />
@@ -122,19 +120,19 @@ export function Layout() {
             <div
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
               style={{
-                background: 'hsl(var(--success) / 0.1)',
-                color: 'hsl(160 84% 28%)',
-                border: '1px solid hsl(var(--success) / 0.2)',
+                background: 'rgba(255,255,255,0.06)',
+                color: 'rgba(255,255,255,0.7)',
+                border: '1px solid rgba(255,255,255,0.1)',
               }}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" aria-hidden="true" />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true" />
               Demo Mode
             </div>
           )}
         </header>
 
         {/* ── Page Content ── */}
-        <main className="flex-1 overflow-auto" role="main">
+        <main className="flex-1 overflow-y-auto" role="main" style={{ minWidth: 0 }}>
           <Outlet />
         </main>
       </div>

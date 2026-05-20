@@ -188,13 +188,12 @@ function SectionHeader({ title, icon: Icon, color, open, onToggle }: {
 }) {
   return (
     <button
-      className="w-full flex items-center gap-3 p-3 rounded-xl text-left transition-colors hover:bg-muted/30"
+      className="w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors hover:bg-surface"
       onClick={onToggle}
       aria-expanded={open}
     >
-      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-        style={{ background: `${color}18` }}>
-        <Icon className="h-4 w-4" style={{ color }} aria-hidden="true" />
+      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-primary/10">
+        <Icon className="h-4 w-4 text-primary" aria-hidden="true" />
       </div>
       <span className="font-display font-semibold text-sm flex-1">{title}</span>
       {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
@@ -258,57 +257,44 @@ export function ResumeBuilderPage() {
   };
 
   return (
-    <div style={{
-      width: '100%',
-      minHeight: '100vh',
-      padding: '20px 32px',
-      background: 'hsl(var(--background))',
-    }}>
+    <div className="w-full min-h-[calc(100vh-56px)] px-8 py-5 box-border bg-background flex flex-col">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #2563EB, #0EA5E9)' }}>
-            <FileText className="h-5 w-5 text-white" aria-hidden="true" />
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-primary/10 flex-shrink-0">
+            <FileText className="h-5 w-5 text-primary" />
           </div>
           <div>
             <h1 className="font-display text-xl font-bold">Resume Builder</h1>
-            <p className="text-sm text-muted-foreground">Build an ATS-friendly resume — export as HTML or print as PDF</p>
+            <p className="text-sm text-muted-foreground">
+              Build an ATS-friendly resume — export as HTML or print as PDF
+            </p>
           </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1.5 text-xs">
-            <Download className="h-3.5 w-3.5" aria-hidden="true" /> Print / PDF
+            <Download className="h-3.5 w-3.5" /> Print / PDF
           </Button>
-          <Button size="sm" onClick={handleDownload} className="gradient-bg text-white gap-1.5 text-xs">
-            <Download className="h-3.5 w-3.5" aria-hidden="true" /> Download HTML
+          <Button size="sm" onClick={handleDownload} className="gap-1.5 text-xs">
+            <Download className="h-3.5 w-3.5" /> Download HTML
           </Button>
         </div>
       </div>
 
-      {/* Full-width desktop two-column grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: '24px',
-        alignItems: 'flex-start',
-        width: '100%',
-      }}
-      className="resume-builder-grid"
-      >
+      {/* Full-width two-column grid - 40% form / 60% preview */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 flex-1 w-full min-w-0">
 
-        {/* ── Left: Form (scrollable) ── */}
-        <div className="space-y-3 overflow-y-auto scrollbar-thin" style={{ maxHeight: 'calc(100vh - 160px)' }}>
+        {/* ── Left: Form (40% width, scrollable) ── */}
+        <div className="lg:col-span-2 overflow-y-auto max-h-[calc(100vh-160px)] flex flex-col gap-3 min-w-0">
 
           {/* Target Role */}
-          <div className="ent-card p-4">
-            <p className="section-label mb-2">Target Role</p>
+          <div className="clean-card p-4">
+            <p className="text-sm font-semibold mb-2">Target Role</p>
             <select
               value={data.targetRole}
               onChange={e => set('targetRole', e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 text-sm"
-              style={{ background: 'hsl(var(--card))', borderColor: 'hsl(var(--border))' }}
+              className="w-full border rounded-button px-3 py-2 text-sm bg-card border-border"
               aria-label="Target role"
             >
               {ROLES.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
@@ -316,7 +302,7 @@ export function ResumeBuilderPage() {
           </div>
 
           {/* Contact */}
-          <div className="ent-card overflow-hidden">
+          <div className="clean-card overflow-hidden">
             <SectionHeader title="Contact Information" icon={User} color="#2563EB" open={sections.contact} onToggle={() => toggle('contact')} />
             {sections.contact && (
               <div className="px-4 pb-4 space-y-2">
@@ -334,7 +320,7 @@ export function ResumeBuilderPage() {
           </div>
 
           {/* Summary */}
-          <div className="ent-card overflow-hidden">
+          <div className="clean-card overflow-hidden">
             <SectionHeader title="Professional Summary" icon={FileText} color="#8B5CF6" open={sections.summary} onToggle={() => toggle('summary')} />
             {sections.summary && (
               <div className="px-4 pb-4">
@@ -350,7 +336,7 @@ export function ResumeBuilderPage() {
           </div>
 
           {/* Skills */}
-          <div className="ent-card overflow-hidden">
+          <div className="clean-card overflow-hidden">
             <SectionHeader title="Technical Skills" icon={Code2} color="#10B981" open={sections.skills} onToggle={() => toggle('skills')} />
             {sections.skills && (
               <div className="px-4 pb-4">
@@ -367,13 +353,12 @@ export function ResumeBuilderPage() {
           </div>
 
           {/* Experience */}
-          <div className="ent-card overflow-hidden">
+          <div className="clean-card overflow-hidden">
             <SectionHeader title="Experience" icon={Briefcase} color="#F59E0B" open={sections.experience} onToggle={() => toggle('experience')} />
             {sections.experience && (
               <div className="px-4 pb-4 space-y-4">
                 {data.experience.map((exp, i) => (
-                  <div key={exp.id} className="space-y-2 pt-2 border-t first:border-0 first:pt-0"
-                    style={{ borderColor: 'hsl(var(--border))' }}>
+                  <div key={exp.id} className="space-y-2 pt-2 border-t first:border-0 first:pt-0 border-border">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-semibold text-muted-foreground">Entry {i + 1}</span>
                       {data.experience.length > 1 && (
@@ -404,13 +389,12 @@ export function ResumeBuilderPage() {
           </div>
 
           {/* Projects */}
-          <div className="ent-card overflow-hidden">
+          <div className="clean-card overflow-hidden">
             <SectionHeader title="Projects" icon={FolderOpen} color="#0EA5E9" open={sections.projects} onToggle={() => toggle('projects')} />
             {sections.projects && (
               <div className="px-4 pb-4 space-y-4">
                 {data.projects.map((proj, i) => (
-                  <div key={proj.id} className="space-y-2 pt-2 border-t first:border-0 first:pt-0"
-                    style={{ borderColor: 'hsl(var(--border))' }}>
+                  <div key={proj.id} className="space-y-2 pt-2 border-t first:border-0 first:pt-0 border-border">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-semibold text-muted-foreground">Project {i + 1}</span>
                       {data.projects.length > 1 && (
@@ -440,13 +424,12 @@ export function ResumeBuilderPage() {
           </div>
 
           {/* Education */}
-          <div className="ent-card overflow-hidden">
+          <div className="clean-card overflow-hidden">
             <SectionHeader title="Education" icon={GraduationCap} color="#6366F1" open={sections.education} onToggle={() => toggle('education')} />
             {sections.education && (
               <div className="px-4 pb-4 space-y-4">
                 {data.education.map((edu, i) => (
-                  <div key={edu.id} className="space-y-2 pt-2 border-t first:border-0 first:pt-0"
-                    style={{ borderColor: 'hsl(var(--border))' }}>
+                  <div key={edu.id} className="space-y-2 pt-2 border-t first:border-0 first:pt-0 border-border">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-semibold text-muted-foreground">Entry {i + 1}</span>
                       {data.education.length > 1 && (
@@ -473,7 +456,7 @@ export function ResumeBuilderPage() {
           </div>
 
           {/* Certifications */}
-          <div className="ent-card overflow-hidden">
+          <div className="clean-card overflow-hidden">
             <SectionHeader title="Certifications" icon={Award} color="#EC4899" open={sections.certs} onToggle={() => toggle('certs')} />
             {sections.certs && (
               <div className="px-4 pb-4">
@@ -490,20 +473,22 @@ export function ResumeBuilderPage() {
           </div>
         </div>
 
-        {/* ── Right: Preview (sticky, full height) ── */}
-        <div style={{ position: 'sticky', top: '20px', maxHeight: 'calc(100vh - 160px)', overflow: 'hidden', width: '100%' }}>
-          <div className="ent-card overflow-hidden" style={{ height: 'calc(100vh - 160px)', display: 'flex', flexDirection: 'column' }}>
-            <div className="px-4 py-3 border-b flex items-center justify-between shrink-0"
-              style={{ borderColor: 'hsl(var(--border))' }}>
-              <p className="section-label">Live Preview</p>
-              <Badge className="text-xs badge-info">ATS-Friendly Format</Badge>
-            </div>
-            <div
-              className="overflow-auto flex-1"
-              style={{ background: 'white', minHeight: '500px' }}
-              dangerouslySetInnerHTML={{ __html: generateResumeHTML(data) }}
-            />
+        {/* ── Right: Preview (60% width, sticky, full height) ── */}
+        <div className="lg:col-span-3 sticky top-5 max-h-[calc(100vh-160px)] overflow-hidden w-full min-w-0 flex flex-col rounded-card border border-border shadow-soft">
+          {/* Preview header */}
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between bg-card flex-shrink-0">
+            <span className="text-xs font-bold tracking-wider uppercase text-muted-foreground">
+              Live Preview
+            </span>
+            <Badge variant="secondary" className="text-xs font-semibold">
+              ATS-Friendly Format
+            </Badge>
           </div>
+          {/* Preview content - full readable width */}
+          <div
+            className="flex-1 overflow-auto bg-white min-h-[500px]"
+            dangerouslySetInnerHTML={{ __html: generateResumeHTML(data) }}
+          />
         </div>
       </div>
     </div>
