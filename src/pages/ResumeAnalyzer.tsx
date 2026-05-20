@@ -700,12 +700,6 @@ function UploadWidget({ targetRole, onComplete }: {
       const ca = fileResult.comprehensiveAnalysis;
       setStage('complete'); setProgress(100);
 
-      // DEBUG: Log comprehensive analysis structure
-      console.log('[ResumeAnalyzer] Comprehensive Analysis:', ca);
-      console.log('[ResumeAnalyzer] Resume Score:', ca?.resumeScore);
-      console.log('[ResumeAnalyzer] Resume Score Total:', ca?.resumeScore?.totalScore);
-      console.log('[ResumeAnalyzer] Component Scores:', ca?.resumeScore?.componentScores);
-
       // Persist for other pages
       try {
         if (ca) {
@@ -729,7 +723,7 @@ function UploadWidget({ targetRole, onComplete }: {
         extractedSkills: ca?.parsedResume.skills ?? [],
         matchedSkills: ca?.skillMatch.matchedSkills.map(s => s.skill) ?? [],
         missingSkills: ca?.skillMatch.missingSkills.map(s => s.skill) ?? [],
-        partialSkills: ca?.skillMatch.partialSkills ?? [],
+        partialSkills: [],
         matchPercentage: ca?.skillMatch.matchScore ?? 0,
         mlScore: ca?.skillMatch.matchScore ?? 0,
         fuzzyScore: 0,
