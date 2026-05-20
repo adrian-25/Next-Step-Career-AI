@@ -54,8 +54,11 @@ export class ResumeParser {
         case 'docx':
           rawText = await this.parseDOCX(file);
           break;
+        case 'txt':
+          rawText = await file.text();
+          break;
         default:
-          throw new Error(`Unsupported file type: ${fileType}`);
+          throw new Error(`Unsupported file type: ${fileType}. Please upload PDF, DOCX, or TXT.`);
       }
 
       // Clean and structure the text
@@ -256,19 +259,28 @@ export class ResumeParser {
   /**
    * Robust regex-based section detection.
    * Supports case variations, ALL-CAPS, trailing colons, and multi-word headings.
-   * A heading line must:
-   *   1. Be short (≤ 60 chars)
-   *   2. Match one of the regex patterns below
-   *   3. Not look like a normal sentence (no mid-line punctuation like '.,' unless it's after a colon)
+   * Uses a two-pass approach:
+   *   Pass 1: Strict heading match (line IS the heading)
+   *   Pass 2: Loose heading match (line STARTS WITH or CONTAINS the heading keyword)
    */
   private readonly HEADING_PATTERNS: Array<{ key: string; pattern: RegExp }> = [
-    { key: 'summary',        pattern: /^(summary|professional\s+summary|career\s+objective|objective|profile|about\s+me|personal\s+statement):?$/i },
-    { key: 'experience',     pattern: /^(experience|work\s+experience|professional\s+experience|employment|employment\s+history|work\s+history|internship|internships|career|career\s+history|professional\s+background):?$/i },
-    { key: 'education',      pattern: /^(education|educational\s+background|academic\s+background|academic\s+qualifications|qualifications|schooling|academics):?$/i },
-    { key: 'skills',         pattern: /^(skills|technical\s+skills|core\s+competencies|competencies|technologies|expertise|key\s+skills|professional\s+skills|proficiencies|tools\s+&\s+technologies):?$/i },
-    { key: 'projects',       pattern: /^(projects|project\s+experience|personal\s+projects|academic\s+projects|key\s+projects|portfolio|notable\s+projects|side\s+projects|work\s+samples):?$/i },
-    { key: 'certifications', pattern: /^(certifications?|certificates?|credentials?|licenses?|professional\s+certifications?|accreditations?):?$/i },
-    { key: 'achievements',   pattern: /^(achievements?|awards?|honors?|accomplishments?|recognition|publications?):?$/i },
+    { key: 'summary',        pattern: /^(summary|professional\s+summary|career\s+objective|objective|profile|about\s+me|personal\s+statement)\s*:?\s*$/i },
+    { key: 'experience',     pattern: /^(experience|work\s+experience|professional\s+experience|employment|employment\s+history|work\s+history|internship|internships|career|career\s+history|professional\s+background)\s*:?\s*$/i },
+    { key: 'education',      pattern: /^(education|educational\s+background|academic\s+background|academic\s+qualifications|qualifications|schooling|academics)\s*:?\s*$/i },
+    { key: 'skills',         pattern: /^(skills|technical\s+skills|core\s+competencies|competencies|technologies|expertise|key\s+skills|professional\s+skills|proficiencies|tools\s*[&and]*\s*technologies)\s*:?\s*$/i },
+    { key: 'projects',       pattern: /^(projects|project\s+experience|personal\s+projects|academic\s+projects|key\s+projects|portfolio|notable\s+projects|side\s+projects|work\s+samples)\s*:?\s*$/i },
+    { key: 'certifications', pattern: /^(certifications?|certificates?|credentials?|licenses?|professional\s+certifications?|accreditations?)\s*:?\s*$/i },
+    { key: 'achievements',   pattern: /^(achievements?|awards?|honors?|accomplishments?|recognition|publications?)\s*:?\s*$/i },
+  ];
+
+  // Loose patterns — match lines that START with the keyword (for headings with extra text)
+  private readonly LOOSE_HEADING_PATTERNS: Array<{ key: string; pattern: RegExp }> = [
+    { key: 'experience',     pattern: /^(work\s+experience|professional\s+experience|employment|internship|experience)\b/i },
+    { key: 'education',      pattern: /^(education|academic|qualifications?)\b/i },
+    { key: 'skills',         pattern: /^(technical\s+skills|skills|competencies|technologies|expertise)\b/i },
+    { key: 'projects',       pattern: /^(projects?|academic\s+projects?|personal\s+projects?|key\s+projects?)\b/i },
+    { key: 'certifications', pattern: /^(certifications?|certificates?)\b/i },
+    { key: 'summary',        pattern: /^(summary|objective|profile|about)\b/i },
   ];
 
   private extractSections(text: string): ResumeSections {
@@ -298,16 +310,31 @@ export class ResumeParser {
     for (const line of lines) {
       const trimmed = line.trim();
 
-      // Check heading: short line matching one of our regex patterns
-      if (trimmed.length > 0 && trimmed.length <= 60) {
-        const match = this.HEADING_PATTERNS.find(({ pattern }) => pattern.test(trimmed));
-        if (match) {
+      if (trimmed.length > 0 && trimmed.length <= 80) {
+        // Pass 1: strict match — line IS the heading
+        const strictMatch = this.HEADING_PATTERNS.find(({ pattern }) => pattern.test(trimmed));
+        if (strictMatch) {
           saveCurrentSection();
-          currentSection = match.key;
+          currentSection = strictMatch.key;
           currentContent = [];
           startIndex = charOffset;
           charOffset += line.length + 1;
           continue;
+        }
+
+        // Pass 2: loose match — line STARTS WITH heading keyword AND is short
+        // Only trigger if the line looks like a heading (no sentence punctuation mid-line)
+        const looksLikeHeading = trimmed.length <= 50 && !/[,;]/.test(trimmed) && !/\s{2,}/.test(trimmed.slice(5));
+        if (looksLikeHeading) {
+          const looseMatch = this.LOOSE_HEADING_PATTERNS.find(({ pattern }) => pattern.test(trimmed));
+          if (looseMatch) {
+            saveCurrentSection();
+            currentSection = looseMatch.key;
+            currentContent = [];
+            startIndex = charOffset;
+            charOffset += line.length + 1;
+            continue;
+          }
         }
       }
 
@@ -320,6 +347,33 @@ export class ResumeParser {
     // Save last section
     saveCurrentSection();
 
+    // ── Fallback: if key sections still missing, scan full text ───────────────
+    if (!sections.projects) {
+      const projectContent = this.extractSectionByKeywords(text, [
+        'project', 'built', 'developed', 'created', 'implemented', 'github'
+      ]);
+      if (projectContent.length > 50) {
+        sections.projects = { content: projectContent, startIndex: 0, endIndex: projectContent.length, qualityScore: this.calculateSectionQuality(projectContent) };
+      }
+    }
+    if (!sections.experience) {
+      const expContent = this.extractSectionByKeywords(text, [
+        'intern', 'engineer', 'developer', 'analyst', 'manager', 'company', 'organization', 'worked at', 'employed'
+      ]);
+      if (expContent.length > 30) {
+        sections.experience = { content: expContent, startIndex: 0, endIndex: expContent.length, qualityScore: this.calculateSectionQuality(expContent) };
+      }
+    }
+    if (!sections.education) {
+      const eduContent = this.extractSectionByKeywords(text, [
+        'bachelor', 'master', 'phd', 'b.tech', 'btech', 'b.e', 'msc', 'mba',
+        'university', 'college', 'institute', 'degree', 'cgpa', 'gpa'
+      ]);
+      if (eduContent.length > 20) {
+        sections.education = { content: eduContent, startIndex: 0, endIndex: eduContent.length, qualityScore: this.calculateSectionQuality(eduContent) };
+      }
+    }
+
     // ── Debug logging ──────────────────────────────────────────────────────────
     const detected = Object.keys(sections);
     console.log('[ResumeParser] Detected sections:', detected);
@@ -328,6 +382,19 @@ export class ResumeParser {
     console.log('[ResumeParser] Education content length:', sections.education?.content?.length ?? 0);
 
     return sections;
+  }
+
+  /**
+   * Extract lines from full text that contain any of the given keywords.
+   * Used as a last-resort fallback when section headers aren't detected.
+   */
+  private extractSectionByKeywords(text: string, keywords: string[]): string {
+    const lines = text.split('\n');
+    const matched = lines.filter(line => {
+      const l = line.toLowerCase();
+      return keywords.some(kw => l.includes(kw));
+    });
+    return matched.join('\n');
   }
 
   /**
