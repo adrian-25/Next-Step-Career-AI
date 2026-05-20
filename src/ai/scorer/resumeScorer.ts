@@ -233,6 +233,11 @@ export class ResumeScorer {
 
   /**
    * Calculate education component score (0-100)
+   * Requirements:
+   * - 10th standard mentioned = 33% of education score
+   * - 12th standard mentioned = 33% of education score
+   * - College/Graduation with marks = 33% of education score
+   * - If only 1 mentioned = proportional score
    */
   private calculateEducationScore(parsedResume: ParsedResume): number {
     const educationSection = parsedResume.sections.education;
@@ -241,36 +246,92 @@ export class ResumeScorer {
 
     // If no section detected, fall back to scanning full resume text
     const eduContent = educationSection?.content ?? this.extractEducationFromText(resumeText);
+    const lowerText = resumeText.toLowerCase();
+
+    // Check for 10th standard (33%)
+    const has10th = lowerText.includes('10th') || 
+                   lowerText.includes('10th grade') || 
+                   lowerText.includes('class 10') ||
+                   lowerText.includes('ssc') ||
+                   lowerText.includes('secondary school');
+
+    // Check for 12th standard (33%)
+    const has12th = lowerText.includes('12th') || 
+                   lowerText.includes('12th grade') || 
+                   lowerText.includes('class 12') ||
+                   lowerText.includes('hsc') ||
+                   lowerText.includes('higher secondary') ||
+                   lowerText.includes('intermediate');
+
+    // Check for College/Graduation with marks (33%)
+    const hasCollege = lowerText.includes('bachelor') || 
+                      lowerText.includes('b.tech') || 
+                      lowerText.includes('btech') || 
+                      lowerText.includes('b.e') || 
+                      lowerText.includes('b.sc') ||
+                      lowerText.includes('bsc') ||
+                      lowerText.includes('master') || 
+                      lowerText.includes('msc') || 
+                      lowerText.includes('mba') ||
+                      lowerText.includes('phd') || 
+                      lowerText.includes('doctorate') ||
+                      lowerText.includes('college') || 
+                      lowerText.includes('university') ||
+                      lowerText.includes('institute') ||
+                      lowerText.includes('graduation') ||
+                      lowerText.includes('degree');
+
+    // Check if marks/CGPA/GPA are mentioned (for college score)
+    const hasMarks = lowerText.includes('cgpa') || 
+                    lowerText.includes('gpa') || 
+                    lowerText.includes('percentage') || 
+                    lowerText.includes('%') ||
+                    lowerText.includes('marks') ||
+                    lowerText.includes('score');
 
     let score = 0;
+    let componentsFound = 0;
 
-    // Education section score (up to 70 points)
-    if (eduContent && eduContent.length > 0) {
-      const qualityScore = educationSection?.qualityScore ?? this.calculateSectionQuality(eduContent);
-      score += qualityScore * 0.7;
+    // 10th standard: 33% (33 points)
+    if (has10th) {
+      score += 33;
+      componentsFound++;
     }
 
-    // Certifications bonus (up to 30 points)
+    // 12th standard: 33% (33 points)
+    if (has12th) {
+      score += 33;
+      componentsFound++;
+    }
+
+    // College/Graduation: 33% (33 points) - only if marks are mentioned
+    if (hasCollege && hasMarks) {
+      score += 33;
+      componentsFound++;
+    } else if (hasCollege) {
+      // College without marks: partial credit (20 points)
+      score += 20;
+      componentsFound++;
+    }
+
+    // If only 1 component found, scale up to 100
+    if (componentsFound === 1) {
+      score = Math.min(100, score * 3);
+    }
+    // If 2 components found, scale up proportionally
+    else if (componentsFound === 2) {
+      score = Math.min(100, score * 1.5);
+    }
+
+    // Certifications bonus (up to 10 additional points)
     const certContent = certificationsSection?.content ?? '';
     if (certContent) {
       const certCount = this.estimateCertificationCount(certContent);
-      if (certCount >= 5) {
-        score += 30;
-      } else if (certCount >= 3) {
-        score += 20;
-      } else if (certCount >= 1) {
+      if (certCount >= 3) {
         score += 10;
+      } else if (certCount >= 1) {
+        score += 5;
       }
-    }
-
-    // Fallback: detect degree keywords in full text if score is still 0
-    if (score === 0) {
-      const lower = resumeText.toLowerCase();
-      if (lower.includes('phd') || lower.includes('doctorate')) score = 70;
-      else if (lower.includes('master') || lower.includes('msc') || lower.includes('mba')) score = 56;
-      else if (lower.includes('bachelor') || lower.includes('b.tech') || lower.includes('btech') || lower.includes('b.e') || lower.includes('b.sc')) score = 42;
-      else if (lower.includes('diploma') || lower.includes('associate')) score = 28;
-      else if (lower.includes('college') || lower.includes('university') || lower.includes('institute')) score = 20;
     }
 
     return Math.round(Math.min(100, score));

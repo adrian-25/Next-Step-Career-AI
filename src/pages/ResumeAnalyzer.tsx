@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { MLAnalysisService, MLAnalysisResult } from '@/services/mlAnalysis.service';
+import { ResumeIntelligenceService } from '@/services/resumeIntelligence.service';
 import { downloadAnalysisReport } from '@/services/resumeExport.service';
 import { explainPrediction, ExplainabilityResult } from '@/ai/explainability/explainableAI';
 import { getDataset, JobRoleEntry } from '@/ai/ml/rolePredictor';
@@ -696,41 +697,42 @@ function UploadWidget({ targetRole, onComplete }: {
 
       if (!fileResult.success) throw new Error(fileResult.error ?? 'Parsing failed');
 
-      // Use full resume text — NOT the 500-char preview
-      const resumeText = fileResult.comprehensiveAnalysis?.parsedResume?.text
-        ?? fileResult.extractedText?.replace(/\.\.\.$/, '') // strip preview ellipsis
-        ?? '';
-
-      // Run ML pipeline
-      setStage('predicting'); setProgress(75);
-      const mlResult = await MLAnalysisService.analyze({
-        resumeText,
-        fileName:   file.name,
-        targetRole,
-        userId:     'demo-user',
-      });
-
+      const ca = fileResult.comprehensiveAnalysis;
       setStage('complete'); setProgress(100);
 
       // Persist for other pages
       try {
-        const ca = fileResult.comprehensiveAnalysis;
         if (ca) {
           // Clear old cached data before storing new analysis
           localStorage.removeItem('lastAnalysisResult');
-          localStorage.setItem('lastAnalysisResult', JSON.stringify({
-            ...ca,
-            mlResult,
-          }));
-          localStorage.setItem('lastDetectedRole', mlResult.predictedRole);
+          localStorage.setItem('lastAnalysisResult', JSON.stringify(ca));
+          localStorage.setItem('lastDetectedRole', ca.parsedResume.targetRole);
           const history = JSON.parse(localStorage.getItem('analysisHistory') ?? '[]');
-          history.push({ score: mlResult.matchPercentage, date: new Date().toISOString() });
+          history.push({ score: ca.skillMatch.matchScore, date: new Date().toISOString() });
           localStorage.setItem('analysisHistory', JSON.stringify(history.slice(-10)));
         }
       } catch { /* ignore */ }
 
-      toast({ title: 'Analysis complete!', description: `${mlResult.matchPercentage}% match for ${targetRole.replace(/_/g, ' ')}` });
-      setTimeout(() => onComplete(mlResult), 600);
+      toast({ title: 'Analysis complete!', description: `${ca?.skillMatch.matchScore ?? 0}% match for ${targetRole.replace(/_/g, ' ')}` });
+      setTimeout(() => onComplete({
+        success: true,
+        predictedRole: ca?.parsedResume.targetRole ?? targetRole,
+        predictedDisplay: ca?.parsedResume.targetRole?.replace(/_/g, ' ') ?? targetRole,
+        mlConfidence: ca?.parsedResume.roleConfidence ?? 0,
+        probabilities: {},
+        extractedSkills: ca?.parsedResume.skills ?? [],
+        matchedSkills: ca?.skillMatch.matchedSkills.map(s => s.skill) ?? [],
+        missingSkills: ca?.skillMatch.missingSkills.map(s => s.skill) ?? [],
+        partialSkills: ca?.skillMatch.partialSkills ?? [],
+        matchPercentage: ca?.skillMatch.matchScore ?? 0,
+        mlScore: ca?.skillMatch.matchScore ?? 0,
+        fuzzyScore: 0,
+        weightedScore: ca?.skillMatch.matchScore ?? 0,
+        finalScore: ca?.skillMatch.matchScore ?? 0,
+        confidence: ca?.parsedResume.roleConfidence ?? 0,
+        recommendations: [],
+        jobCompatibility: [],
+      }), 600);
 
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Analysis failed';
