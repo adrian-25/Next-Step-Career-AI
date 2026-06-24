@@ -154,6 +154,18 @@ export function AssessmentsPage() {
     finally { setLoading(false); }
   };
 
+  const handleComplete = useCallback(() => {
+    if (!quizState || !selectedAssessment || quizState.completed) return;
+    const correct = quizState.answers.reduce((acc, ans, i) => {
+      const question = selectedAssessment.questions[i];
+      if (!question) return acc;
+      return acc + (ans === question.correct ? 1 : 0);
+    }, 0);
+    const score = Math.round((correct / selectedAssessment.questions.length) * 100);
+    setQuizState(prev => prev ? { ...prev, completed: true, score } : prev);
+    saveResult(selectedAssessment.id, score, score >= 70);
+  }, [quizState, selectedAssessment]);
+
   useEffect(() => {
     if (!quizState || quizState.completed || timeLeft <= 0) return;
     const timer = setInterval(() => {
@@ -198,18 +210,6 @@ export function AssessmentsPage() {
     if (!quizState || quizState.currentQuestion === 0) return;
     setQuizState(prev => prev ? { ...prev, currentQuestion: prev.currentQuestion - 1 } : prev);
   };
-
-  const handleComplete = useCallback(() => {
-    if (!quizState || !selectedAssessment || quizState.completed) return;
-    const correct = quizState.answers.reduce((acc, ans, i) => {
-      const question = selectedAssessment.questions[i];
-      if (!question) return acc;
-      return acc + (ans === question.correct ? 1 : 0);
-    }, 0);
-    const score = Math.round((correct / selectedAssessment.questions.length) * 100);
-    setQuizState(prev => prev ? { ...prev, completed: true, score } : prev);
-    saveResult(selectedAssessment.id, score, score >= 70);
-  }, [quizState, selectedAssessment]);
 
   const saveResult = async (assessmentId: string, score: number, passed: boolean) => {
     if (assessmentId.startsWith("demo-")) return;
