@@ -12,23 +12,16 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { getAnalyticsOverview, checkBackendHealth, downloadUserBackup } from '@/services/backendApi.service';
-import { downloadLastAnalysisReport } from '@/services/resumeExport.service';
+import { downloadLastAnalysisReport, exportLastAnalysisAsPDF } from '@/services/resumeExport.service';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { getStoredAnalysis, getAnalysisHistory, getDetectedRole } from '@/constants/storageKeys';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function getLastAnalysis() {
-  try { return JSON.parse(localStorage.getItem('lastAnalysisResult') ?? 'null'); }
-  catch { return null; }
-}
-function getHistory(): Array<{ score: number; date: string }> {
-  try { return JSON.parse(localStorage.getItem('analysisHistory') ?? '[]'); }
-  catch { return []; }
-}
-function getRole(): string {
-  try { return localStorage.getItem('lastDetectedRole') ?? ''; }
-  catch { return ''; }
-}
+function getLastAnalysis() { return getStoredAnalysis(); }
+function getHistory(): Array<{ score: number; date: string }> { return getAnalysisHistory(); }
+function getRole(): string { return getDetectedRole() ?? ''; }
 function roleLabel(r: string) {
   return r ? r.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Not set';
 }
@@ -71,11 +64,12 @@ const QUICK_ACTIONS = [
   { title: 'Architecture',     desc: 'System diagram & ADBMS checklist',   icon: GitBranch,     href: '/architecture',          color: '#64748B' },
 ];
 
-const PLATFORM_STATS = [
-  { label: 'Resumes Analyzed', value: '10,000+', icon: FileText,   color: '#2563EB' },
-  { label: 'Career Paths',     value: '500+',    icon: Route,      color: '#10B981' },
-  { label: 'Success Rate',     value: '94%',     icon: TrendingUp, color: '#F59E0B' },
-  { label: 'Happy Users',      value: '2,500+',  icon: Users,      color: '#8B5CF6' },
+// Filled by Supabase query; used as fallback while loading
+const PLATFORM_STATS_FALLBACK = [
+  { label: 'Resumes Analyzed', value: '—', icon: FileText,   color: '#2563EB' },
+  { label: 'Avg Match Score',  value: '—', icon: TrendingUp, color: '#10B981' },
+  { label: 'Analyses Run',     value: '—', icon: BarChart3,  color: '#F59E0B' },
+  { label: 'Active Users',     value: '—', icon: Users,      color: '#8B5CF6' },
 ];
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -151,12 +145,38 @@ export function Dashboard() {
     total_resumes: number; avg_match_score: number; total_skills: number; total_analyses: number;
   } | null>(null);
   const [backendOnline, setBackendOnline] = useState(false);
+  const [dbStats, setDbStats] = useState<typeof PLATFORM_STATS_FALLBACK | null>(null);
 
   useEffect(() => {
     checkBackendHealth().then(online => {
       setBackendOnline(online);
       if (online) getAnalyticsOverview().then(setLiveMetrics).catch(() => {});
     });
+  }, []);
+
+  useEffect(() => {
+    async function loadDbStats() {
+      try {
+        const [analysesRes, scoresRes, usersRes] = await Promise.all([
+          supabase.from('resume_analyses').select('id', { count: 'exact', head: true }),
+          supabase.from('resume_scores').select('total_score'),
+          supabase.from('user_profiles').select('user_id', { count: 'exact', head: true }),
+        ]);
+        const totalAnalyses = analysesRes.count ?? 0;
+        const totalUsers = usersRes.count ?? 0;
+        const scores = scoresRes.data ?? [];
+        const avgScore = scores.length > 0
+          ? Math.round(scores.reduce((s, r) => s + (r.total_score ?? 0), 0) / scores.length)
+          : 0;
+        setDbStats([
+          { label: 'Resumes Analyzed', value: totalAnalyses > 0 ? String(totalAnalyses) : '—', icon: FileText,   color: '#2563EB' },
+          { label: 'Avg Match Score',  value: avgScore > 0 ? `${avgScore}%` : '—',              icon: TrendingUp, color: '#10B981' },
+          { label: 'Analyses Run',     value: totalAnalyses > 0 ? String(totalAnalyses) : '—',  icon: BarChart3,  color: '#F59E0B' },
+          { label: 'Active Users',     value: totalUsers > 0 ? String(totalUsers) : '—',        icon: Users,      color: '#8B5CF6' },
+        ]);
+      } catch { /* silently fall back */ }
+    }
+    loadDbStats();
   }, []);
 
   const hasAnalysis   = analysis !== null;
@@ -372,7 +392,7 @@ export function Dashboard() {
               { label: 'Avg Match Score', value: `${liveMetrics.avg_match_score}%`,      icon: Target,     color: '#10B981' },
               { label: 'Skills Tracked',  value: liveMetrics.total_skills,               icon: TrendingUp, color: '#F59E0B' },
               { label: 'Analyses Run',    value: liveMetrics.total_analyses,             icon: Users,      color: '#8B5CF6' },
-            ] : PLATFORM_STATS).map(({ label, value, icon: Icon, color }, i) => (
+            ] : (dbStats ?? PLATFORM_STATS_FALLBACK)).map(({ label, value, icon: Icon, color }, i) => (
               <motion.div
                 key={label}
                 initial={{ opacity: 0, y: 8 }}
@@ -410,7 +430,14 @@ export function Dashboard() {
             onClick={() => downloadLastAnalysisReport()}
             className="text-xs gap-1.5"
           >
-            <Download className="h-3.5 w-3.5" aria-hidden="true" /> Analysis Report
+            <Download className="h-3.5 w-3.5" aria-hidden="true" /> HTML Report
+          </Button>
+          <Button
+            variant="outline" size="sm"
+            onClick={() => exportLastAnalysisAsPDF()}
+            className="text-xs gap-1.5"
+          >
+            <Download className="h-3.5 w-3.5" aria-hidden="true" /> PDF Export
           </Button>
           <Button
             variant="outline" size="sm"

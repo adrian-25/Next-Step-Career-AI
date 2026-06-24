@@ -1,4 +1,5 @@
 import mammoth from 'mammoth';
+import { supabase } from '../integrations/supabase/client';
 import { EnhancedResumeAnalysisService } from './enhancedResumeAnalysisService';
 import { PlacementPredictionService } from '../services/placementPrediction.service';
 import { ResumeAnalysisService } from '../services/resumeAnalysis.service';
@@ -38,8 +39,9 @@ export class FileProcessingService {
     onProgress?: (step: number, message: string, progress: number) => void
   ): Promise<FileProcessingResult> {
     try {
-      // DEMO MODE: No authentication required
-      const userId = 'demo-user';
+      // Get real user ID from Supabase auth
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || 'anonymous';
 
       // NEW PIPELINE: Use AI Resume Intelligence Service
       if (useNewPipeline) {
@@ -375,7 +377,7 @@ export class FileProcessingService {
 
       const analysis = await EnhancedResumeAnalysisService.analyzeResume({
         resume_text: text,
-        user_id: 'demo-user',
+        user_id: userId,
         target_role: targetRole
       });
 

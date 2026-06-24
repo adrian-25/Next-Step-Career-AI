@@ -10,34 +10,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
-  Award, CheckCircle2, XCircle, AlertCircle, ArrowRight,
+  Award, CheckCircle2, AlertCircle, ArrowRight,
   FileText, Briefcase, GraduationCap, Code2, Lightbulb,
   TrendingUp, Star, Zap, RotateCcw, Download,
 } from 'lucide-react';
-import { downloadLastAnalysisReport } from '@/services/resumeExport.service';
+import { downloadLastAnalysisReport, exportLastAnalysisAsPDF } from '@/services/resumeExport.service';
 import { getTextShadow } from '@/utils/colorUtils';
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function getStoredAnalysis() {
-  try {
-    const raw = localStorage.getItem('lastAnalysisResult');
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
-}
-
-function getMLResult() {
-  try {
-    const raw = localStorage.getItem('lastAnalysisResult');
-    if (!raw) return null;
-    return JSON.parse(raw)?.mlResult ?? null;
-  } catch { return null; }
-}
-
-function getRole(): string {
-  try { return localStorage.getItem('lastDetectedRole') ?? 'software_developer'; }
-  catch { return 'software_developer'; }
-}
+import { getStoredAnalysis, getDetectedRole } from '@/constants/storageKeys';
 
 function scoreColor(s: number): string {
   if (s >= 80) return '#22c55e';
@@ -147,7 +126,7 @@ function ComponentCard({
         />
       </div>
       <p className="text-xs mt-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
-        Contributes {contribution} pts
+        {contribution} / 100 total pts
       </p>
     </motion.div>
   );
@@ -184,55 +163,35 @@ function RecommendationCard({ rec, index }: { rec: string; index: number }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function ResumeScorePage() {
-  const navigate  = useNavigate();
-  const analysis  = useMemo(getStoredAnalysis, []);
-  const mlResult  = useMemo(getMLResult, []);
-  const role      = useMemo(getRole, []);
+  const navigate = useNavigate();
+  const analysis = useMemo(getStoredAnalysis, []);
+  const role     = useMemo(() => getDetectedRole() ?? 'software_developer', []);
 
-  const hasData = analysis !== null || mlResult !== null;
+  const hasData = analysis !== null;
 
-  // ── DEBUG: log raw stored data to console ─────────────────────────────────
-  if (process.env.NODE_ENV !== 'production') {
-    console.group('[ResumeScorePage] Raw localStorage data');
-    console.log('analysis:', analysis);
-    console.log('mlResult:', mlResult);
-    console.log('resumeScore:', analysis?.resumeScore);
-    console.log('componentScores:', analysis?.resumeScore?.componentScores);
-    console.log('parsedResume.sections:', analysis?.parsedResume?.sections);
-    console.groupEnd();
-  }
+  // Single read path — validated by Zod in getStoredAnalysis
+  const rs = analysis?.resumeScore;
+  const cs = rs?.componentScores;
+  const bd = rs?.breakdown;
 
-  // Extract scores
-  let totalScore: number = analysis?.resumeScore?.totalScore ?? 0;
-  const cs = analysis?.resumeScore?.componentScores ?? {};
-  const bd = analysis?.resumeScore?.breakdown ?? {};
-  const recs: string[] = analysis?.resumeScore?.recommendations ?? [];
-  const qualityFlag: string = analysis?.resumeScore?.qualityFlag ?? (totalScore >= 80 ? 'excellent' : totalScore >= 60 ? 'competitive' : 'needs_improvement');
+  const totalScore      = rs?.totalScore       ?? 0;
+  const skillsScore     = cs?.skillsScore      ?? 0;
+  const projectsScore   = cs?.projectsScore    ?? 0;
+  const experienceScore = cs?.experienceScore  ?? 0;
+  const educationScore  = cs?.educationScore   ?? 0;
 
-  const skillsScore      = cs.skillsScore      ?? mlResult?.mlScore      ?? 0;
-  const projectsScore    = cs.projectsScore    ?? 0;
-  const experienceScore  = cs.experienceScore  ?? 0;
-  const educationScore   = cs.educationScore   ?? 0;
+  // Weighted contributions — these sum to totalScore
+  const skillsContrib     = bd?.skillsContribution     ?? Math.round(skillsScore     * 0.40);
+  const projectsContrib   = bd?.projectsContribution   ?? Math.round(projectsScore   * 0.25);
+  const experienceContrib = bd?.experienceContribution ?? Math.round(experienceScore * 0.20);
+  const educationContrib  = bd?.educationContribution  ?? Math.round(educationScore  * 0.15);
 
-  // Fallback: Calculate total score from component scores if totalScore is 0
-  if (totalScore === 0 && (skillsScore > 0 || projectsScore > 0 || experienceScore > 0 || educationScore > 0)) {
-    totalScore = Math.round(
-      (skillsScore * 0.40) +
-      (projectsScore * 0.25) +
-      (experienceScore * 0.20) +
-      (educationScore * 0.15)
-    );
-    console.log('[ResumeScorePage] Calculated total score from components:', totalScore);
-  }
+  const recs: string[]     = rs?.recommendations ?? [];
+  const qualityFlag        = rs?.qualityFlag ?? (totalScore >= 80 ? 'excellent' : totalScore >= 60 ? 'competitive' : 'needs_improvement');
+  const factors            = bd?.factors ?? {};
 
-  const skillsContrib     = bd.skillsContribution     ?? Math.round(skillsScore * 0.40);
-  const projectsContrib   = bd.projectsContribution   ?? Math.round(projectsScore * 0.25);
-  const experienceContrib = bd.experienceContribution ?? Math.round(experienceScore * 0.20);
-  const educationContrib  = bd.educationContribution  ?? Math.round(educationScore * 0.15);
-
-  const factors = bd.factors ?? {};
-
-  // ML scores from mlResult
+  // ML scores
+  const mlResult   = analysis?.mlResult;
   const mlScore    = mlResult?.mlScore    ?? 0;
   const fuzzyScore = mlResult?.fuzzyScore ?? 0;
   const finalScore = mlResult?.finalScore ?? 0;
@@ -298,10 +257,17 @@ export function ResumeScorePage() {
         <div className="flex gap-2">
           <Button
             variant="outline" size="sm"
+            onClick={() => { const ok = exportLastAnalysisAsPDF(); if (!ok) navigate('/resume'); }}
+            className="gap-1.5 text-xs"
+          >
+            <Download className="h-3.5 w-3.5" aria-hidden="true" /> Print PDF
+          </Button>
+          <Button
+            variant="outline" size="sm"
             onClick={() => { const ok = downloadLastAnalysisReport(); if (!ok) navigate('/resume'); }}
             className="gap-1.5 text-xs"
           >
-            <Download className="h-3.5 w-3.5" aria-hidden="true" /> Export Report
+            <Download className="h-3.5 w-3.5" aria-hidden="true" /> Export HTML
           </Button>
           <Button variant="outline" size="sm" onClick={() => navigate('/resume')} className="gap-1.5 text-xs">
             <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" /> Re-analyze
@@ -516,52 +482,6 @@ export function ResumeScorePage() {
         </Button>
       </motion.div>
 
-      {/* ── DEBUG PANEL (remove before production) ── */}
-      {process.env.NODE_ENV !== 'production' && (
-        <details className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-xs">
-          <summary className="cursor-pointer font-semibold text-amber-400 mb-2">
-            🐛 Debug: Raw Parsed Data (dev only — remove before deploy)
-          </summary>
-          <div className="space-y-2 mt-2">
-            <div>
-              <p className="font-semibold text-amber-300 mb-1">Component Scores:</p>
-              <pre className="text-white/70 overflow-auto max-h-32">
-                {JSON.stringify(analysis?.resumeScore?.componentScores ?? 'null', null, 2)}
-              </pre>
-            </div>
-            <div>
-              <p className="font-semibold text-amber-300 mb-1">Detected Sections:</p>
-              <pre className="text-white/70 overflow-auto max-h-32">
-                {JSON.stringify(
-                  Object.fromEntries(
-                    Object.entries(analysis?.parsedResume?.sections ?? {}).map(([k, v]: [string, any]) => [
-                      k, { contentLength: v?.content?.length ?? 0, qualityScore: v?.qualityScore ?? 0 }
-                    ])
-                  ),
-                  null, 2
-                )}
-              </pre>
-            </div>
-            <div>
-              <p className="font-semibold text-amber-300 mb-1">Skill Match:</p>
-              <pre className="text-white/70 overflow-auto max-h-32">
-                {JSON.stringify({
-                  matchScore: analysis?.skillMatch?.matchScore,
-                  weightedMatchScore: analysis?.skillMatch?.weightedMatchScore,
-                  matchedCount: analysis?.skillMatch?.matchedSkills?.length,
-                  missingCount: analysis?.skillMatch?.missingSkills?.length,
-                }, null, 2)}
-              </pre>
-            </div>
-            <div>
-              <p className="font-semibold text-amber-300 mb-1">ML Result:</p>
-              <pre className="text-white/70 overflow-auto max-h-32">
-                {JSON.stringify(mlResult, null, 2)}
-              </pre>
-            </div>
-          </div>
-        </details>
-      )}
 
     </div>
   );

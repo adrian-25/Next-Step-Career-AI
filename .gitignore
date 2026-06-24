@@ -28,3 +28,14 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Claude / MCP (contain secrets and local config)
+.mcp.json
+.claude/
+.agents/
+.kiro/
+claude-code-mcp.js
+project-analyzer.js
+skills-lock.json
+CLAUDE_PROJECT_MEMORY.md
+supabase/.temp/

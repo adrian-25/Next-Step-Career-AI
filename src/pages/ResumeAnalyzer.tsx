@@ -1,4 +1,7 @@
 import { useState, useCallback } from 'react';
+import {
+  setStoredAnalysis, setDetectedRole, getAnalysisHistory, setAnalysisHistory,
+} from '@/constants/storageKeys';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -703,18 +706,11 @@ function UploadWidget({ targetRole, onComplete }: {
       // Persist for other pages
       try {
         if (ca) {
-          // Clear old cached data before storing new analysis
-          localStorage.removeItem('lastAnalysisResult');
-          localStorage.setItem('lastAnalysisResult', JSON.stringify(ca));
-          localStorage.setItem('lastDetectedRole', ca.parsedResume.targetRole);
-          const history = JSON.parse(localStorage.getItem('analysisHistory') ?? '[]');
+          setStoredAnalysis(ca as any);
+          setDetectedRole(ca.parsedResume.targetRole);
+          const history = getAnalysisHistory();
           history.push({ score: ca.skillMatch.matchScore, date: new Date().toISOString() });
-          localStorage.setItem('analysisHistory', JSON.stringify(history.slice(-10)));
-          
-          // DEBUG: Verify localStorage save
-          console.log('[ResumeAnalyzer] Saved to localStorage');
-          console.log('[ResumeAnalyzer] lastAnalysisResult:', localStorage.getItem('lastAnalysisResult'));
-          console.log('[ResumeAnalyzer] resumeScore.totalScore:', ca.resumeScore?.totalScore);
+          setAnalysisHistory(history.slice(-10));
         }
       } catch (error) {
         console.error('[ResumeAnalyzer] Error saving to localStorage:', error);

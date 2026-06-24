@@ -54,94 +54,34 @@ export class AuthService {
    * Sign up a new user
    */
   static async signUp(data: SignUpData): Promise<AuthResponse> {
-    console.log('[AuthService] signUp called with:', { email: data.email, full_name: data.full_name });
-    
     try {
-      // Validate input
       if (!data.email || !data.password || !data.full_name) {
-        console.error('[AuthService] Missing required fields');
-        return {
-          user: null,
-          session: null,
-          error: 'Email, password, and full name are required'
-        };
+        return { user: null, session: null, error: 'Email, password, and full name are required' };
       }
 
-      console.log('[AuthService] Calling Supabase signUp...');
-      console.log('[AuthService] Supabase URL:', supabaseUrl);
-      
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
-        options: {
-          data: {
-            full_name: data.full_name
-          }
-        }
+        options: { data: { full_name: data.full_name } }
       });
 
-      console.log('[AuthService] Supabase response:', { 
-        user: authData?.user?.id, 
-        session: !!authData?.session,
-        error: error?.message,
-        errorDetails: error 
-      });
-
-      if (error) {
-        console.error('[AuthService] Sign up error:', error);
-        console.error('[AuthService] Error name:', error.name);
-        console.error('[AuthService] Error status:', error.status);
-        return { user: null, session: null, error: error.message };
-      }
+      if (error) return { user: null, session: null, error: error.message };
 
       if (!authData.user) {
-        console.error('[AuthService] No user returned from Supabase');
-        return {
-          user: null,
-          session: null,
-          error: 'Failed to create user account'
-        };
+        return { user: null, session: null, error: 'Failed to create user account' };
       }
 
-      // Log authentication event (don't fail signup if this fails)
       try {
-        await AuditLogService.logAuthEvent(
-          'LOGIN',
-          authData.user.id,
-          undefined,
-          undefined,
-          { action: 'sign_up', email: data.email }
-        );
-      } catch (logError) {
-        console.error('[AuthService] Failed to log auth event:', logError);
-      }
+        await AuditLogService.logAuthEvent('LOGIN', authData.user.id, undefined, undefined, { action: 'sign_up', email: data.email });
+      } catch { /* audit failure doesn't block signup */ }
 
-      console.log('[AuthService] Sign up successful');
-      return {
-        user: authData.user as User,
-        session: authData.session,
-        error: null
-      };
+      return { user: authData.user as User, session: authData.session, error: null };
 
     } catch (error) {
-      console.error('[AuthService] Sign up service error:', error);
-      console.error('[AuthService] Error type:', typeof error);
-      console.error('[AuthService] Error details:', JSON.stringify(error, null, 2));
-      
-      // Check if it's a network error
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        return {
-          user: null,
-          session: null,
-          error: 'Network error: Unable to connect to Supabase. Please check your internet connection and try again.'
-        };
+        return { user: null, session: null, error: 'Network error: Unable to connect. Check your internet connection.' };
       }
-      
-      return {
-        user: null,
-        session: null,
-        error: error instanceof Error ? error.message : 'Sign up failed. Please try again.'
-      };
+      return { user: null, session: null, error: error instanceof Error ? error.message : 'Sign up failed. Please try again.' };
     }
   }
 
@@ -264,26 +204,30 @@ export class AuthService {
    */
   static async createUserProfile(userId: string, profileData: Partial<UserProfile>): Promise<UserProfile | null> {
     try {
-      // For now, return a mock profile since we'll implement full profiles later
-      console.log('Creating user profile for:', userId, profileData);
-      
-      return {
-        id: userId,
-        user_id: userId,
-        full_name: profileData.full_name || '',
-        job_title: profileData.job_title,
-        company: profileData.company,
-        experience_level: profileData.experience_level || 'entry',
-        target_roles: profileData.target_roles || [],
-        skills: profileData.skills || [],
-        bio: profileData.bio,
-        linkedin_url: profileData.linkedin_url,
-        github_url: profileData.github_url,
-        portfolio_url: profileData.portfolio_url,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      } as UserProfile;
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .upsert({
+          user_id: userId,
+          full_name: profileData.full_name || '',
+          job_title: profileData.job_title,
+          company: profileData.company,
+          experience_level: profileData.experience_level || 'entry',
+          target_roles: profileData.target_roles || [],
+          skills: profileData.skills || [],
+          bio: profileData.bio,
+          linkedin_url: profileData.linkedin_url,
+          github_url: profileData.github_url,
+          portfolio_url: profileData.portfolio_url
+        })
+        .select()
+        .single();
 
+      if (error) {
+        console.error('Error creating user profile:', error);
+        return null;
+      }
+
+      return data as UserProfile;
     } catch (error) {
       console.error('Create user profile error:', error);
       return null;
@@ -295,26 +239,21 @@ export class AuthService {
    */
   static async getUserProfile(userId: string): Promise<UserProfile | null> {
     try {
-      // For now, return a mock profile since we'll implement full profiles later
-      console.log('Getting user profile for:', userId);
-      
-      return {
-        id: userId,
-        user_id: userId,
-        full_name: 'User',
-        job_title: 'Professional',
-        company: undefined,
-        experience_level: 'entry',
-        target_roles: [],
-        skills: [],
-        bio: undefined,
-        linkedin_url: undefined,
-        github_url: undefined,
-        portfolio_url: undefined,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      } as UserProfile;
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
 
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null;
+        }
+        console.error('Get user profile error:', error);
+        return null;
+      }
+
+      return data as UserProfile;
     } catch (error) {
       console.error('Get user profile error:', error);
       return null;
@@ -326,36 +265,28 @@ export class AuthService {
    */
   static async updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile | null> {
     try {
-      console.log('Updating user profile for:', userId, updates);
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .update(updates)
+        .eq('user_id', userId)
+        .select()
+        .single();
 
-      // Log profile update
+      if (error) {
+        console.error('Update user profile error:', error);
+        return null;
+      }
+
       await AuditLogService.logAuditEvent(
         'PROFILE_UPDATED',
-        'profiles',
+        'user_profiles',
         userId,
         userId,
         undefined,
         updates
       );
 
-      // Return updated mock profile
-      return {
-        id: userId,
-        user_id: userId,
-        full_name: updates.full_name || 'User',
-        job_title: updates.job_title || 'Professional',
-        company: updates.company,
-        experience_level: updates.experience_level || 'entry',
-        target_roles: updates.target_roles || [],
-        skills: updates.skills || [],
-        bio: updates.bio,
-        linkedin_url: updates.linkedin_url,
-        github_url: updates.github_url,
-        portfolio_url: updates.portfolio_url,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      } as UserProfile;
-
+      return data as UserProfile;
     } catch (error) {
       console.error('Update user profile error:', error);
       return null;
@@ -449,14 +380,37 @@ export class AuthService {
     lastActivity: string;
   }> {
     try {
-      // This would typically make parallel calls to get user-specific stats
-      // For now, return mock data structure
+      const [analysesRes, scoresRes, profileRes] = await Promise.all([
+        supabase
+          .from('resume_analyses')
+          .select('id, created_at', { count: 'exact' })
+          .eq('user_id', userId),
+        supabase
+          .from('resume_scores')
+          .select('total_score, created_at', { count: 'exact' })
+          .eq('user_id', userId),
+        supabase
+          .from('user_profiles')
+          .select('created_at')
+          .eq('user_id', userId)
+          .single()
+      ]);
+
+      const totalAnalyses = analysesRes.count || 0;
+      const averageScore = scoresRes.data && scoresRes.data.length > 0
+        ? Math.round(scoresRes.data.reduce((sum, row) => sum + (row.total_score || 0), 0) / scoresRes.data.length)
+        : 0;
+
+      const lastAnalysis = analysesRes.data && analysesRes.data.length > 0
+        ? analysesRes.data[analysesRes.data.length - 1].created_at
+        : new Date().toISOString();
+
       return {
-        totalAnalyses: 0,
-        totalPredictions: 0,
-        averageScore: 0,
-        joinedDate: new Date().toISOString(),
-        lastActivity: new Date().toISOString()
+        totalAnalyses,
+        totalPredictions: totalAnalyses,
+        averageScore,
+        joinedDate: profileRes.data?.created_at || new Date().toISOString(),
+        lastActivity: lastAnalysis
       };
     } catch (error) {
       console.error('Get user stats error:', error);

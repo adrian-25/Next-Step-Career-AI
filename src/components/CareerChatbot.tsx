@@ -4,19 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  Send, 
-  Bot, 
-  User, 
-  Lightbulb, 
-  Target, 
-  BookOpen, 
+import {
+  Send,
+  Bot,
+  User,
+  Lightbulb,
+  Target,
+  BookOpen,
   TrendingUp,
   CheckCircle,
   ArrowRight,
   Star
 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { careerChat, ChatMessage as ServiceChatMessage, CareerChatContext } from "@/services/edgeFunctionService";
 
 interface Message {
   id: string;
@@ -804,13 +805,32 @@ What specific career question can I help you with today?`;
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const question = inputValue;
     setInputValue("");
     setIsTyping(true);
 
-    // Simulate AI thinking time
-    setTimeout(() => {
-      const response = generateCareerResponse(userMessage.content);
-      
+    try {
+      const history: ServiceChatMessage[] = messages
+        .filter(m => m.id !== '1')
+        .map(m => ({ role: m.type === 'user' ? 'user' as const : 'assistant' as const, content: m.content }));
+
+      const context: CareerChatContext = {};
+      if (userSkills.length) context.skills = userSkills;
+      if (targetRole) context.targetRole = targetRole;
+      if (experienceYears) context.experienceYears = experienceYears;
+
+      const reply = await careerChat(question, history, context);
+
+      const botMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'bot',
+        content: reply,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, botMessage]);
+    } catch (err) {
+      console.warn('Career chat LLM unavailable, using fallback:', err);
+      const response = generateCareerResponse(question);
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'bot',
@@ -818,10 +838,10 @@ What specific career question can I help you with today?`;
         timestamp: new Date(),
         skillData: response.skillData
       };
-
       setMessages(prev => [...prev, botMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1000);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

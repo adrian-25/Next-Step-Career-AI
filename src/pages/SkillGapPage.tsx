@@ -1,7 +1,5 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -12,7 +10,7 @@ import {
 import { getDataset } from '@/ai/ml/rolePredictor';
 import { getResourcesForSkill } from '@/data/learningResources';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────────────────────
 
 interface GapSkill {
   skill: string;
@@ -23,7 +21,39 @@ interface GapSkill {
   paidUrl?: string;
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Config ─────────────────────────────────────────────────────────────────────
+
+const DIFF_CONFIG: Record<string, { bg: string; border: string; text: string }> = {
+  beginner:     { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400' },
+  intermediate: { bg: 'bg-amber-500/10',   border: 'border-amber-500/30',   text: 'text-amber-400' },
+  advanced:     { bg: 'bg-rose-500/10',    border: 'border-rose-500/30',    text: 'text-rose-400' },
+};
+
+const DEMAND_CONFIG: Record<string, { bg: string; text: string }> = {
+  high:   { bg: 'bg-rose-500/10',   text: 'text-rose-400' },
+  medium: { bg: 'bg-amber-500/10',  text: 'text-amber-400' },
+  low:    { bg: 'bg-white/[0.06]',  text: 'text-white/40' },
+};
+
+// ── Animations ─────────────────────────────────────────────────────────────────
+
+const pageVariants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
+};
+const itemVariants = {
+  hidden: { opacity: 0, y: 14 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } },
+};
+const cardVariants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: (i: number) => ({
+    opacity: 1, y: 0,
+    transition: { delay: i * 0.04, duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] },
+  }),
+};
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
 
 const ROLES = getDataset().map(e => ({ key: e.role, label: e.display }));
 
@@ -46,18 +76,6 @@ function getLastAnalysisSkills(): string[] {
 function getLastRole(): string {
   try { return localStorage.getItem('lastDetectedRole') ?? ''; }
   catch { return ''; }
-}
-
-function difficultyColor(d: GapSkill['difficulty']) {
-  if (d === 'beginner')     return 'bg-green-100 text-green-700 border-green-200';
-  if (d === 'intermediate') return 'bg-amber-100 text-amber-700 border-amber-200';
-  return 'bg-red-100 text-red-700 border-red-200';
-}
-
-function demandColor(d: GapSkill['demand']) {
-  if (d === 'high')   return 'bg-rose-100 text-rose-700';
-  if (d === 'medium') return 'bg-amber-100 text-amber-700';
-  return 'bg-slate-100 text-slate-600';
 }
 
 function estimateDifficulty(skill: string): GapSkill['difficulty'] {
@@ -87,58 +105,49 @@ function buildGapSkills(missing: string[]): GapSkill[] {
   return missing.map(skill => {
     const difficulty = estimateDifficulty(skill);
     const res = getResourcesForSkill(skill);
-    return {
-      skill,
-      difficulty,
-      estimatedHours: estimateHours(difficulty),
-      demand: estimateDemand(skill),
-      freeUrl: res.free?.url,
-      paidUrl: res.paid?.url,
-    };
+    return { skill, difficulty, estimatedHours: estimateHours(difficulty), demand: estimateDemand(skill), freeUrl: res.free?.url, paidUrl: res.paid?.url };
   });
 }
 
-// ── Skill card ────────────────────────────────────────────────────────────────
+// ── Skill card ─────────────────────────────────────────────────────────────────
 
 function GapSkillCard({ item, index, expanded, onToggle }: {
-  item: GapSkill;
-  index: number;
-  expanded: boolean;
-  onToggle: () => void;
+  item: GapSkill; index: number; expanded: boolean; onToggle: () => void;
 }) {
+  const diff   = DIFF_CONFIG[item.difficulty]   ?? DIFF_CONFIG.intermediate;
+  const demand = DEMAND_CONFIG[item.demand]       ?? DEMAND_CONFIG.low;
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04 }}
-      className="border rounded-xl overflow-hidden"
+      custom={index}
+      variants={cardVariants}
+      className="rounded-xl border border-white/[0.07] overflow-hidden"
+      style={{ background: 'rgba(255,255,255,0.02)' }}
     >
-      <button
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30 transition-colors"
+      <motion.button
+        className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-white/[0.03] transition-colors"
         onClick={onToggle}
+        whileTap={{ scale: 0.995 }}
       >
-        {/* Rank */}
-        <div className="w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0">
+        <div className="w-7 h-7 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-display text-xs font-bold flex items-center justify-center shrink-0">
           {index + 1}
         </div>
-
-        {/* Skill name */}
-        <span className="flex-1 font-medium text-sm capitalize">{item.skill}</span>
-
-        {/* Badges */}
+        <span className="flex-1 font-display text-sm font-semibold text-white capitalize">{item.skill}</span>
         <div className="flex items-center gap-1.5 shrink-0">
-          <Badge className={`text-xs border ${difficultyColor(item.difficulty)}`}>
+          <span className={`font-sans text-xs px-2 py-0.5 rounded-full border ${diff.bg} ${diff.border} ${diff.text}`}>
             {item.difficulty}
-          </Badge>
-          <Badge className={`text-xs ${demandColor(item.demand)}`}>
+          </span>
+          <span className={`font-sans text-xs px-2 py-0.5 rounded-full ${demand.bg} ${demand.text}`}>
             {item.demand} demand
-          </Badge>
-          <span className="text-xs text-muted-foreground flex items-center gap-0.5 ml-1">
+          </span>
+          <span className="font-sans text-xs text-white/30 flex items-center gap-1 ml-1">
             <Clock className="h-3 w-3" /> ~{item.estimatedHours}h
           </span>
-          {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground ml-1" /> : <ChevronDown className="h-4 w-4 text-muted-foreground ml-1" />}
+          <motion.div animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+            <ChevronDown className="h-4 w-4 text-white/25 ml-1" />
+          </motion.div>
         </div>
-      </button>
+      </motion.button>
 
       <AnimatePresence>
         {expanded && (
@@ -146,35 +155,44 @@ function GapSkillCard({ item, index, expanded, onToggle }: {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 pt-1 bg-muted/20 border-t space-y-3">
-              <p className="text-xs text-muted-foreground">
-                Estimated learning time: <strong>{item.estimatedHours} hours</strong> ({item.difficulty} level)
+            <div className="px-4 pb-4 pt-2 border-t border-white/[0.06] space-y-3">
+              <p className="font-sans text-xs text-white/40">
+                Estimated learning time: <span className="text-white/70 font-medium">{item.estimatedHours} hours</span>{' '}
+                ({item.difficulty} level)
               </p>
               <div className="flex gap-2 flex-wrap">
                 {item.freeUrl && (
                   <a href={item.freeUrl} target="_blank" rel="noopener noreferrer">
-                    <Button size="sm" variant="outline" className="h-7 text-xs gap-1 border-blue-300 text-blue-700 hover:bg-blue-50">
-                      <BookOpen className="h-3 w-3" /> Free Resource
-                    </Button>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button size="sm" variant="outline"
+                        className="font-sans h-7 text-xs gap-1 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 rounded-lg">
+                        <BookOpen className="h-3 w-3" /> Free Resource
+                      </Button>
+                    </motion.div>
                   </a>
                 )}
                 {item.paidUrl && (
                   <a href={item.paidUrl} target="_blank" rel="noopener noreferrer">
-                    <Button size="sm" variant="outline" className="h-7 text-xs gap-1 border-purple-300 text-purple-700 hover:bg-purple-50">
-                      <ExternalLink className="h-3 w-3" /> Premium Course
-                    </Button>
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button size="sm" variant="outline"
+                        className="font-sans h-7 text-xs gap-1 border-violet-500/30 text-violet-400 hover:bg-violet-500/10 rounded-lg">
+                        <ExternalLink className="h-3 w-3" /> Premium Course
+                      </Button>
+                    </motion.div>
                   </a>
                 )}
                 {!item.freeUrl && !item.paidUrl && (
-                  <a
-                    href={`https://www.google.com/search?q=learn+${encodeURIComponent(item.skill)}+tutorial`}
-                    target="_blank" rel="noopener noreferrer"
-                  >
-                    <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
-                      <ExternalLink className="h-3 w-3" /> Search Resources
-                    </Button>
+                  <a href={`https://www.google.com/search?q=learn+${encodeURIComponent(item.skill)}+tutorial`}
+                    target="_blank" rel="noopener noreferrer">
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Button size="sm" variant="outline"
+                        className="font-sans h-7 text-xs gap-1 border-white/[0.08] text-white/45 hover:text-white rounded-lg">
+                        <ExternalLink className="h-3 w-3" /> Search Resources
+                      </Button>
+                    </motion.div>
                   </a>
                 )}
               </div>
@@ -186,100 +204,94 @@ function GapSkillCard({ item, index, expanded, onToggle }: {
   );
 }
 
-// ── Timeline view ─────────────────────────────────────────────────────────────
+// ── Timeline ───────────────────────────────────────────────────────────────────
 
 function LearningTimeline({ gapSkills, currentRole, targetRole }: {
-  gapSkills: GapSkill[];
-  currentRole: string;
-  targetRole: string;
+  gapSkills: GapSkill[]; currentRole: string; targetRole: string;
 }) {
-  // Group by difficulty into phases
   const phase1 = gapSkills.filter(s => s.difficulty === 'beginner');
   const phase2 = gapSkills.filter(s => s.difficulty === 'intermediate');
   const phase3 = gapSkills.filter(s => s.difficulty === 'advanced');
 
   const phases = [
-    { label: 'Phase 1 — Foundation', skills: phase1, color: 'border-green-400 bg-green-50', badge: 'bg-green-100 text-green-700', weeks: '2–4 weeks' },
-    { label: 'Phase 2 — Core Skills', skills: phase2, color: 'border-blue-400 bg-blue-50', badge: 'bg-blue-100 text-blue-700', weeks: '4–8 weeks' },
-    { label: 'Phase 3 — Advanced', skills: phase3, color: 'border-purple-400 bg-purple-50', badge: 'bg-purple-100 text-purple-700', weeks: '8–16 weeks' },
+    { label: 'Phase 1 — Foundation', skills: phase1, leftColor: 'border-l-emerald-500', bg: 'bg-emerald-500/5 border-emerald-500/20', badge: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400', weeks: '2–4 weeks' },
+    { label: 'Phase 2 — Core Skills', skills: phase2, leftColor: 'border-l-indigo-500', bg: 'bg-indigo-500/5 border-indigo-500/20', badge: 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400', weeks: '4–8 weeks' },
+    { label: 'Phase 3 — Advanced',    skills: phase3, leftColor: 'border-l-violet-500', bg: 'bg-violet-500/5 border-violet-500/20', badge: 'bg-violet-500/10 border-violet-500/30 text-violet-400', weeks: '8–16 weeks' },
   ].filter(p => p.skills.length > 0);
 
   const totalHours = gapSkills.reduce((s, g) => s + g.estimatedHours, 0);
-  const totalWeeks = Math.ceil(totalHours / 10); // ~10h/week
+  const totalWeeks = Math.ceil(totalHours / 10);
 
   return (
     <div className="space-y-4">
-      {/* Timeline header */}
-      <div className="flex items-center gap-3 flex-wrap text-sm">
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-full font-medium">
-          <Layers className="h-4 w-4 text-slate-600" />
-          {currentRole || 'Current Role'}
+      <div className="flex items-center gap-3 flex-wrap font-sans text-sm">
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-white/[0.05] border border-white/[0.08] rounded-full text-white/55">
+          <Layers className="h-4 w-4" /> {currentRole || 'Current Role'}
         </div>
-        <ArrowRight className="h-4 w-4 text-muted-foreground" />
-        <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full font-medium text-primary">
-          <Target className="h-4 w-4" />
-          {targetRole}
+        <ArrowRight className="h-4 w-4 text-white/25" />
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-500/10 border border-indigo-500/25 rounded-full text-indigo-400">
+          <Target className="h-4 w-4" /> {targetRole}
         </div>
-        <Badge className="bg-amber-100 text-amber-700 ml-auto">
-          <Clock className="h-3 w-3 mr-1" /> ~{totalWeeks} weeks total
-        </Badge>
+        <span className="ml-auto font-sans text-xs px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center gap-1">
+          <Clock className="h-3 w-3" /> ~{totalWeeks} weeks total
+        </span>
       </div>
 
-      {/* Phases */}
       {phases.map((phase, i) => (
         <motion.div
           key={phase.label}
           initial={{ opacity: 0, x: -12 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: i * 0.1 }}
-          className={`border-l-4 pl-4 py-3 rounded-r-xl ${phase.color}`}
+          transition={{ delay: i * 0.1, duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className={`border-l-4 pl-4 py-3 rounded-r-xl border ${phase.leftColor} ${phase.bg}`}
         >
           <div className="flex items-center justify-between mb-2">
-            <p className="font-semibold text-sm">{phase.label}</p>
+            <p className="font-display text-sm font-semibold text-white">{phase.label}</p>
             <div className="flex items-center gap-2">
-              <Badge className={`text-xs ${phase.badge}`}>{phase.weeks}</Badge>
-              <span className="text-xs text-muted-foreground">{phase.skills.length} skills</span>
+              <span className={`font-sans text-xs px-2 py-0.5 rounded-full border ${phase.badge}`}>{phase.weeks}</span>
+              <span className="font-sans text-xs text-white/35">{phase.skills.length} skills</span>
             </div>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {phase.skills.map(s => (
-              <Badge key={s.skill} variant="outline" className="text-xs capitalize bg-white">
+              <span key={s.skill}
+                className="font-sans text-xs px-2 py-0.5 rounded-full border border-white/[0.08] bg-white/[0.04] text-white/55 capitalize">
                 {s.skill}
-              </Badge>
+              </span>
             ))}
           </div>
         </motion.div>
       ))}
 
-      {/* Destination */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: phases.length * 0.1 + 0.1 }}
-        className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl"
+        className="flex items-center gap-3 p-3.5 bg-emerald-500/5 border border-emerald-500/20 rounded-xl"
       >
-        <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+        <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
         <div>
-          <p className="text-sm font-semibold text-emerald-700">Ready for {targetRole}</p>
-          <p className="text-xs text-emerald-600">After completing all {gapSkills.length} gap skills (~{totalWeeks} weeks)</p>
+          <p className="font-display text-sm font-semibold text-emerald-400">Ready for {targetRole}</p>
+          <p className="font-sans text-xs text-white/35 mt-0.5">
+            After completing all {gapSkills.length} gap skills (~{totalWeeks} weeks)
+          </p>
         </div>
       </motion.div>
     </div>
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
+// ── Main page ──────────────────────────────────────────────────────────────────
 
 export function SkillGapPage() {
-  const lastRole    = useMemo(getLastRole, []);
-  const lastSkills  = useMemo(getLastAnalysisSkills, []);
+  const lastRole   = useMemo(getLastRole, []);
+  const lastSkills = useMemo(getLastAnalysisSkills, []);
 
   const [currentRole, setCurrentRole] = useState(lastRole || '');
   const [targetRole, setTargetRole]   = useState('');
   const [expanded, setExpanded]       = useState<string | null>(null);
   const [view, setView]               = useState<'list' | 'timeline'>('list');
 
-  // Compute gap
   const currentSkills = useMemo(() => {
     if (lastSkills.length > 0 && currentRole === lastRole) return lastSkills;
     return getSkillsForRole(currentRole);
@@ -301,9 +313,7 @@ export function SkillGapPage() {
   }, [currentSkills, targetSkills, targetRole]);
 
   const readiness = targetSkills.length > 0
-    ? Math.round(matchedCount / targetSkills.length * 100)
-    : 0;
-
+    ? Math.round(matchedCount / targetSkills.length * 100) : 0;
   const totalHours = gapSkills.reduce((s, g) => s + g.estimatedHours, 0);
   const highDemand = gapSkills.filter(g => g.demand === 'high').length;
 
@@ -311,227 +321,250 @@ export function SkillGapPage() {
   const targetLabel  = ROLES.find(r => r.key === targetRole)?.label ?? targetRole;
 
   return (
-    <div className="page-content max-w-5xl space-y-6">
+    <motion.div
+      className="page-content max-w-5xl space-y-5"
+      variants={pageVariants}
+      initial="hidden"
+      animate="visible"
+    >
       {/* Header */}
-      <div className="flex items-center gap-3 mb-2">
-        <div className="w-9 h-9 rounded-lg flex items-center justify-center"
-          style={{ background: 'linear-gradient(135deg, #8B5CF6, #6366F1)' }}>
-          <Zap className="h-4.5 w-4.5 text-white" aria-hidden="true" />
+      <motion.div variants={itemVariants} className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center">
+          <Zap className="h-4 w-4 text-indigo-400" />
         </div>
         <div>
-          <h1 className="font-display text-xl font-bold">Skill Gap Analyzer</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="font-display text-xl font-bold text-white">Skill Gap Analyzer</h1>
+          <p className="font-sans text-sm text-white/40">
             Compare your current skills against a target role and get a personalised learning plan.
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Role selectors */}
-      <Card>
-        <CardContent className="pt-5">
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium mb-1.5 block flex items-center gap-1.5">
-                <Layers className="h-4 w-4 text-slate-500" /> Current Role
-                {lastRole && <Badge className="text-xs bg-green-100 text-green-700 ml-1">From resume</Badge>}
-              </label>
-              <select
-                value={currentRole}
-                onChange={e => setCurrentRole(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
-              >
-                <option value="">Select current role…</option>
-                {ROLES.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
-              </select>
-              {lastSkills.length > 0 && currentRole === lastRole && (
-                <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                  <CheckCircle2 className="h-3 w-3" /> Using {lastSkills.length} skills from your resume
-                </p>
+      <motion.div variants={itemVariants} className="rounded-2xl border border-white/[0.07] p-5" style={{ background: 'rgba(255,255,255,0.02)' }}>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label className="font-sans text-xs font-semibold text-white/45 mb-1.5 block flex items-center gap-1.5 uppercase tracking-wide">
+              <Layers className="h-3.5 w-3.5" /> Current Role
+              {lastRole && (
+                <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 normal-case tracking-normal">
+                  From resume
+                </span>
               )}
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-1.5 block flex items-center gap-1.5">
-                <Target className="h-4 w-4 text-primary" /> Target Role
-              </label>
-              <select
-                value={targetRole}
-                onChange={e => setTargetRole(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm bg-background"
-              >
-                <option value="">Select target role…</option>
-                {ROLES.filter(r => r.key !== currentRole).map(r => (
-                  <option key={r.key} value={r.key}>{r.label}</option>
-                ))}
-              </select>
-            </div>
+            </label>
+            <select
+              value={currentRole}
+              onChange={e => setCurrentRole(e.target.value)}
+              className="w-full border border-white/[0.08] rounded-xl px-3 py-2 font-sans text-sm bg-white/[0.03] text-white/75 focus:outline-none focus:border-indigo-500/40"
+            >
+              <option value="">Select current role…</option>
+              {ROLES.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
+            </select>
+            {lastSkills.length > 0 && currentRole === lastRole && (
+              <p className="font-sans text-xs text-emerald-400 mt-1 flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" /> Using {lastSkills.length} skills from your resume
+              </p>
+            )}
           </div>
-        </CardContent>
-      </Card>
+
+          <div>
+            <label className="font-sans text-xs font-semibold text-white/45 mb-1.5 block flex items-center gap-1.5 uppercase tracking-wide">
+              <Target className="h-3.5 w-3.5" /> Target Role
+            </label>
+            <select
+              value={targetRole}
+              onChange={e => setTargetRole(e.target.value)}
+              className="w-full border border-white/[0.08] rounded-xl px-3 py-2 font-sans text-sm bg-white/[0.03] text-white/75 focus:outline-none focus:border-indigo-500/40"
+            >
+              <option value="">Select target role…</option>
+              {ROLES.filter(r => r.key !== currentRole).map(r => (
+                <option key={r.key} value={r.key}>{r.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Empty state */}
-      {!targetRole && (
-        <div className="text-center py-16 text-muted-foreground">
-          <Lightbulb className="h-12 w-12 mx-auto mb-3 opacity-20" />
-          <p className="text-sm">Select a target role to see your skill gap analysis</p>
-          <p className="text-xs mt-1">We'll show you exactly what to learn and how long it'll take</p>
-        </div>
-      )}
+      <AnimatePresence>
+        {!targetRole && (
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="text-center py-16"
+          >
+            <div className="w-14 h-14 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
+              <Lightbulb className="h-6 w-6 text-white/20" />
+            </div>
+            <p className="font-sans text-sm text-white/35">Select a target role to see your skill gap analysis</p>
+            <p className="font-sans text-xs text-white/20 mt-1">We'll show you exactly what to learn and how long it'll take</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Results */}
       <AnimatePresence>
         {targetRole && (
           <motion.div
+            key="results"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
+            transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="space-y-5"
           >
             {/* KPI row */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <Card className="border-emerald-200 bg-emerald-50">
-                <CardContent className="pt-4 pb-3 text-center">
-                  <p className="text-3xl font-bold text-emerald-700">{readiness}%</p>
-                  <p className="text-xs text-emerald-600 mt-0.5">Readiness</p>
-                  <Progress value={readiness} className="h-1.5 mt-2" />
-                </CardContent>
-              </Card>
-              <Card className="border-blue-200 bg-blue-50">
-                <CardContent className="pt-4 pb-3 text-center">
-                  <p className="text-3xl font-bold text-blue-700">{matchedCount}</p>
-                  <p className="text-xs text-blue-600 mt-0.5">Skills Matched</p>
-                  <p className="text-xs text-muted-foreground">of {targetSkills.length} required</p>
-                </CardContent>
-              </Card>
-              <Card className="border-rose-200 bg-rose-50">
-                <CardContent className="pt-4 pb-3 text-center">
-                  <p className="text-3xl font-bold text-rose-700">{gapSkills.length}</p>
-                  <p className="text-xs text-rose-600 mt-0.5">Skills to Learn</p>
-                  <p className="text-xs text-muted-foreground">{highDemand} high demand</p>
-                </CardContent>
-              </Card>
-              <Card className="border-amber-200 bg-amber-50">
-                <CardContent className="pt-4 pb-3 text-center">
-                  <p className="text-3xl font-bold text-amber-700">~{Math.ceil(totalHours / 10)}w</p>
-                  <p className="text-xs text-amber-600 mt-0.5">Est. Timeline</p>
-                  <p className="text-xs text-muted-foreground">{totalHours}h at 10h/week</p>
-                </CardContent>
-              </Card>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { value: `${readiness}%`, label: 'Readiness', sub: null, showProgress: true, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/25' },
+                { value: matchedCount,    label: 'Skills Matched', sub: `of ${targetSkills.length} required`, showProgress: false, color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/25' },
+                { value: gapSkills.length, label: 'Skills to Learn', sub: `${highDemand} high demand`, showProgress: false, color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/25' },
+                { value: `~${Math.ceil(totalHours / 10)}w`, label: 'Est. Timeline', sub: `${totalHours}h at 10h/week`, showProgress: false, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/25' },
+              ].map((kpi, i) => (
+                <motion.div
+                  key={kpi.label}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 + i * 0.06, duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+                  className={`rounded-2xl border p-4 ${kpi.bg} ${kpi.border}`}
+                >
+                  <p className={`font-display text-3xl font-bold ${kpi.color}`}>{kpi.value}</p>
+                  <p className="font-sans text-xs text-white/45 mt-0.5">{kpi.label}</p>
+                  {kpi.sub && <p className="font-sans text-xs text-white/30 mt-0.5">{kpi.sub}</p>}
+                  {kpi.showProgress && <Progress value={readiness} className="h-1 mt-2 bg-white/[0.07]" />}
+                </motion.div>
+              ))}
             </div>
 
             {/* No gap */}
             {gapSkills.length === 0 && (
-              <Card className="border-emerald-200 bg-emerald-50">
-                <CardContent className="py-10 text-center">
-                  <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-emerald-500" />
-                  <p className="font-semibold text-emerald-700">You're already qualified!</p>
-                  <p className="text-sm text-emerald-600 mt-1">
-                    Your current skills cover all requirements for {targetLabel}.
-                  </p>
-                </CardContent>
-              </Card>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 py-10 text-center"
+              >
+                <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-emerald-400" />
+                <p className="font-display text-lg font-bold text-white">You're already qualified!</p>
+                <p className="font-sans text-sm text-white/40 mt-1">
+                  Your current skills cover all requirements for {targetLabel}.
+                </p>
+              </motion.div>
             )}
 
             {gapSkills.length > 0 && (
               <>
                 {/* View toggle */}
                 <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4" />
+                  <h2 className="font-sans text-xs font-semibold text-white/40 uppercase tracking-widest flex items-center gap-2">
+                    <TrendingUp className="h-3.5 w-3.5" />
                     {currentLabel || 'Current'} → {targetLabel}
                   </h2>
-                  <div className="flex gap-1 border rounded-lg p-0.5">
-                    <button
-                      onClick={() => setView('list')}
-                      className={`px-3 py-1 text-xs rounded-md transition-colors ${view === 'list' ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'}`}
-                    >
-                      Skill List
-                    </button>
-                    <button
-                      onClick={() => setView('timeline')}
-                      className={`px-3 py-1 text-xs rounded-md transition-colors ${view === 'timeline' ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground'}`}
-                    >
-                      Timeline
-                    </button>
+                  <div className="flex gap-0.5 border border-white/[0.08] rounded-xl p-0.5">
+                    {(['list', 'timeline'] as const).map(v => (
+                      <motion.button
+                        key={v}
+                        onClick={() => setView(v)}
+                        whileTap={{ scale: 0.96 }}
+                        className={`px-3 py-1 font-sans text-xs rounded-lg transition-colors capitalize ${
+                          view === v
+                            ? 'bg-indigo-500 text-white'
+                            : 'text-white/40 hover:text-white/70'
+                        }`}
+                      >
+                        {v === 'list' ? 'Skill List' : 'Timeline'}
+                      </motion.button>
+                    ))}
                   </div>
                 </div>
 
                 {/* List view */}
-                {view === 'list' && (
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <AlertCircle className="h-4 w-4 text-rose-500" />
-                        Skills to Acquire ({gapSkills.length})
-                        <Badge className="text-xs bg-rose-100 text-rose-700 ml-1">
+                <AnimatePresence mode="wait">
+                  {view === 'list' && (
+                    <motion.div
+                      key="list"
+                      initial={{ opacity: 0, x: 8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -8 }}
+                      transition={{ duration: 0.25 }}
+                      className="rounded-2xl border border-white/[0.07] overflow-hidden"
+                      style={{ background: 'rgba(255,255,255,0.02)' }}
+                    >
+                      <div className="flex items-center gap-2 px-5 py-3.5 border-b border-white/[0.06]">
+                        <AlertCircle className="h-4 w-4 text-rose-400" />
+                        <span className="font-display text-sm font-semibold text-white">
+                          Skills to Acquire ({gapSkills.length})
+                        </span>
+                        <span className="ml-auto font-sans text-xs px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/25 text-rose-400">
                           Sorted by demand
-                        </Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      {[...gapSkills]
-                        .sort((a, b) => {
-                          const order = { high: 0, medium: 1, low: 2 };
-                          return order[a.demand] - order[b.demand];
-                        })
-                        .map((item, i) => (
-                          <GapSkillCard
-                            key={item.skill}
-                            item={item}
-                            index={i}
-                            expanded={expanded === item.skill}
-                            onToggle={() => setExpanded(expanded === item.skill ? null : item.skill)}
-                          />
-                        ))}
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Timeline view */}
-                {view === 'timeline' && (
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-amber-500" />
-                        Learning Timeline
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <LearningTimeline
-                        gapSkills={gapSkills}
-                        currentRole={currentLabel}
-                        targetRole={targetLabel}
-                      />
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Already matched skills */}
-                {matchedCount > 0 && (
-                  <Card className="border-emerald-200">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                        Already Have ({matchedCount} skills)
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-1.5">
-                        {targetSkills
-                          .filter(s => currentSkills.map(c => c.toLowerCase()).includes(s.toLowerCase()))
-                          .map(s => (
-                            <Badge key={s} className="text-xs bg-emerald-100 text-emerald-700 border-emerald-200 capitalize">
-                              <CheckCircle2 className="h-2.5 w-2.5 mr-1" />{s}
-                            </Badge>
+                        </span>
+                      </div>
+                      <div className="p-3 space-y-2">
+                        {[...gapSkills]
+                          .sort((a, b) => ({ high: 0, medium: 1, low: 2 }[a.demand] - { high: 0, medium: 1, low: 2 }[b.demand]))
+                          .map((item, i) => (
+                            <GapSkillCard
+                              key={item.skill}
+                              item={item}
+                              index={i}
+                              expanded={expanded === item.skill}
+                              onToggle={() => setExpanded(expanded === item.skill ? null : item.skill)}
+                            />
                           ))}
                       </div>
-                    </CardContent>
-                  </Card>
+                    </motion.div>
+                  )}
+
+                  {view === 'timeline' && (
+                    <motion.div
+                      key="timeline"
+                      initial={{ opacity: 0, x: 8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -8 }}
+                      transition={{ duration: 0.25 }}
+                      className="rounded-2xl border border-white/[0.07] p-5"
+                      style={{ background: 'rgba(255,255,255,0.02)' }}
+                    >
+                      <div className="flex items-center gap-2 mb-4">
+                        <Clock className="h-4 w-4 text-amber-400" />
+                        <span className="font-display text-sm font-semibold text-white">Learning Timeline</span>
+                      </div>
+                      <LearningTimeline gapSkills={gapSkills} currentRole={currentLabel} targetRole={targetLabel} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Already matched */}
+                {matchedCount > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3, duration: 0.35 }}
+                    className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5"
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                      <span className="font-display text-sm font-semibold text-white">
+                        Already Have ({matchedCount} skills)
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {targetSkills
+                        .filter(s => currentSkills.map(c => c.toLowerCase()).includes(s.toLowerCase()))
+                        .map(s => (
+                          <span key={s}
+                            className="font-sans text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 capitalize flex items-center gap-1">
+                            <CheckCircle2 className="h-2.5 w-2.5" />{s}
+                          </span>
+                        ))}
+                    </div>
+                  </motion.div>
                 )}
               </>
             )}
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   );
 }

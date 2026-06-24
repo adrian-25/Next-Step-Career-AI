@@ -1,18 +1,16 @@
 /**
  * Job Fetcher Service
  *
- * Attempts to fetch real job listings from external sources.
+ * Fetches real job listings via Supabase Edge Function (server-side proxy).
  * Strategy (in order):
- *   1. RapidAPI JSearch (if VITE_RAPIDAPI_KEY is set)
+ *   1. Supabase Edge Function `fetch-jobs` (RapidAPI key stays server-side)
  *   2. Curated Unstop / Internshala deep-link fallback objects
  *
  * The fallback always returns valid job objects with real apply URLs
  * so the UI never shows an empty state due to missing API keys.
- *
- * ⚠️ SECURITY NOTE: VITE_RAPIDAPI_KEY is exposed to the frontend.
- * For production, create a Supabase Edge Function (e.g. `fetch-jobs`)
- * that holds the RapidAPI key server-side and proxies the request.
  */
+
+import { supabase } from '@/integrations/supabase/client';
 
 export interface RealJob {
   jobId: string;
@@ -48,35 +46,19 @@ const ROLE_SKILLS: Record<string, string[]> = {
   product_manager:    ['Agile', 'Jira', 'Roadmapping', 'Stakeholder Management', 'Analytics'],
 };
 
-// ─── RapidAPI JSearch ─────────────────────────────────────────────────────────
+// ─── Supabase Edge Function proxy ────────────────────────────────────────────
 
-async function fetchFromJSearch(query: string): Promise<RealJob[]> {
-  const apiKey = import.meta.env.VITE_RAPIDAPI_KEY as string | undefined;
-  if (!apiKey) throw new Error('No RapidAPI key configured');
-
-  const url = `https://jsearch.p.rapidapi.com/search?query=${encodeURIComponent(query)}&num_pages=1&page=1`;
-  const res = await fetch(url, {
-    headers: {
-      'X-RapidAPI-Key': apiKey,
-      'X-RapidAPI-Host': 'jsearch.p.rapidapi.com',
-    },
+async function fetchFromEdgeFunction(queries: string[], location?: string): Promise<RealJob[]> {
+  const { data, error } = await supabase.functions.invoke('fetch-jobs', {
+    body: { queries, location },
   });
 
-  if (!res.ok) throw new Error(`JSearch API error: ${res.status}`);
+  if (error) throw new Error(`Edge function error: ${error.message}`);
+  if (!data || data.source === 'no_key' || data.source === 'error') {
+    throw new Error(data?.error ?? 'No API key configured on server');
+  }
 
-  const data = await res.json();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data.data ?? []).slice(0, 5).map((j: any): RealJob => ({
-    jobId:         j.job_id ?? `jsearch-${Math.random()}`,
-    title:         j.job_title ?? 'Software Engineer',
-    company:       j.employer_name ?? 'Unknown Company',
-    location:      j.job_city ? `${j.job_city}, ${j.job_country ?? ''}`.trim() : (j.job_country ?? 'Remote'),
-    applyUrl:      j.job_apply_link ?? j.job_google_link ?? 'https://jsearch.p.rapidapi.com',
-    requiredSkills: (j.job_required_skills ?? []).slice(0, 8),
-    source:        'jsearch',
-    postedDate:    j.job_posted_at_datetime_utc,
-    description:   j.job_description?.slice(0, 300),
-  }));
+  return (data.jobs ?? []) as RealJob[];
 }
 
 // ─── Unstop / Internshala curated fallback ────────────────────────────────────
@@ -141,15 +123,14 @@ export interface FetchJobsResult {
 export async function fetchJobsForRole(role: string): Promise<FetchJobsResult> {
   const queries = ROLE_QUERIES[role] ?? DEFAULT_QUERIES;
 
-  // Try RapidAPI JSearch first
+  // Try edge function (server-side proxy to RapidAPI)
   try {
-    const results = await Promise.all(queries.slice(0, 2).map(fetchFromJSearch));
-    const jobs = results.flat().slice(0, 10);
+    const jobs = await fetchFromEdgeFunction(queries.slice(0, 3));
     if (jobs.length > 0) {
       return { jobs, source: 'api' };
     }
   } catch (err) {
-    console.warn('[JobFetcher] JSearch unavailable, using fallback:', err);
+    console.warn('[JobFetcher] Edge function unavailable, using fallback:', err);
   }
 
   // Fallback: curated search-page links

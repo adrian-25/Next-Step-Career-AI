@@ -605,8 +605,6 @@ export class AnalyticsService {
       throw error;
     }
   }
-}
-
 
   /**
    * Get resume score data for user
@@ -845,3 +843,6 @@ export class AnalyticsService {
     }
   }
 }
+
+// Export singleton instance
+export const analyticsService = new AnalyticsService();

@@ -4,8 +4,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Mail, Lock, Eye, EyeOff, ArrowLeft, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { AuthService } from '@/services/auth.service';
 
 interface LoginFormProps {
   onToggleMode: () => void;
@@ -21,6 +22,9 @@ export function LoginForm({ onToggleMode, onSuccess }: LoginFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetSent, setResetSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +33,7 @@ export function LoginForm({ onToggleMode, onSuccess }: LoginFormProps) {
 
     try {
       const result = await signIn(formData);
-      
+
       if (result.error) {
         setError(result.error);
       } else {
@@ -43,12 +47,90 @@ export function LoginForm({ onToggleMode, onSuccess }: LoginFormProps) {
     }
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail.trim()) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error: resetError } = await AuthService.resetPassword(resetEmail.trim());
+      if (resetError) {
+        setError(resetError);
+      } else {
+        setResetSent(true);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send reset email');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
     }));
   };
+
+  if (forgotMode) {
+    return (
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
+          <p className="text-muted-foreground">Enter your email to receive a reset link</p>
+        </CardHeader>
+        <CardContent>
+          {resetSent ? (
+            <div className="space-y-4 text-center">
+              <CheckCircle className="h-12 w-12 text-green-500 mx-auto" />
+              <p className="text-sm text-muted-foreground">
+                We've sent a password reset link to <strong>{resetEmail}</strong>. Check your inbox and follow the instructions.
+              </p>
+              <Button variant="ghost" onClick={() => { setForgotMode(false); setResetSent(false); setResetEmail(''); }}>
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Sign In
+              </Button>
+            </div>
+          ) : (
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="reset-email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="reset-email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={resetEmail}
+                    onChange={e => setResetEmail(e.target.value)}
+                    className="pl-10"
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+              <Button type="submit" className="w-full" disabled={loading || !resetEmail.trim()}>
+                {loading ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending...</>
+                ) : (
+                  'Send Reset Link'
+                )}
+              </Button>
+              <Button variant="ghost" className="w-full" onClick={() => { setForgotMode(false); setError(null); }}>
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Sign In
+              </Button>
+            </form>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-md">
@@ -123,7 +205,7 @@ export function LoginForm({ onToggleMode, onSuccess }: LoginFormProps) {
             <button
               type="button"
               className="text-sm text-primary hover:underline"
-              onClick={() => {/* TODO: Implement forgot password */}}
+              onClick={() => { setForgotMode(true); setError(null); setResetEmail(formData.email); }}
             >
               Forgot your password?
             </button>

@@ -34,6 +34,10 @@ import { ATSCheckerPage } from "@/pages/ATSCheckerPage";
 import { ResumeBuilderPage } from "@/pages/ResumeBuilderPage";
 import { AutoImproverPage } from "@/pages/AutoImproverPage";
 import { EmployerDashboardPage } from "@/pages/EmployerDashboardPage";
+import { AssessmentsPage } from "@/pages/AssessmentsPage";
+import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
+import { JobTrackerPage } from "@/pages/JobTrackerPage";
+import { SalaryInsightsPage } from "@/pages/SalaryInsightsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -75,6 +79,7 @@ const App = () => (
                 
                 {/* Authentication Page - Optional (No Layout) */}
                 <Route path="/auth" element={<PageTransition><AuthPage /></PageTransition>} />
+                <Route path="/reset-password" element={<PageTransition><ResetPasswordPage /></PageTransition>} />
                 
                 {/* DEMO MODE: All App Pages - With Layout, NO Authentication Required */}
                 <Route element={<Layout />}>
@@ -101,6 +106,9 @@ const App = () => (
                   <Route path="/builder" element={<PageTransition><ResumeBuilderPage /></PageTransition>} />
                   <Route path="/improver" element={<PageTransition><AutoImproverPage /></PageTransition>} />
                   <Route path="/employer" element={<PageTransition><EmployerDashboardPage /></PageTransition>} />
+                  <Route path="/assessments" element={<PageTransition><AssessmentsPage /></PageTransition>} />
+                  <Route path="/job-tracker" element={<PageTransition><JobTrackerPage /></PageTransition>} />
+                  <Route path="/salary-insights" element={<PageTransition><SalaryInsightsPage /></PageTransition>} />
                 </Route>
                 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -73,6 +73,42 @@ export interface PlacementInput {
   certifications?: string[];
 }
 
+// ── Career Chat ──────────────────────────────────────────────────────────────
+
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface CareerChatContext {
+  skills?: string[];
+  targetRole?: string;
+  experienceYears?: number;
+  resumeSummary?: string;
+}
+
+export async function careerChat(
+  message: string,
+  history?: ChatMessage[],
+  context?: CareerChatContext
+): Promise<string> {
+  const { data, error } = await supabase.functions.invoke('career-chat', {
+    body: { message, history, context },
+  });
+
+  if (error) {
+    throw new Error(`Career chat failed: ${error.message}`);
+  }
+
+  if (isEdgeFunctionError(data)) {
+    throw new Error(`Career chat failed: ${data.error}`);
+  }
+
+  return data.reply as string;
+}
+
+// ── Predict Placement ─────────────────────────────────────────────────────────
+
 export async function predictPlacement(
   input: PlacementInput
 ): Promise<PlacementPrediction> {

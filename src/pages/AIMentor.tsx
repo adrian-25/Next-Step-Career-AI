@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { supabase } from "@/integrations/supabase/client"
+import { careerChat, ChatMessage as ServiceChatMessage, CareerChatContext } from "@/services/edgeFunctionService"
 
 interface Message {
   id: string
@@ -69,24 +69,21 @@ export function AIMentor() {
     setInputValue("")
     setIsTyping(true)
 
-    // Call Edge Function for AI-powered career mentorship
     try {
-      const { data, error } = await supabase.functions.invoke('analyze-resume', {
-        body: { resumeText: content, targetRole: 'career-advice' },
-      })
+      const history: ServiceChatMessage[] = messages
+        .filter(m => m.id !== "welcome")
+        .map(m => ({ role: m.sender === "user" ? "user" as const : "assistant" as const, content: m.content }))
 
-      if (error) throw new Error(error.message)
-      if (data?.error) throw new Error(data.error)
+      const reply = await careerChat(content, history)
 
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        content: data?.data?.summary_text || data?.data?.resume_elevator_pitch || generateAIResponse(content),
+        content: reply,
         sender: "ai",
         timestamp: new Date()
       }
       setMessages(prev => [...prev, aiResponse])
     } catch (err) {
-      // Fallback to simulated response if Edge Function is unavailable
       console.warn('AI Mentor: Edge Function unavailable, using fallback:', err)
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),

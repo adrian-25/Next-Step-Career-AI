@@ -6,7 +6,7 @@ import {
   Database, TrendingUp, Route, GitBranch,
   Award, BookMarked, ChevronLeft, ChevronRight,
   Zap, LogOut, User, GraduationCap, ShieldCheck,
-  Wand2, Building2,
+  Wand2, Building2, MessageCircle, Star, FolderOpen, Network, ClipboardList, LayoutList, DollarSign,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
@@ -33,25 +33,32 @@ const NAV_GROUPS = [
   {
     label: 'Matching',
     items: [
-      { name: 'Job Matching',     href: '/job-matching',         icon: Briefcase,  },
-      { name: 'Resume Ranking',   href: '/ranking',              icon: Trophy,     },
-      { name: 'Skill Gap',        href: '/skill-gap',            icon: Layers,     },
-      { name: 'Search Resumes',   href: '/search',               icon: Search,     },
+      { name: 'Job Tracker',        href: '/job-tracker',   icon: LayoutList,     },
+      { name: 'Job Matching',       href: '/job-matching',  icon: Briefcase,      },
+      { name: 'Job Recommendations',href: '/job-matches',   icon: Star,           },
+      { name: 'Resume Ranking',     href: '/ranking',       icon: Trophy,         },
+      { name: 'Skill Gap',          href: '/skill-gap',     icon: Layers,         },
+      { name: 'Search Resumes',     href: '/search',        icon: Search,         },
     ],
   },
   {
     label: 'Analytics',
     items: [
       { name: 'Employer Dashboard', href: '/employer',           icon: Building2,  },
-      { name: 'DBMS Analytics',   href: '/dbms-analytics',       icon: Database,   },
-      { name: 'Prod Analytics',   href: '/production-analytics', icon: TrendingUp, },
+      { name: 'Salary Insights',    href: '/salary-insights',    icon: DollarSign, },
+      { name: 'DBMS Analytics',     href: '/dbms-analytics',     icon: Database,   },
+      { name: 'Prod Analytics',     href: '/production-analytics', icon: TrendingUp, },
     ],
   },
   {
     label: 'Learning',
     items: [
-      { name: 'Courses',          href: '/courses',              icon: GraduationCap, },
-      { name: 'Career Roadmap',   href: '/roadmap',              icon: Route,      },
+      { name: 'Courses',            href: '/courses',      icon: GraduationCap, },
+      { name: 'Assessments',         href: '/assessments',  icon: ClipboardList, },
+      { name: 'Career Roadmap',     href: '/roadmap',    icon: Route,         },
+      { name: 'Career Mentor',      href: '/mentor',     icon: MessageCircle, },
+      { name: 'Portfolio Ideas',    href: '/portfolio',  icon: FolderOpen,    },
+      { name: 'Networking',         href: '/networking', icon: Network,       },
     ],
   },
   {
