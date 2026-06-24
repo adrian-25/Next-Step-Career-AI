@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import {
   setStoredAnalysis, setDetectedRole, getAnalysisHistory, setAnalysisHistory,
+  STORAGE_KEYS,
 } from '@/constants/storageKeys';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,16 +42,16 @@ function SkillCard({ skill, variant, resources }: {
   return (
     <motion.div
       variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0, transition: { duration: 0.2 } } }}
-      className={`flex items-center justify-between p-3 rounded-lg border text-sm ${
+      className={`flex items-center justify-between px-3.5 py-2.5 rounded-lg border text-sm leading-relaxed ${
         isMatched ? 'bg-success/10 border-success/20' : 'bg-warning/10 border-warning/20'
       }`}
     >
-      <div className="flex items-center gap-2 min-w-0">
+      <div className="flex items-center gap-2.5 min-w-0">
         {isMatched
           ? <CheckCircle className="h-3.5 w-3.5 text-success shrink-0" />
           : <AlertCircle className="h-3.5 w-3.5 text-warning shrink-0" />
         }
-        <span className="font-medium truncate capitalize">{skill}</span>
+        <span className="font-medium truncate capitalize tracking-wide">{skill}</span>
       </div>
       {!isMatched && resources && resources.length > 0 && (
         <div className="flex gap-1 shrink-0 ml-2">
@@ -92,7 +93,7 @@ function MLResultsView({ result, selectedRole, onReset }: {
     // Get full resume text (not just skill names)
     let resumeText = result.extractedSkills.join(' ');
     try {
-      const raw = localStorage.getItem('lastAnalysisResult');
+      const raw = localStorage.getItem(STORAGE_KEYS.RESUME_ANALYSIS);
       if (raw) {
         const parsed = JSON.parse(raw);
         const fullText = parsed?.parsedResume?.text ?? parsed?.mlResult?.resumeText ?? '';
@@ -114,7 +115,7 @@ function MLResultsView({ result, selectedRole, onReset }: {
   // ── FIX 2: Parse resume sections from stored text ─────────────────────────
   const { sections: parsedSections, sectionScores } = (() => {
     try {
-      const raw = localStorage.getItem('lastAnalysisResult');
+      const raw = localStorage.getItem(STORAGE_KEYS.RESUME_ANALYSIS);
       if (!raw) return { sections: null, sectionScores: null };
       const parsed = JSON.parse(raw);
       const fullText = parsed?.parsedResume?.text ?? '';
@@ -161,7 +162,7 @@ function MLResultsView({ result, selectedRole, onReset }: {
             variant="outline" size="sm"
             onClick={() => {
               try {
-                const raw = localStorage.getItem('lastAnalysisResult');
+                const raw = localStorage.getItem(STORAGE_KEYS.RESUME_ANALYSIS);
                 const analysis = raw ? JSON.parse(raw) : null;
                 downloadAnalysisReport(result, analysis, selectedRole);
               } catch { /* ignore */ }
@@ -563,15 +564,15 @@ function MLResultsView({ result, selectedRole, onReset }: {
       {/* Matched skills */}
       {result.matchedSkills.length > 0 && (
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              Matched Skills ({result.matchedSkills.length})
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2.5">
+              <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
+              <span>Matched Skills <span className="text-muted-foreground font-normal">({result.matchedSkills.length})</span></span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <motion.div
-              className="grid gap-2 sm:grid-cols-2"
+              className="grid gap-2.5 sm:grid-cols-2"
               initial="hidden" animate="visible"
               variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
             >
@@ -625,18 +626,18 @@ function MLResultsView({ result, selectedRole, onReset }: {
       {/* Missing skills with learning resources */}
       {result.missingSkills.length > 0 && (
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-orange-500" />
-              Skills to Learn ({result.missingSkills.length})
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2.5">
+              <AlertCircle className="h-4 w-4 text-orange-500 shrink-0" />
+              <span>Skills to Learn <span className="text-muted-foreground font-normal">({result.missingSkills.length})</span></span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-muted-foreground mb-3">
+            <p className="text-sm text-muted-foreground mb-3">
               Click Free or Course for learning resources.
             </p>
             <motion.div
-              className="grid gap-2 sm:grid-cols-2"
+              className="grid gap-2.5 sm:grid-cols-2"
               initial="hidden" animate="visible"
               variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
             >

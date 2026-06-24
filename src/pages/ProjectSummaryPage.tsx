@@ -282,11 +282,11 @@ export function ProjectSummaryPage() {
           <Button onClick={() => navigate('/resume')} className="gap-2">
             <FileText className="h-4 w-4" /> Analyze Resume
           </Button>
-          <Button variant="outline" onClick={() => navigate('/dbms-analytics')} className="gap-2">
-            <Database className="h-4 w-4" /> DBMS Analytics
+          <Button variant="outline" onClick={() => navigate('/salary-insights')} className="gap-2">
+            <Database className="h-4 w-4" /> Salary Insights
           </Button>
-          <Button variant="outline" onClick={() => navigate('/architecture')} className="gap-2">
-            <GitBranch className="h-4 w-4" /> Architecture
+          <Button variant="outline" onClick={() => navigate('/dashboard')} className="gap-2">
+            <GitBranch className="h-4 w-4" /> Dashboard
           </Button>
         </div>
       </motion.div>

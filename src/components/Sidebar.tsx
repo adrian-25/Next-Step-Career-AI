@@ -2,11 +2,11 @@ import React, { useState } from "react"
 import { NavLink, useLocation, useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  FileText, BarChart3, Briefcase, Trophy, Layers, Search,
-  Database, TrendingUp, Route, GitBranch,
+  FileText, BarChart3, Briefcase, Layers,
+  Route,
   Award, BookMarked, ChevronLeft, ChevronRight,
   Zap, LogOut, User, GraduationCap, ShieldCheck,
-  Wand2, Building2, MessageCircle, Star, FolderOpen, Network, ClipboardList, LayoutList, DollarSign,
+  Wand2, Building2, Star, Network, ClipboardList, LayoutList, DollarSign,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
@@ -33,39 +33,32 @@ const NAV_GROUPS = [
   {
     label: 'Matching',
     items: [
-      { name: 'Job Tracker',        href: '/job-tracker',   icon: LayoutList,     },
-      { name: 'Job Matching',       href: '/job-matching',  icon: Briefcase,      },
-      { name: 'Job Recommendations',href: '/job-matches',   icon: Star,           },
-      { name: 'Resume Ranking',     href: '/ranking',       icon: Trophy,         },
-      { name: 'Skill Gap',          href: '/skill-gap',     icon: Layers,         },
-      { name: 'Search Resumes',     href: '/search',        icon: Search,         },
+      { name: 'Job Tracker',         href: '/job-tracker',  icon: LayoutList, },
+      { name: 'Job Matching',        href: '/job-matching', icon: Briefcase,  },
+      { name: 'Job Recommendations', href: '/job-matches',  icon: Star,       },
+      { name: 'Skill Gap',           href: '/skill-gap',    icon: Layers,     },
     ],
   },
   {
     label: 'Analytics',
     items: [
-      { name: 'Employer Dashboard', href: '/employer',           icon: Building2,  },
-      { name: 'Salary Insights',    href: '/salary-insights',    icon: DollarSign, },
-      { name: 'DBMS Analytics',     href: '/dbms-analytics',     icon: Database,   },
-      { name: 'Prod Analytics',     href: '/production-analytics', icon: TrendingUp, },
+      { name: 'Employer Dashboard', href: '/employer',        icon: Building2,  },
+      { name: 'Salary Insights',    href: '/salary-insights', icon: DollarSign, },
     ],
   },
   {
     label: 'Learning',
     items: [
-      { name: 'Courses',            href: '/courses',      icon: GraduationCap, },
-      { name: 'Assessments',         href: '/assessments',  icon: ClipboardList, },
-      { name: 'Career Roadmap',     href: '/roadmap',    icon: Route,         },
-      { name: 'Career Mentor',      href: '/mentor',     icon: MessageCircle, },
-      { name: 'Portfolio Ideas',    href: '/portfolio',  icon: FolderOpen,    },
-      { name: 'Networking',         href: '/networking', icon: Network,       },
+      { name: 'Courses',        href: '/courses',     icon: GraduationCap, },
+      { name: 'Assessments',    href: '/assessments', icon: ClipboardList, },
+      { name: 'Career Roadmap', href: '/roadmap',     icon: Route,         },
+      { name: 'Networking',     href: '/networking',  icon: Network,       },
     ],
   },
   {
     label: 'System',
     items: [
-      { name: 'Architecture',     href: '/architecture',         icon: GitBranch,  },
-      { name: 'Project Summary',  href: '/summary',              icon: BookMarked, },
+      { name: 'Project Summary', href: '/summary', icon: BookMarked, },
     ],
   },
 ]
@@ -83,24 +76,21 @@ export function Sidebar() {
     {
       label: 'Analytics',
       items: [
-        { name: 'Employer Dashboard', href: '/employer',           icon: Building2,  },
-        { name: 'DBMS Analytics',     href: '/dbms-analytics',     icon: Database,   },
-        { name: 'Prod Analytics',     href: '/production-analytics', icon: TrendingUp, },
+        { name: 'Employer Dashboard', href: '/employer',        icon: Building2,  },
+        { name: 'Salary Insights',    href: '/salary-insights', icon: DollarSign, },
       ],
     },
     {
       label: 'Recruitment',
       items: [
-        { name: 'Resume Ranking',   href: '/ranking',              icon: Trophy,     },
-        { name: 'Search Resumes',   href: '/search',               icon: Search,     },
-        { name: 'Job Matching',     href: '/job-matching',         icon: Briefcase,  },
+        { name: 'Job Matching', href: '/job-matching', icon: Briefcase, },
+        { name: 'Skill Gap',    href: '/skill-gap',    icon: Layers,    },
       ],
     },
     {
       label: 'System',
       items: [
-        { name: 'Architecture',     href: '/architecture',         icon: GitBranch,  },
-        { name: 'Project Summary',  href: '/summary',              icon: BookMarked, },
+        { name: 'Project Summary', href: '/summary', icon: BookMarked, },
       ],
     },
   ]

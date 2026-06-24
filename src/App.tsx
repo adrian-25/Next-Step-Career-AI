@@ -13,20 +13,13 @@ import { TopicsPage } from "@/pages/TopicsPage";
 import { Dashboard } from "@/pages/Dashboard";
 import { ResumeAnalyzer } from "@/pages/ResumeAnalyzer";
 import { ResumeInsightsPage } from "@/pages/ResumeInsightsPage";
-import { DBMSAnalyticsPage } from "@/pages/DBMSAnalyticsPage";
 import { CareerRoadmap } from "@/pages/CareerRoadmap";
-import { CareerMentorPage } from "@/pages/CareerMentorPage";
 import { CareerChatbotPage } from "@/pages/CareerChatbotPage";
 import { JobRecommendationsPage } from "@/pages/JobRecommendationsPage";
-import { PortfolioSuggestions } from "@/pages/PortfolioSuggestions";
 import { NetworkingAssistant } from "@/pages/NetworkingAssistant";
 import { Courses } from "@/pages/Courses";
 import { AuthPage } from "@/pages/AuthPage";
 import { JobMatchingPage } from "@/pages/JobMatchingPage";
-import { MultiResumeRankingPage } from "@/pages/MultiResumeRankingPage";
-import { ResumeSearchPage } from "@/pages/ResumeSearchPage";
-import { ArchitecturePage } from "@/pages/ArchitecturePage";
-import { ProductionAnalyticsPage } from "@/pages/ProductionAnalyticsPage";
 import { SkillGapPage } from "@/pages/SkillGapPage";
 import { ResumeScorePage } from "@/pages/ResumeScorePage";
 import { ProjectSummaryPage } from "@/pages/ProjectSummaryPage";
@@ -86,19 +79,12 @@ const App = () => (
                   <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
                   <Route path="/resume" element={<PageTransition><ResumeAnalyzer /></PageTransition>} />
                   <Route path="/analytics" element={<PageTransition><ResumeInsightsPage /></PageTransition>} />
-                  <Route path="/dbms-analytics" element={<PageTransition><DBMSAnalyticsPage /></PageTransition>} />
                   <Route path="/roadmap" element={<PageTransition><CareerRoadmap /></PageTransition>} />
-                  <Route path="/mentor" element={<PageTransition><CareerMentorPage /></PageTransition>} />
                   <Route path="/chatbot" element={<PageTransition><CareerChatbotPage /></PageTransition>} />
                   <Route path="/job-matches" element={<PageTransition><JobRecommendationsPage /></PageTransition>} />
-                  <Route path="/portfolio" element={<PageTransition><PortfolioSuggestions /></PageTransition>} />
                   <Route path="/networking" element={<PageTransition><NetworkingAssistant /></PageTransition>} />
                   <Route path="/courses" element={<PageTransition><Courses /></PageTransition>} />
                   <Route path="/job-matching" element={<PageTransition><JobMatchingPage /></PageTransition>} />
-                  <Route path="/ranking" element={<PageTransition><MultiResumeRankingPage /></PageTransition>} />
-                  <Route path="/search" element={<PageTransition><ResumeSearchPage /></PageTransition>} />
-                  <Route path="/architecture" element={<PageTransition><ArchitecturePage /></PageTransition>} />
-                  <Route path="/production-analytics" element={<PageTransition><ProductionAnalyticsPage /></PageTransition>} />
                   <Route path="/skill-gap" element={<PageTransition><SkillGapPage /></PageTransition>} />
                   <Route path="/score" element={<PageTransition><ResumeScorePage /></PageTransition>} />
                   <Route path="/summary" element={<PageTransition><ProjectSummaryPage /></PageTransition>} />

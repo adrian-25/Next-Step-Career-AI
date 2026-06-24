@@ -174,17 +174,31 @@ export function ResumeScorePage() {
   const cs = rs?.componentScores;
   const bd = rs?.breakdown;
 
-  const totalScore      = rs?.totalScore       ?? 0;
-  const skillsScore     = cs?.skillsScore      ?? 0;
-  const projectsScore   = cs?.projectsScore    ?? 0;
-  const experienceScore = cs?.experienceScore  ?? 0;
-  const educationScore  = cs?.educationScore   ?? 0;
+  const totalScore = rs?.totalScore ?? 0;
 
-  // Weighted contributions — these sum to totalScore
-  const skillsContrib     = bd?.skillsContribution     ?? Math.round(skillsScore     * 0.40);
-  const projectsContrib   = bd?.projectsContribution   ?? Math.round(projectsScore   * 0.25);
-  const experienceContrib = bd?.experienceContribution ?? Math.round(experienceScore * 0.20);
-  const educationContrib  = bd?.educationContribution  ?? Math.round(educationScore  * 0.15);
+  // Read contributions first — stored in breakdown
+  const rawSkillsContrib   = bd?.skillsContribution;
+  const rawProjectsContrib = bd?.projectsContribution;
+  const rawExpContrib      = bd?.experienceContribution;
+  const rawEduContrib      = bd?.educationContribution;
+
+  // Read stored component scores
+  const rawSkillsScore   = cs?.skillsScore      ?? 0;
+  const rawProjectsScore = cs?.projectsScore    ?? 0;
+  const rawExpScore      = cs?.experienceScore  ?? 0;
+  const rawEduScore      = cs?.educationScore   ?? 0;
+
+  // When stored score is 0 but a contribution exists, back-calculate the score
+  const skillsScore     = rawSkillsScore   > 0 ? rawSkillsScore   : (rawSkillsContrib   ? Math.min(100, Math.round(rawSkillsContrib   / 0.40)) : 0);
+  const projectsScore   = rawProjectsScore > 0 ? rawProjectsScore : (rawProjectsContrib ? Math.min(100, Math.round(rawProjectsContrib / 0.25)) : 0);
+  const experienceScore = rawExpScore      > 0 ? rawExpScore      : (rawExpContrib      ? Math.min(100, Math.round(rawExpContrib      / 0.20)) : 0);
+  const educationScore  = rawEduScore      > 0 ? rawEduScore      : (rawEduContrib      ? Math.min(100, Math.round(rawEduContrib      / 0.15)) : 0);
+
+  // Weighted contributions — use stored or compute from (now-corrected) score
+  const skillsContrib     = rawSkillsContrib   ?? Math.round(skillsScore     * 0.40);
+  const projectsContrib   = rawProjectsContrib ?? Math.round(projectsScore   * 0.25);
+  const experienceContrib = rawExpContrib      ?? Math.round(experienceScore * 0.20);
+  const educationContrib  = rawEduContrib      ?? Math.round(educationScore  * 0.15);
 
   const recs: string[]     = rs?.recommendations ?? [];
   const qualityFlag        = rs?.qualityFlag ?? (totalScore >= 80 ? 'excellent' : totalScore >= 60 ? 'competitive' : 'needs_improvement');
