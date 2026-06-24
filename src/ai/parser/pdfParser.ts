@@ -1,10 +1,7 @@
 import * as pdfjsLib from 'pdfjs-dist';
+import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-// ── Worker setup ──────────────────────────────────────────────────────────────
-// Use unpkg CDN — avoids Vite/Vercel bundling issues with the worker file.
-// The version is read directly from the installed package so it always matches.
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
 
 /**
  * Parse PDF file and extract text content using pdfjs-dist (browser-compatible).
