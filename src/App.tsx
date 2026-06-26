@@ -31,6 +31,8 @@ import { AssessmentsPage } from "@/pages/AssessmentsPage";
 import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
 import { JobTrackerPage } from "@/pages/JobTrackerPage";
 import { SalaryInsightsPage } from "@/pages/SalaryInsightsPage";
+import { AnalyticsPage } from "@/pages/AnalyticsPage";
+import { MLTraining } from "@/pages/MLTraining";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -95,6 +97,8 @@ const App = () => (
                   <Route path="/assessments" element={<PageTransition><AssessmentsPage /></PageTransition>} />
                   <Route path="/job-tracker" element={<PageTransition><JobTrackerPage /></PageTransition>} />
                   <Route path="/salary-insights" element={<PageTransition><SalaryInsightsPage /></PageTransition>} />
+                  <Route path="/advanced-analytics" element={<PageTransition><AnalyticsPage /></PageTransition>} />
+                  <Route path="/ml-training" element={<PageTransition><MLTraining /></PageTransition>} />
                 </Route>
                 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

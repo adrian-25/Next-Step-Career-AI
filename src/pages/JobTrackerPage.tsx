@@ -285,7 +285,7 @@ export function JobTrackerPage() {
 
   // ── Kanban card ──────────────────────────────────────────────
 
-  const KanbanCard = ({ app }: { app: JobApplication }) => {
+  const KanbanCard = React.forwardRef<HTMLDivElement, { app: JobApplication }>(({ app }, ref) => {
     const cfg = STATUS_CONFIG[app.status];
     const nextIdx = STATUS_ORDER.indexOf(app.status) + 1;
     const next = nextIdx < STATUS_ORDER.length - 1 ? STATUS_ORDER[nextIdx] : null;
@@ -293,6 +293,7 @@ export function JobTrackerPage() {
 
     return (
       <motion.div
+        ref={ref}
         layout
         variants={cardVariants}
         exit="exit"
@@ -373,7 +374,8 @@ export function JobTrackerPage() {
         )}
       </motion.div>
     );
-  };
+  });
+  KanbanCard.displayName = 'KanbanCard';
 
   // ── Empty column state ─────────────────────────────────────────
 

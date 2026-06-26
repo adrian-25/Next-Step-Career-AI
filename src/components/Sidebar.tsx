@@ -6,7 +6,7 @@ import {
   Route,
   Award, BookMarked, ChevronLeft, ChevronRight,
   Zap, LogOut, User, GraduationCap, ShieldCheck,
-  Wand2, Building2, Star, Network, ClipboardList, LayoutList, DollarSign,
+  Wand2, Building2, Star, Network, ClipboardList, LayoutList, DollarSign, Brain, Activity,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
@@ -42,8 +42,10 @@ const NAV_GROUPS = [
   {
     label: 'Analytics',
     items: [
-      { name: 'Employer Dashboard', href: '/employer',        icon: Building2,  },
-      { name: 'Salary Insights',    href: '/salary-insights', icon: DollarSign, },
+      { name: 'Employer Dashboard',   href: '/employer',            icon: Building2,  },
+      { name: 'Salary Insights',      href: '/salary-insights',     icon: DollarSign, },
+      { name: 'Advanced Analytics',   href: '/advanced-analytics',  icon: Activity,   },
+      { name: 'ML Training',          href: '/ml-training',         icon: Brain,      },
     ],
   },
   {

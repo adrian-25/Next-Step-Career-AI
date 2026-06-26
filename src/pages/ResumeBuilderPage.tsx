@@ -523,14 +523,16 @@ export function ResumeBuilderPage() {
           </div>
 
           {/* Preview iframe-style pane */}
-          <motion.div
-            key={template}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="flex-1 overflow-auto bg-white min-h-[500px]"
-            dangerouslySetInnerHTML={{ __html: GENERATORS[template](data) }}
-          />
+          <div className="flex-1 overflow-auto min-h-[500px] p-4" style={{ background: 'rgba(0,0,0,0.25)' }}>
+            <motion.div
+              key={template}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="bg-white rounded-lg shadow-2xl min-h-full"
+              dangerouslySetInnerHTML={{ __html: GENERATORS[template](data) }}
+            />
+          </div>
         </div>
       </motion.div>
     </motion.div>

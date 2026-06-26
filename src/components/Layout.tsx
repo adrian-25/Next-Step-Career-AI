@@ -30,6 +30,11 @@ const ROUTE_LABELS: Record<string, string> = {
   '/networking':            'Networking Hub',
   '/mentor':                'AI Mentor',
   '/chatbot':               'Career Chatbot',
+  '/job-tracker':           'Job Tracker',
+  '/salary-insights':       'Salary Insights',
+  '/assessments':           'Skill Assessments',
+  '/advanced-analytics':    'Advanced Analytics',
+  '/ml-training':           'ML Training',
 }
 
 // ── Employer-only routes ──────────────────────────────────────
