@@ -39,3 +39,6 @@ project-analyzer.js
 skills-lock.json
 CLAUDE_PROJECT_MEMORY.md
 supabase/.temp/
+
+.vercel
+.env*
