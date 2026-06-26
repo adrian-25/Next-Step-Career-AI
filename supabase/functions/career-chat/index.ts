@@ -4,6 +4,7 @@ const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 

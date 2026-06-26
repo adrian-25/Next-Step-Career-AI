@@ -46,6 +46,7 @@ export function EmployerDashboardPage() {
   const [skills, setSkills]           = useState<any[]>([]);
   const [mlFuzzy, setMlFuzzy]         = useState<any[]>([]);
   const [auditLogs, setAuditLogs]     = useState<any[]>([]);
+  const [auditLoaded, setAuditLoaded] = useState(false);
   const [loading, setLoading]         = useState(true);
   const [backendOnline, setBackendOnline] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -82,11 +83,15 @@ export function EmployerDashboardPage() {
       if (skillData.status === 'fulfilled') setSkills(skillData.value.map(s => ({ skill: s.skill, frequency: s.frequency })));
     }
 
-    // Load audit logs
-    const logs = await AdvancedAnalyticsService.getAuditLogs(20);
-    setAuditLogs(logs);
     setLastUpdated(new Date());
     setLoading(false);
+  };
+
+  const loadAuditLogs = async () => {
+    if (auditLoaded) return;
+    const logs = await AdvancedAnalyticsService.getAuditLogs(20);
+    setAuditLogs(logs);
+    setAuditLoaded(true);
   };
 
   useEffect(() => { load(); }, []);
@@ -172,7 +177,7 @@ export function EmployerDashboardPage() {
         {TABS.map(tab => (
           <button
             key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
+            onClick={() => { setActiveTab(tab.key); if (tab.key === 'audit') loadAuditLogs(); }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all flex-1 justify-center"
             style={{
               background: activeTab === tab.key ? 'hsl(var(--card))' : 'transparent',

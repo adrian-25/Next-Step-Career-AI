@@ -428,14 +428,14 @@ export class MLTrainingService {
         .select('*')
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching latest training results:', error);
         return null;
       }
 
-      return data;
+      return data ?? null;
     } catch (error) {
       console.error('Failed to fetch latest training results:', error);
       return null;

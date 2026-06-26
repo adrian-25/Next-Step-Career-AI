@@ -299,7 +299,10 @@ export class AdvancedAnalyticsService {
         .order('created_at', { ascending: false })
         .limit(limit);
 
-      if (error) return [];
+      if (error) {
+        console.warn('[AdvancedAnalytics] getAuditLogs:', error.message);
+        return [];
+      }
       return (data ?? []) as AuditLogEntry[];
     } catch { return []; }
   }
