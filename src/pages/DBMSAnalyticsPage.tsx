@@ -227,7 +227,7 @@ export function DBMSAnalyticsPage() {
     }
   }, [selectedRole, auditLogs.length]);
 
-  useEffect(() => { load(); loadAuditLogs(); }, []);
+  useEffect(() => { load(); }, []);
 
   const handleSeedDemoData = async () => {
     setSeeding(true); setSeedMsg('');

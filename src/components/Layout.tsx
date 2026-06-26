@@ -35,6 +35,8 @@ const ROUTE_LABELS: Record<string, string> = {
   '/assessments':           'Skill Assessments',
   '/advanced-analytics':    'Advanced Analytics',
   '/ml-training':           'ML Training',
+  '/profile':               'Profile Settings',
+  '/settings':              'Settings',
 }
 
 // ── Employer-only routes ──────────────────────────────────────

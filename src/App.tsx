@@ -33,6 +33,9 @@ import { JobTrackerPage } from "@/pages/JobTrackerPage";
 import { SalaryInsightsPage } from "@/pages/SalaryInsightsPage";
 import { AnalyticsPage } from "@/pages/AnalyticsPage";
 import { MLTraining } from "@/pages/MLTraining";
+import { DBMSAnalyticsPage } from "@/pages/DBMSAnalyticsPage";
+import { ProductionAnalyticsPage } from "@/pages/ProductionAnalyticsPage";
+import { ProfilePage } from "@/pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -99,6 +102,10 @@ const App = () => (
                   <Route path="/salary-insights" element={<PageTransition><SalaryInsightsPage /></PageTransition>} />
                   <Route path="/advanced-analytics" element={<PageTransition><AnalyticsPage /></PageTransition>} />
                   <Route path="/ml-training" element={<PageTransition><MLTraining /></PageTransition>} />
+                  <Route path="/dbms-analytics" element={<PageTransition><DBMSAnalyticsPage /></PageTransition>} />
+                  <Route path="/production-analytics" element={<PageTransition><ProductionAnalyticsPage /></PageTransition>} />
+                  <Route path="/profile" element={<PageTransition><ProfilePage /></PageTransition>} />
+                  <Route path="/settings" element={<PageTransition><ProfilePage /></PageTransition>} />
                 </Route>
                 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

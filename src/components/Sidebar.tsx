@@ -7,6 +7,7 @@ import {
   Award, BookMarked, ChevronLeft, ChevronRight,
   Zap, LogOut, User, GraduationCap, ShieldCheck,
   Wand2, Building2, Star, Network, ClipboardList, LayoutList, DollarSign, Brain, Activity,
+  Database, FlaskConical,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
@@ -46,6 +47,8 @@ const NAV_GROUPS = [
       { name: 'Salary Insights',      href: '/salary-insights',     icon: DollarSign, },
       { name: 'Advanced Analytics',   href: '/advanced-analytics',  icon: Activity,   },
       { name: 'ML Training',          href: '/ml-training',         icon: Brain,      },
+      { name: 'DBMS Analytics',       href: '/dbms-analytics',      icon: Database,   },
+      { name: 'Prod Analytics',       href: '/production-analytics',icon: FlaskConical,},
     ],
   },
   {
@@ -270,7 +273,7 @@ export function Sidebar() {
             <DropdownMenuContent align="end" className="w-52">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/profile')}>
                 <User className="mr-2 h-4 w-4" /> Profile Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
