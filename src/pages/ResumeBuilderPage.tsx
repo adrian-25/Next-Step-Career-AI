@@ -335,10 +335,10 @@ export function ResumeBuilderPage() {
       </motion.div>
 
       {/* ── Form + Preview grid ── */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-12 gap-5 flex-1 min-w-0">
+      <motion.div variants={itemVariants} className="grid grid-cols-12 gap-4 flex-1 min-w-0">
 
         {/* Left: Form (40%) */}
-        <div className="md:col-span-5 overflow-y-auto max-h-[calc(100vh-200px)] flex flex-col gap-3 min-w-0 pr-1">
+        <div className="col-span-5 overflow-y-auto max-h-[calc(100vh-200px)] flex flex-col gap-3 min-w-0 pr-1">
 
           {/* Target role */}
           <div className="rounded-2xl border border-white/[0.07] p-4" style={{ background: 'rgba(255,255,255,0.02)' }}>
@@ -508,7 +508,7 @@ export function ResumeBuilderPage() {
         </div>
 
         {/* Right: Preview (60%) */}
-        <div className="md:col-span-7 sticky top-14 md:top-5 max-h-[calc(100vh-200px)] overflow-hidden flex flex-col rounded-2xl border border-white/[0.07] min-w-0">
+        <div className="col-span-7 sticky top-14 max-h-[calc(100vh-200px)] overflow-hidden flex flex-col rounded-2xl border border-white/[0.07] min-w-0">
           {/* Preview header */}
           <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between shrink-0"
             style={{ background: 'rgba(255,255,255,0.025)' }}>
