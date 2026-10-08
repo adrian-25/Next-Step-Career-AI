@@ -99,7 +99,8 @@ FastAPI app as a web service. In Render, choose **New → Blueprint** and select
 this repository. Render will request these values during setup:
 
 - `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` for the frontend.
-- `DATABASE_URL` for the PostgreSQL/Supabase database used by the API.
+- `DATABASE_URL` for the PostgreSQL/Supabase database used by the API (optional
+  at initial deploy; required for database-backed API features).
 
 The Blueprint wires the frontend to the API and configures CORS automatically.
 After the deployment, add the Render static-site URL to Supabase Auth's allowed

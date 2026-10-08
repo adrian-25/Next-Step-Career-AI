@@ -3,7 +3,9 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # Database
-    DATABASE_URL: str = "postgresql://postgres:password@localhost:5432/resume_intelligence"
+    # Optional for browser-fallback deployments. Set this in Render to enable
+    # resume history, search, analytics, and backup endpoints.
+    DATABASE_URL: str = ""
     SUPABASE_URL: str = ""
     SUPABASE_SERVICE_KEY: str = ""
 

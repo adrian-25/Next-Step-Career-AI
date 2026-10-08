@@ -13,7 +13,7 @@ import logging
 
 from routers import resume, match, search, analytics, auth, backup
 from core.config import settings
-from core.database import init_db
+from core.database import init_db, is_database_connected
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -55,7 +55,11 @@ app.include_router(backup.router,    prefix="/api/backup",    tags=["Backup"])
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "version": "2.0.0"}
+    return {
+        "status": "ok",
+        "version": "2.0.0",
+        "database": "connected" if is_database_connected() else "unconfigured",
+    }
 
 
 if __name__ == "__main__":
