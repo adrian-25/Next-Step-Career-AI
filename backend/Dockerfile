@@ -6,10 +6,12 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc libpq-dev && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY backend/ .
+# The ML trainer loads the shared role dataset from this absolute path.
+COPY src/data/job_roles_dataset.json /src/data/job_roles_dataset.json
 
 # Pre-train ML model at build time
 RUN python -c "from ml.analyzer import train_model; train_model(); print('Model trained')"
