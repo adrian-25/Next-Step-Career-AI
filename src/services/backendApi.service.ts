@@ -5,7 +5,11 @@
  * Falls back to browser-side ML if backend is unavailable.
  */
 
-const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api';
+// VITE_API_URL is the backend origin (for example, https://api.example.com).
+// Accept the older `/api` form too, so existing local environment files keep
+// working while Render can inject its backend service URL directly.
+const apiOrigin = (import.meta.env.VITE_API_URL ?? 'http://localhost:8000').replace(/\/$/, '');
+const API_BASE = apiOrigin.endsWith('/api') ? apiOrigin : `${apiOrigin}/api`;
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -111,7 +115,8 @@ export async function downloadUserBackup(userId: string) {
 
 export async function checkBackendHealth(): Promise<boolean> {
   try {
-    const res = await fetch(`${import.meta.env.VITE_API_URL ?? 'http://localhost:8000'}/health`, { signal: AbortSignal.timeout(3000) });
+    const healthOrigin = API_BASE.endsWith('/api') ? API_BASE.slice(0, -4) : API_BASE;
+    const res = await fetch(`${healthOrigin}/health`, { signal: AbortSignal.timeout(3000) });
     return res.ok;
   } catch { return false; }
 }

@@ -1,5 +1,4 @@
 from pydantic_settings import BaseSettings
-from typing import List
 
 
 class Settings(BaseSettings):
@@ -14,11 +13,12 @@ class Settings(BaseSettings):
     JWT_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
 
     # CORS
-    ALLOWED_ORIGINS: List[str] = [
-        "http://localhost:8080",
-        "http://localhost:3000",
-        "https://next-step-career-ai.vercel.app",
-    ]
+    # Comma-separated to support Render's direct service-URL injection.
+    ALLOWED_ORIGINS: str = (
+        "http://localhost:8080,"
+        "http://localhost:3000,"
+        "https://next-step-career-ai.vercel.app"
+    )
 
     # ML
     MODEL_CACHE_DIR: str = "./ml/models"
@@ -29,6 +29,10 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+
+    @property
+    def allowed_origins(self) -> list[str]:
+        return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
 
 
 settings = Settings()

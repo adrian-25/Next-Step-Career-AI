@@ -29,7 +29,7 @@
 | ML       | scikit-learn, TF-IDF, Naive Bayes, Fuzzy Logic  |
 | Database | PostgreSQL 15 (Supabase)                        |
 | Auth     | Supabase Auth + JWT                             |
-| Deploy   | Vercel (frontend) + Railway (backend)           |
+| Deploy   | Render (frontend static site + FastAPI backend)  |
 | CI/CD    | GitHub Actions                                  |
 
 ---
@@ -89,8 +89,21 @@ Copy `.env.example` to `.env` and fill in your values:
 ```
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_anon_key
-VITE_API_URL=http://localhost:8000/api
+VITE_API_URL=http://localhost:8000
 ```
+
+### Deploy to Render
+
+The included `render.yaml` deploys the Vite app as a static site and the
+FastAPI app as a web service. In Render, choose **New → Blueprint** and select
+this repository. Render will request these values during setup:
+
+- `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` for the frontend.
+- `DATABASE_URL` for the PostgreSQL/Supabase database used by the API.
+
+The Blueprint wires the frontend to the API and configures CORS automatically.
+After the deployment, add the Render static-site URL to Supabase Auth's allowed
+redirect URLs if users sign in through Supabase.
 
 ---
 
