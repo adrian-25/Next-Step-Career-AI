@@ -335,10 +335,10 @@ export function ResumeBuilderPage() {
       </motion.div>
 
       {/* ── Form + Preview grid ── */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 2xl:grid-cols-12 gap-5 flex-1 min-w-0">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-12 gap-5 flex-1 min-w-0">
 
         {/* Left: Form (40%) */}
-        <div className="2xl:col-span-4 overflow-y-auto max-h-[calc(100vh-200px)] flex flex-col gap-3 min-w-0 pr-1">
+        <div className="md:col-span-5 overflow-y-auto max-h-[calc(100vh-200px)] flex flex-col gap-3 min-w-0 pr-1">
 
           {/* Target role */}
           <div className="rounded-2xl border border-white/[0.07] p-4" style={{ background: 'rgba(255,255,255,0.02)' }}>
@@ -508,7 +508,7 @@ export function ResumeBuilderPage() {
         </div>
 
         {/* Right: Preview (60%) */}
-        <div className="2xl:col-span-8 sticky top-14 2xl:top-5 max-h-[calc(100vh-200px)] overflow-hidden flex flex-col rounded-2xl border border-white/[0.07] min-w-0">
+        <div className="md:col-span-7 sticky top-14 md:top-5 max-h-[calc(100vh-200px)] overflow-hidden flex flex-col rounded-2xl border border-white/[0.07] min-w-0">
           {/* Preview header */}
           <div className="px-4 py-3 border-b border-white/[0.06] flex items-center justify-between shrink-0"
             style={{ background: 'rgba(255,255,255,0.025)' }}>
@@ -522,15 +522,19 @@ export function ResumeBuilderPage() {
             </div>
           </div>
 
-          {/* Preview iframe-style pane */}
+          {/* Isolated document preview. The templates contain document-level
+              body styles, so rendering them in an iframe prevents those styles
+              from shrinking the entire dashboard on laptop screens. */}
           <div className="flex-1 overflow-auto min-h-[560px] p-5" style={{ background: 'rgba(0,0,0,0.25)' }}>
-            <motion.div
+            <motion.iframe
+              title="Live resume preview"
               key={template}
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
-              className="bg-white rounded-lg shadow-2xl w-full max-w-[46rem] min-h-[64rem] mx-auto"
-              dangerouslySetInnerHTML={{ __html: GENERATORS[template](data) }}
+              sandbox=""
+              srcDoc={GENERATORS[template](data)}
+              className="block bg-white rounded-lg shadow-2xl w-full max-w-[46rem] min-h-[64rem] mx-auto border-0"
             />
           </div>
         </div>
