@@ -118,7 +118,7 @@ function MLResultsView({ result, selectedRole, onReset }: {
       const raw = localStorage.getItem(STORAGE_KEYS.RESUME_ANALYSIS);
       if (!raw) return { sections: null, sectionScores: null };
       const parsed = JSON.parse(raw);
-      const fullText = parsed?.parsedResume?.text ?? '';
+      const fullText = parsed?.parsedResume?.text ?? parsed?.mlResult?.resumeText ?? parsed?.resumeText ?? '';
       if (!fullText || fullText.length < 50) return { sections: null, sectionScores: null };
       const sections = parseResumeSections(fullText);
       const scores   = scoreSections(sections, result.finalScore);

@@ -11,7 +11,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 import logging
 
-from routers import resume, match, search, analytics, auth, backup
+from routers import resume, match, search, analytics, auth, backup, jobs
 from core.config import settings
 from core.database import init_db, is_database_connected
 
@@ -51,6 +51,7 @@ app.include_router(match.router,     prefix="/api/match",     tags=["Matching"])
 app.include_router(search.router,    prefix="/api/search",    tags=["Search"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
 app.include_router(backup.router,    prefix="/api/backup",    tags=["Backup"])
+app.include_router(jobs.router,      prefix="/api/jobs",      tags=["Live jobs"])
 
 
 @app.get("/health")

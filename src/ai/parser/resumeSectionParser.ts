@@ -10,7 +10,7 @@
 
 const SECTION_PATTERNS: Array<{ key: string; pattern: RegExp }> = [
   { key: 'summary',        pattern: /^(summary|professional\s+summary|career\s+objective|objective|profile|about\s+me|personal\s+statement):?$/i },
-  { key: 'experience',     pattern: /^(experience|work\s+experience|professional\s+experience|employment|employment\s+history|work\s+history|internship|internships|career|career\s+history|professional\s+background):?$/i },
+  { key: 'experience',     pattern: /^(experience|work\s+experience|professional\s+experience|employment|employment\s+history|work\s+history|internship|internships|experience\s*(?:&|and)\s*internships?|career|career\s+history|professional\s+background):?$/i },
   { key: 'education',      pattern: /^(education|educational\s+background|academic\s+background|academic\s+qualifications|qualifications|schooling|academics):?$/i },
   { key: 'skills',         pattern: /^(skills|technical\s+skills|core\s+competencies|competencies|technologies|expertise|key\s+skills|professional\s+skills|proficiencies|tools\s*[&|]\s*technologies):?$/i },
   { key: 'projects',       pattern: /^(projects|project\s+experience|personal\s+projects|academic\s+projects|key\s+projects|portfolio|notable\s+projects|side\s+projects|work\s+samples):?$/i },
@@ -71,10 +71,18 @@ function splitIntoBlocks(text: string): Record<string, string> {
     if (!trimmed) continue;
 
     // Check if this line is a section heading (short line matching a pattern)
-    if (trimmed.length <= 60) {
+    if (trimmed.length <= 80) {
+      // PDF/DOCX extractors frequently leave bullets, pipes, em dashes or
+      // all-caps decoration around headings. Match the semantic heading, not
+      // the formatting noise, while preserving the original content lines.
+      const heading = trimmed
+        .replace(/^[\s•*#|>\-–—]+/, '')
+        .replace(/[\s:|\-–—•]+$/, '')
+        .replace(/\s+/g, ' ')
+        .trim();
       let matched = false;
       for (const { key, pattern } of SECTION_PATTERNS) {
-        if (pattern.test(trimmed)) {
+        if (pattern.test(heading)) {
           // Save previous block
           if (currentLines.length > 0) {
             blocks[currentSection] = (blocks[currentSection] ?? '') + '\n' + currentLines.join('\n');
@@ -111,6 +119,13 @@ const PROJECT_VERBS = /\b(developed|built|created|implemented|designed|deployed|
 const EXPERIENCE_ROLES = /\b(engineer|developer|analyst|manager|intern|lead|senior|junior|associate|director|consultant|specialist|coordinator)\b/i;
 const DATE_RANGE = /(\w+\s+\d{4}|\d{4})\s*[-–—to]+\s*(\w+\s+\d{4}|\d{4}|present|current)/i;
 const DEGREE_KEYWORDS = /\b(b\.?tech|b\.?e|b\.?sc|b\.?com|b\.?a|m\.?tech|m\.?sc|m\.?e|mba|phd|bachelor|master|doctorate|diploma|associate|engineering|science|arts|commerce)\b/i;
+const TECH_KEYWORDS = [
+  'python', 'javascript', 'typescript', 'react', 'angular', 'vue', 'node.js', 'nodejs',
+  'java', 'c++', 'c#', 'sql', 'mysql', 'postgresql', 'mongodb', 'firebase', 'aws',
+  'azure', 'gcp', 'docker', 'kubernetes', 'git', 'github', 'linux', 'html', 'css',
+  'tailwind', 'next.js', 'express', 'django', 'flask', 'fastapi', 'spring', 'tensorflow',
+  'pytorch', 'machine learning', 'power bi', 'tableau', 'figma', 'excel', 'pandas', 'numpy',
+];
 
 function clusterByKeywords(text: string): Record<string, string> {
   const lines = text.split('\n').filter(l => l.trim());
@@ -148,7 +163,8 @@ function clusterByKeywords(text: string): Record<string, string> {
   return result;
 }
 
-// ── Step 3: Extract structured data per section ────────────�// Action verbs that appear at the START of description lines (not project titles)
+// ── Step 3: Extract structured data per section ──────────────────────────────
+// Action verbs that appear at the START of description lines (not project titles)
 const DESCRIPTION_VERBS = /^(developed|built|created|implemented|designed|deployed|architected|engineered|programmed|launched|integrated|solved|achieved|led|managed|reduced|increased|improved|optimized|automated|analyzed|trained|used|utilized|leveraged|worked|collaborated|maintained|contributed|performed|conducted|assisted|supported|tested|debugged|wrote|researched|gathered|built|configured|set\s+up|set\s*up|established)/i;
 
 // Prefixes that indicate a descriptor line, not a project title (should not start new project)
@@ -260,6 +276,7 @@ function extractProjects(block: string): ProjectEntry[] {
   }
 
   console.log('[SectionParser] Project chunks found:', projectChunks.length, '→ valid projects:', projects.length);
+  return projects;
 }
 
 function extractExperience(block: string): ExperienceEntry[] {
@@ -307,7 +324,7 @@ function extractExperience(block: string): ExperienceEntry[] {
 
     // Extract role and company
     const cleanFirst = firstLine.replace(dateRangePattern, '').trim();
-    const parts = cleanFirst.split(/[,|@\-–—at]/i).map(p => p.trim()).filter(Boolean);
+    const parts = cleanFirst.split(/\s*(?:,|\||@|[-–—]|\bat\b)\s*/i).map(p => p.trim()).filter(Boolean);
     const role    = parts[0] ?? cleanFirst;
     const company = parts[1] ?? '';
 
@@ -423,11 +440,17 @@ export function parseResumeSections(resumeText: string): ParsedSections {
   // Step 2: Split into blocks
   let rawBlocks = splitIntoBlocks(resumeText);
 
-  // Step 9: Fallback — if no section headings detected, use keyword clustering
+  // Use content clustering for a resume with no headings, and also fill just
+  // the sections that a noisy PDF extractor failed to label.
   const detectedKeys = Object.keys(rawBlocks).filter(k => k !== 'header');
   if (detectedKeys.length === 0) {
     console.log('[SectionParser] No headings detected — falling back to keyword clustering');
     rawBlocks = clusterByKeywords(resumeText);
+  } else {
+    const fallbackBlocks = clusterByKeywords(resumeText);
+    for (const key of ['projects', 'experience', 'education', 'skills']) {
+      if (!rawBlocks[key]?.trim() && fallbackBlocks[key]?.trim()) rawBlocks[key] = fallbackBlocks[key];
+    }
   }
 
   // Step 3: Extract structured data

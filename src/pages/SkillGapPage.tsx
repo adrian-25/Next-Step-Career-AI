@@ -1,14 +1,15 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
   ArrowRight, BookOpen, ExternalLink, Target, TrendingUp,
   Zap, Clock, Star, ChevronDown, ChevronUp, Lightbulb,
-  CheckCircle2, AlertCircle, Layers,
+  CheckCircle2, AlertCircle, Layers, FileText, Loader2, Upload, X,
 } from 'lucide-react';
 import { getDataset } from '@/ai/ml/rolePredictor';
 import { getResourcesForSkill } from '@/data/learningResources';
+import { ResumeIntelligenceService } from '@/services/resumeIntelligence.service';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -87,25 +88,28 @@ function estimateDifficulty(skill: string): GapSkill['difficulty'] {
   return 'intermediate';
 }
 
-function estimateHours(difficulty: GapSkill['difficulty']): number {
-  if (difficulty === 'beginner')     return Math.floor(Math.random() * 20) + 10;
-  if (difficulty === 'intermediate') return Math.floor(Math.random() * 40) + 30;
-  return Math.floor(Math.random() * 80) + 60;
+function stableOffset(value: string, range: number): number {
+  return [...value].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) % range, 0);
+}
+
+function estimateHours(skill: string, difficulty: GapSkill['difficulty']): number {
+  if (difficulty === 'beginner')     return 10 + stableOffset(skill, 20);
+  if (difficulty === 'intermediate') return 30 + stableOffset(skill, 40);
+  return 60 + stableOffset(skill, 80);
 }
 
 function estimateDemand(skill: string): GapSkill['demand'] {
   const high = ['python', 'javascript', 'typescript', 'react', 'aws', 'docker', 'kubernetes', 'machine learning', 'sql', 'node.js'];
   const s = skill.toLowerCase();
   if (high.some(h => s.includes(h))) return 'high';
-  if (Math.random() > 0.5) return 'medium';
-  return 'low';
+  return stableOffset(skill, 3) ? 'medium' : 'low';
 }
 
 function buildGapSkills(missing: string[]): GapSkill[] {
   return missing.map(skill => {
     const difficulty = estimateDifficulty(skill);
     const res = getResourcesForSkill(skill);
-    return { skill, difficulty, estimatedHours: estimateHours(difficulty), demand: estimateDemand(skill), freeUrl: res.free?.url, paidUrl: res.paid?.url };
+    return { skill, difficulty, estimatedHours: estimateHours(skill, difficulty), demand: estimateDemand(skill), freeUrl: res.free?.url, paidUrl: res.paid?.url };
   });
 }
 
@@ -291,11 +295,17 @@ export function SkillGapPage() {
   const [targetRole, setTargetRole]   = useState('');
   const [expanded, setExpanded]       = useState<string | null>(null);
   const [view, setView]               = useState<'list' | 'timeline'>('list');
+  const [resumeSkills, setResumeSkills] = useState<string[]>([]);
+  const [resumeFileName, setResumeFileName] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const currentSkills = useMemo(() => {
+    if (resumeSkills.length > 0) return resumeSkills;
     if (lastSkills.length > 0 && currentRole === lastRole) return lastSkills;
     return getSkillsForRole(currentRole);
-  }, [currentRole, lastRole, lastSkills]);
+  }, [currentRole, lastRole, lastSkills, resumeSkills]);
 
   const targetSkills = useMemo(() => getSkillsForRole(targetRole), [targetRole]);
 
@@ -320,6 +330,31 @@ export function SkillGapPage() {
   const currentLabel = ROLES.find(r => r.key === currentRole)?.label ?? currentRole;
   const targetLabel  = ROLES.find(r => r.key === targetRole)?.label ?? targetRole;
 
+  async function handleResumeUpload(file?: File) {
+    if (!file) return;
+    setUploading(true);
+    setUploadError('');
+    try {
+      const result = await ResumeIntelligenceService.analyzeResume({
+        file,
+        userId: 'skill-gap-upload',
+        targetRole: targetRole || undefined,
+        saveToDatabase: false,
+      });
+      const skills = result.analysis?.parsedResume.skills.filter(Boolean) ?? [];
+      if (!result.success || skills.length === 0) throw new Error(result.error || 'No skills could be extracted from this resume.');
+      setResumeSkills([...new Set(skills)]);
+      setResumeFileName(file.name);
+    } catch (error) {
+      setResumeSkills([]);
+      setResumeFileName('');
+      setUploadError(error instanceof Error ? error.message : 'Could not process this resume.');
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  }
+
   return (
     <motion.div
       className="page-content max-w-5xl space-y-5"
@@ -340,15 +375,25 @@ export function SkillGapPage() {
         </div>
       </motion.div>
 
-      {/* Role selectors */}
+      {/* Resume input + role selectors */}
       <motion.div variants={itemVariants} className="rounded-2xl border border-white/[0.07] p-5" style={{ background: 'rgba(255,255,255,0.02)' }}>
+        <div className="mb-5 p-4 rounded-xl border border-dashed border-indigo-500/30 bg-indigo-500/[0.04] flex flex-wrap items-center gap-3">
+          <input ref={inputRef} type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" className="hidden" onChange={event => void handleResumeUpload(event.target.files?.[0])} />
+          <div className="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center"><FileText className="h-4 w-4 text-indigo-400" /></div>
+          <div className="flex-1 min-w-[190px]">
+            <p className="font-display text-sm font-semibold text-white">Use skills from your resume</p>
+            <p className="font-sans text-xs text-white/40 mt-0.5">Upload a PDF, DOCX, or TXT resume, then select the target role to compare.</p>
+          </div>
+          {resumeFileName ? <div className="flex items-center gap-2"><span className="font-sans text-xs text-emerald-400 max-w-[180px] truncate">{resumeFileName} · {resumeSkills.length} skills</span><Button size="icon" variant="ghost" onClick={() => { setResumeSkills([]); setResumeFileName(''); }} aria-label="Remove uploaded resume" className="h-8 w-8 text-white/40 hover:text-white"><X className="h-4 w-4" /></Button></div> : <Button size="sm" onClick={() => inputRef.current?.click()} disabled={uploading} className="gap-1.5 bg-indigo-500 hover:bg-indigo-400 text-white">{uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}{uploading ? 'Reading resume…' : 'Upload resume'}</Button>}
+          {uploadError && <p className="basis-full font-sans text-xs text-rose-300">{uploadError}</p>}
+        </div>
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <label className="font-sans text-xs font-semibold text-white/45 mb-1.5 block flex items-center gap-1.5 uppercase tracking-wide">
               <Layers className="h-3.5 w-3.5" /> Current Role
-              {lastRole && (
+              {(lastRole || resumeFileName) && (
                 <span className="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 normal-case tracking-normal">
-                  From resume
+                  {resumeFileName ? 'Uploaded resume' : 'From resume'}
                 </span>
               )}
             </label>
@@ -360,7 +405,9 @@ export function SkillGapPage() {
               <option value="">Select current role…</option>
               {ROLES.map(r => <option key={r.key} value={r.key}>{r.label}</option>)}
             </select>
-            {lastSkills.length > 0 && currentRole === lastRole && (
+            {resumeSkills.length > 0 ? (
+              <p className="font-sans text-xs text-emerald-400 mt-1 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Using {resumeSkills.length} extracted resume skills</p>
+            ) : lastSkills.length > 0 && currentRole === lastRole && (
               <p className="font-sans text-xs text-emerald-400 mt-1 flex items-center gap-1">
                 <CheckCircle2 className="h-3 w-3" /> Using {lastSkills.length} skills from your resume
               </p>
