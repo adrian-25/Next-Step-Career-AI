@@ -2,7 +2,7 @@
 
 > AI-powered career platform for resume analysis, job role prediction, and personalized career roadmaps.
 
-**Live Demo:** [https://next-step-career-ai.onrender.com]
+**Live Demo:** https://next-step-career-ai.onrender.com
 
 **GitHub:** https://github.com/adrian-25/Next-Step-Career-AI
 
